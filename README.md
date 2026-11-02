@@ -140,6 +140,7 @@ npm --prefix mobile run export
 (cd backend-ml && .venv/bin/ruff check app ml tests scripts migrations && .venv/bin/mypy app)
 (cd backend-ml && .venv/bin/python scripts/test_browser.py)
 node --experimental-strip-types --test shared/photo-location.test.ts
+node --test mobile/scripts/photo-upload.test.mjs
 python3 scripts/package_release.py
 ```
 

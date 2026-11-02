@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Linking,
@@ -107,6 +108,7 @@ export function ReportComposer({
     };
   }, [editId, stored]);
   async function analyze(value: Photo, version: number, requestId: string) {
+    setError("");
     const controller = new AbortController();
     abort.current = controller;
     try {
@@ -287,23 +289,19 @@ export function ReportComposer({
             accessibilityLabel="Foto yang dianalisis"
           />
         )}
-        {(photo || draft) && (
-          <Button
-            secondary
-            title="Hapus draft foto"
-            disabled={!!busy}
-            onPress={() => {
-              void discard();
-            }}
-          />
-        )}
         {busy ? (
-          <Text accessibilityRole="text" style={styles.text}>
-            {busy}
-          </Text>
+          <View style={styles.panel} accessibilityLiveRegion="polite">
+            <ActivityIndicator color="#245e43" />
+            <Text style={styles.text}>{busy}</Text>
+            {!result && (
+              <Text style={styles.text}>
+                Kategori sampah akan muncul otomatis setelah analisis selesai.
+              </Text>
+            )}
+          </View>
         ) : null}
         {result && (
-          <View style={styles.panel}>
+          <View style={styles.panel} accessibilityLiveRegion="polite">
             <Text style={styles.label}>KATEGORI OTOMATIS</Text>
             <Text style={styles.heading}>{categoryName(result.category)}</Text>
             <Text style={styles.text}>
@@ -316,6 +314,16 @@ export function ReportComposer({
                 : "Hasil model dapat keliru, terutama pada objek campuran atau foto bukan sampah."}
             </Text>
           </View>
+        )}
+        {(photo || draft) && (
+          <Button
+            secondary
+            title="Hapus draft foto"
+            disabled={!!busy}
+            onPress={() => {
+              void discard();
+            }}
+          />
         )}
         {draft && !result && (
           <>

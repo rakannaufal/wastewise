@@ -125,9 +125,6 @@ export async function appendPhoto(form: FormData, photo: Photo) {
   if (Platform.OS === "web")
     form.append("image", await (await fetch(photo.uri)).blob(), photo.name);
   else
-    form.append("image", {
-      uri: photo.uri,
-      name: photo.name,
-      type: photo.type,
-    } as unknown as Blob);
+    // Expo SDK 58 fetch serializes File.bytes(); legacy URI parts are rejected.
+    form.append("image", new File(photo.uri));
 }

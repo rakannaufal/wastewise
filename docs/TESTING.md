@@ -23,6 +23,7 @@ Dari root, dengan Node24/npm dan Google Chrome:
 npm run check
 npm run build
 node --experimental-strip-types --test shared/photo-location.test.ts
+node --test mobile/scripts/photo-upload.test.mjs
 (cd backend-ml && .venv/bin/python scripts/test_browser.py)
 npm --prefix web run e2e:auth
 ```
@@ -36,6 +37,8 @@ Tiga skenario:
 3. Expo web: register/login, galeri, ML, konfirmasi GPS, kirim/detail/edit/hapus, filter/profil/navigasi dan lebar390px.
 
 Web diperiksa pada320/360/390/768/1024/1440px; tabel admin menggunakan scroll wilayah sendiri tanpa menyembunyikan status. Axe menguji WCAG2A/AA/2.1AA yang tersedia; nol pelanggaran bukan sertifikasi penuh. Empat tes Auth memakai provider tiruan: konfirmasi/resend/reset, PKCE, sesi reload/logout saat provider gagal. Dua tes EXIF mencakup TIFF kedua byte order, koordinat selatan, metadata rusak/truncated dan denominator0.
+
+Regresi upload native menjalankan serializer multipart Expo yang benar-benar terpasang. Tes pertama mereproduksi penolakan objek URI lama sebelum request dikirim; tes kedua memeriksa jalur appendPhoto memakai File, isi byte JPEG, filename, MIME dan parsing multipart. File I/O perangkat diganti secara eksplisit karena Node tidak menyediakan modul filesystem native. Ini melengkapi Expo web, belum menggantikan pemotretan/upload pada iPhone atau Android fisik.
 
 ## Mobile native
 

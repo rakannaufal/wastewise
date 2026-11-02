@@ -122,3 +122,11 @@ Verifikasi akhir:
 Bukti terbaru: evidence/workflow-{backend-tests,backend-static,check,build,local-browser,auth-browser,exif}.txt, workflow-runtime.json, workflow-dashboard-benchmark.json, workflow-*-audit.json, workflow-admin-local-*.png, supabase-smoke.json. Detail konfigurasi dan batas pengukuran: WORKFLOW_IMPLEMENTATION.md dan TESTING.md.
 
 Masih terbuka: perangkat iOS/Android fisik (kamera/GPS/HEIC/izin/lifecycle/reboot/performa), deployment HTTPS, SMTP/email delivery, pemulihan penuh Auth/Storage, shared rate limiter multi-worker, monitoring dan holdout lapangan. Implementasi terverifikasi untuk demo lokal/Supabase; belum dinyatakan siap rilis publik. Langkah berikut: uji kamera/GPS pada dua perangkat fisik menggunakan checklist TESTING.md.
+
+## Perbaikan kategori setelah foto iPhone (2 November 2026)
+
+Screenshot pengguna18.01menunjukkan foto lokal, tanpa kategori, dengan kegagalan koneksi. Request Auth/statistik pada log API berhasil tetapi upload draft tidak mencapai server. Serializer fetch default Expo SDK58 menolak multipart objek URI lama (`Unsupported FormDataPart implementation`). Upload native kini memakai File expo-file-system yang menyediakan bytes(); backend dan checkpoint tidak diubah. Kategori/indikator analisis ditempatkan langsung setelah foto. Retry membersihkan pesan kegagalan sebelumnya.
+
+Dua tes regresi menjalankan serializer Expo terpasang: reproduksi penolakan objek lama, lalu verifikasi byte JPEG/MIME/filename dan parsing multipart jalur appendPhoto yang baru. File I/O perangkat diganti secara eksplisit; tes ini tidak mengklaim pemotretan fisik. Root check/typecheck lulus; ekspor iOS/Android/web lulus. Tiga E2E lokal lulus lagi (1,5menit), termasuk kategori otomatis sebelum konfirmasi GPS dan submit. Bukti: evidence/native-upload-*.txt. CI menyertakan regresi serializer.
+
+Metro/API pengguna tetap aktif. Reload Expo Go lalu ambil foto baru untuk verifikasi iPhone. Draft lama yang gagal dapat dicoba ulang dengan tombol foto yang sama; tidak perlu memilih kategori atau menekan Kirim laporan untuk memulai analisis.

@@ -65,3 +65,9 @@ node --experimental-strip-types --test shared/photo-location.test.ts
 - Lighthouse produksi, zoom200%/font sistem besar, koneksi lambat dan pengukuran end-to-end foto→hasil pada perangkat. Pemeriksaan screenshot/axe/overflow tidak menggantikannya.
 
 Tidak ada perubahan identitas visual besar atau model retraining pada pekerjaan ini. Tahap berikut yang paling berguna: uji alur kamera/GPS pada iPhone dan Android dengan checklist di atas sebelum rilis publik.
+
+## Koreksi upload native Expo SDK58
+
+Screenshot iPhone menunjukkan foto tersedia tetapi kategori tidak muncul dan pesan koneksi gagal. Log API pada waktu tersebut mencatat request Auth/statistik berhasil, tanpa request draft. Penyebab direproduksi pada serializer Expo58 terpasang: objek multipart lama `{uri, name, type}` ditolak dengan `Unsupported FormDataPart implementation` sebelum jaringan digunakan. Ini bukan bukti checkpoint gagal atau password salah.
+
+`mobile/src/photo.ts` kini mengirim `File` expo-file-system yang menyediakan bytes(), sesuai serializer fetch default SDK58. Analisis tetap dipicu otomatis setelah shutter/galeri; hasil kategori ditempatkan langsung setelah foto, indikator menjelaskan proses yang sedang berjalan. Tidak ada penetapan kategori dari nama file, input pengguna atau dugaan visual. Backend/model tidak diubah. Dua regresi native serializer disertakan dalam CI; File I/O pada tes memakai pengganti eksplisit. Konfirmasi upload kamera di HP fisik tetap diperlukan setelah reload Expo.
