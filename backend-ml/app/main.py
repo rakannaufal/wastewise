@@ -1,0 +1,193 @@
+import logging
+import time
+import uuid
+from contextlib import asynccontextmanager
+
+import jwt
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from sqlalchemy import text
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from app.auth import router as auth_router
+from app.config import settings
+from app.db import engine
+from app.inference import predictor
+from app.reports import ok
+from app.reports import router as reports_router
+from app.responses import Envelope, ErrorEnvelope, LiveRead, ReadyRead
+from app.storage import storage
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+logger = logging.getLogger("wastewise")
+logging.getLogger("uvicorn.access").disabled = True
+
+
+@asynccontextmanager
+async def lifespan(app):
+    predictor.load()
+    yield
+
+
+app = FastAPI(
+    title="WasteWise API",
+    version="1.0.0",
+    description="Private waste reports and 12-category image classification. Confidence is a model estimate, not a safety guarantee.",
+    lifespan=lifespan,
+    responses={
+        code: {"model": ErrorEnvelope}
+        for code in (400, 401, 403, 404, 409, 413, 415, 422, 429, 500, 503)
+    },
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins.split(","),
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    expose_headers=["X-Request-ID"],
+)
+
+
+@app.middleware("http")
+async def request_context(request: Request, call_next):
+    request.state.request_id = str(uuid.uuid4())
+    start = time.monotonic()
+    # Bound the entire multipart request before parsing; do not trust Content-Length.
+    maximum = 6 * 1024 * 1024
+    size = 0
+    receive = request._receive
+
+    async def bounded_receive():
+        nonlocal size
+        message = await receive()
+        size += len(message.get("body", b""))
+        if size > maximum:
+            raise HTTPException(413, "Permintaan terlalu besar")
+        return message
+
+    request._receive = bounded_receive
+    response = await call_next(request)
+    response.headers.update(
+        {
+            "X-Request-ID": request.state.request_id,
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+            "Cache-Control": "no-store",
+        }
+    )
+    if request.url.path not in {"/docs", "/redoc"}:
+        response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+    route = request.scope.get("route")
+    logger.info(
+        "request id=%s method=%s route=%s status=%s ms=%.1f",
+        request.state.request_id,
+        request.method,
+        route.path if route else "unmatched",
+        response.status_code,
+        (time.monotonic() - start) * 1000,
+    )
+    return response
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_error(request, exc):
+    return JSONResponse(
+        {"success": False, "message": str(exc.detail), "data": None},
+        status_code=exc.status_code,
+        headers=exc.headers,
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(request, exc):
+    return JSONResponse(
+        {
+            "success": False,
+            "message": "Data tidak valid",
+            "data": {
+                "errors": [
+                    {"field": ".".join(map(str, error["loc"])), "message": error["msg"]}
+                    for error in exc.errors()
+                ]
+            },
+        },
+        status_code=422,
+    )
+
+
+@app.exception_handler(Exception)
+async def unexpected_error(request, exc):
+    logger.error(
+        "unhandled_error id=%s type=%s",
+        getattr(request.state, "request_id", "unknown"),
+        type(exc).__name__,
+    )
+    return JSONResponse(
+        {"success": False, "message": "Terjadi gangguan server", "data": None}, status_code=500
+    )
+
+
+@app.get("/health/live", tags=["Health"], response_model=Envelope[LiveRead])
+def live():
+    return ok({"status": "alive"})
+
+
+@app.get(
+    "/health/ready",
+    tags=["Health"],
+    response_model=Envelope[ReadyRead],
+    responses={503: {"model": Envelope[ReadyRead]}},
+)
+def ready():
+    database, images = "ready", "ready"
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1 FROM app_private.users LIMIT 1"))
+    except Exception:
+        database = "unavailable"
+    try:
+        storage.ready()
+    except Exception:
+        images = "unavailable"
+    healthy = database == images == "ready"
+    model = "ready" if predictor.net is not None else "unavailable"
+    return JSONResponse(
+        ok(
+            {
+                "status": ("ready" if model == "ready" else "degraded")
+                if healthy
+                else "unavailable",
+                "database": database,
+                "storage": images,
+                "model": model,
+            }
+        ),
+        status_code=200 if healthy else 503,
+    )
+
+
+@app.get("/api/v1/media/{token}", include_in_schema=False)
+def media(token: str):
+    if not storage.local:
+        raise HTTPException(404)
+    try:
+        payload = jwt.decode(
+            token,
+            settings.jwt_secret.get_secret_value(),
+            algorithms=["HS256"],
+            audience="wastewise-media",
+            options={"require": ["exp", "key"]},
+        )
+        path = storage.path(payload["key"])
+        if not path.is_file():
+            raise HTTPException(404, "Foto tidak ditemukan")
+        return FileResponse(path, media_type="image/jpeg")
+    except (jwt.InvalidTokenError, ValueError, KeyError) as exc:
+        raise HTTPException(403, "Tautan foto tidak valid atau kedaluwarsa") from exc
+
+
+app.include_router(auth_router)
+app.include_router(reports_router)

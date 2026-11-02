@@ -1,0 +1,7 @@
+node_modules
+dist
+.venv
+.local
+garbage_classification
+package-lock.json
+docs/openapi.json

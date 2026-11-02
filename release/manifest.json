@@ -1,0 +1,10 @@
+{
+  "wastewise-dataset-local.zip": {
+    "bytes": 250998643,
+    "sha256": "fb1c91a91ccb4ffbd73227098ec201c6f11c83fa1d7351fd730808a325dd2ef0"
+  },
+  "wastewise-source-model-docs.zip": {
+    "bytes": 11784675,
+    "sha256": "81bdf9b4d43caf73341ccf47a9d4ce74c39a9df82e4dfe5b544b34f642a20fd6"
+  }
+}

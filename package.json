@@ -1,0 +1,11 @@
+{
+  "name": "wastewise",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:web": "npm --prefix web run dev",
+    "dev:mobile": "npm --prefix mobile start",
+    "build": "npm --prefix web run build",
+    "check": "npm --prefix web run check && npm --prefix mobile run typecheck"
+  }
+}

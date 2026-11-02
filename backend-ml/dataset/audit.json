@@ -1,0 +1,816 @@
+{
+  "seed": 42,
+  "source": "https://www.kaggle.com/datasets/mostafaabla/garbage-classification",
+  "source_root": "garbage_classification",
+  "grouping": "pHash Hamming <= 4, transitive components; conflicting-label groups excluded; exact SHA duplicates removed",
+  "original_count": 15515,
+  "invalid": [],
+  "excluded_conflicts": [
+    {
+      "path": "battery/battery125.jpg",
+      "category": "battery",
+      "sha256": "6efd5363a6474b1f96fdb6fa0f9071dd27363d11b6ef8974b80b5bd91409f739",
+      "phash": "b3cccc3399338ccc",
+      "width": 225,
+      "height": 225,
+      "group": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15"
+    },
+    {
+      "path": "brown-glass/brown-glass440.jpg",
+      "category": "brown-glass",
+      "sha256": "82c99413c842c39741394c189bfaa08e3854a678f6776649ec4f5129e519c67a",
+      "phash": "b3ce9c19cc31cc33",
+      "width": 224,
+      "height": 224,
+      "group": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15"
+    },
+    {
+      "path": "brown-glass/brown-glass597.jpg",
+      "category": "brown-glass",
+      "sha256": "ce026a2006b5fa52af334ca4be1f343e1e8a7069ffdc5e8e1f0506f28c737b4a",
+      "phash": "b3cdcc33cc338c23",
+      "width": 259,
+      "height": 194,
+      "group": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15"
+    },
+    {
+      "path": "green-glass/green-glass541.jpg",
+      "category": "green-glass",
+      "sha256": "748db142f0fa4b79af2d5580f55106c62cc08fa41533f5c81d853718b183f776",
+      "phash": "b3cccc338c33cc33",
+      "width": 275,
+      "height": 183,
+      "group": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15"
+    },
+    {
+      "path": "green-glass/green-glass558.jpg",
+      "category": "green-glass",
+      "sha256": "2a5f94666d9c8dcd8d2e61d4c175222e32c07171b06823a56ac5497e625cf42e",
+      "phash": "b3cecc31cc31cc33",
+      "width": 225,
+      "height": 225,
+      "group": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15"
+    },
+    {
+      "path": "trash/trash360.jpg",
+      "category": "trash",
+      "sha256": "8b5ea87ea76e662f0ced963db20bcc54d2dd90ac0b334a84e0b5698f4bf88aea",
+      "phash": "b3cccc663133cccc",
+      "width": 225,
+      "height": 225,
+      "group": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15"
+    },
+    {
+      "path": "trash/trash465.jpg",
+      "category": "trash",
+      "sha256": "7dcb84f08d21da146819faece07171887af7b68503119ba8316a1c2f9b69e473",
+      "phash": "b3cccc33cc33cc26",
+      "width": 225,
+      "height": 225,
+      "group": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15"
+    },
+    {
+      "path": "trash/trash468.jpg",
+      "category": "trash",
+      "sha256": "4a7407dc1372eda2ba380554c552d65eb3757bc26ce1764145aacb16b4ce8728",
+      "phash": "b3cccc669933cc8c",
+      "width": 225,
+      "height": 225,
+      "group": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15"
+    },
+    {
+      "path": "trash/trash502.jpg",
+      "category": "trash",
+      "sha256": "511ba0cf121f82d215a04f19e3948a6b29ed4bf342e15eb87a42c98ccacd629c",
+      "phash": "b3cccc33cc23cc66",
+      "width": 225,
+      "height": 225,
+      "group": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15"
+    },
+    {
+      "path": "trash/trash526.jpg",
+      "category": "trash",
+      "sha256": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15",
+      "phash": "b3cccc33cc339923",
+      "width": 225,
+      "height": 225,
+      "group": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15"
+    },
+    {
+      "path": "trash/trash533.jpg",
+      "category": "trash",
+      "sha256": "74ce0d9dc9cf5d07c753c88542511ea33b03975c0907082685666053f2e726e0",
+      "phash": "b3cccc339933cc26",
+      "width": 357,
+      "height": 141,
+      "group": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15"
+    },
+    {
+      "path": "trash/trash593.jpg",
+      "category": "trash",
+      "sha256": "d0a0f110cdd6b36af5af3b9c805ac7bc4795a674ad792118b0c6ad7488c6628f",
+      "phash": "b3cccc339933cc8c",
+      "width": 195,
+      "height": 259,
+      "group": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15"
+    },
+    {
+      "path": "white-glass/white-glass433.jpg",
+      "category": "white-glass",
+      "sha256": "b219045985cacee00a5346daa834562fb0267c1ce46dbd97ebfb85497f6c814a",
+      "phash": "b3cecc31cc33ce22",
+      "width": 194,
+      "height": 259,
+      "group": "1f51dc0d0f4e95ca4ebfc055c7db01d33d1d95a514c3cf908b8473aa2799de15"
+    },
+    {
+      "path": "battery/battery356.jpg",
+      "category": "battery",
+      "sha256": "ba2e560ed902df187dd1fb2424827d37cb237a70fd197560ba7ee1752dba0b22",
+      "phash": "bec09f30e60df903",
+      "width": 225,
+      "height": 225,
+      "group": "b95ccf77542225209204656dbf1dc8ac45a2e16e4378dd82a96eae4a85ba19e9"
+    },
+    {
+      "path": "trash/trash380.jpg",
+      "category": "trash",
+      "sha256": "b95ccf77542225209204656dbf1dc8ac45a2e16e4378dd82a96eae4a85ba19e9",
+      "phash": "bfc09e30e70cf903",
+      "width": 225,
+      "height": 225,
+      "group": "b95ccf77542225209204656dbf1dc8ac45a2e16e4378dd82a96eae4a85ba19e9"
+    },
+    {
+      "path": "battery/battery61.jpg",
+      "category": "battery",
+      "sha256": "9792f6042c4388dc46563602636bca41e85fb851062b91b9ccd4d21711897b12",
+      "phash": "e6998c66993399cc",
+      "width": 225,
+      "height": 225,
+      "group": "9792f6042c4388dc46563602636bca41e85fb851062b91b9ccd4d21711897b12"
+    },
+    {
+      "path": "trash/trash357.jpg",
+      "category": "trash",
+      "sha256": "99e07d7ff676c8abc7c5611dd7a601ae3b125597866c2baffc2d85ab4c532b6d",
+      "phash": "b3998c66993399cc",
+      "width": 225,
+      "height": 225,
+      "group": "9792f6042c4388dc46563602636bca41e85fb851062b91b9ccd4d21711897b12"
+    },
+    {
+      "path": "brown-glass/brown-glass103.jpg",
+      "category": "brown-glass",
+      "sha256": "40834254b081b5ed594c9e105e691b42136e2e35985a3b9e7771b5cda0788a32",
+      "phash": "e699996499669927",
+      "width": 225,
+      "height": 225,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "brown-glass/brown-glass189.jpg",
+      "category": "brown-glass",
+      "sha256": "515972f95dba6a7bb7c5116de217928802b8038dc00845ca8150651f63580c42",
+      "phash": "e699996699669926",
+      "width": 225,
+      "height": 225,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "brown-glass/brown-glass94.jpg",
+      "category": "brown-glass",
+      "sha256": "149b00308cc32ecbf1bd5df0494f6c3d43116e6331d5a84f99ec97f7e051d6c2",
+      "phash": "e698996599669b26",
+      "width": 225,
+      "height": 225,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "green-glass/green-glass296.jpg",
+      "category": "green-glass",
+      "sha256": "71b1b573759de9457372a969eb5766213d4ea59fe29ade1028ad0aa717cd4c1e",
+      "phash": "e699997199649966",
+      "width": 225,
+      "height": 225,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "green-glass/green-glass474.jpg",
+      "category": "green-glass",
+      "sha256": "3237cf5f5fed57fcb7603154c673806a3e8638bc4860718941fd9f671c5450af",
+      "phash": "e699996699669932",
+      "width": 212,
+      "height": 238,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "green-glass/green-glass480.jpg",
+      "category": "green-glass",
+      "sha256": "5751e1a86ab033b56d830eeece75890cbfdf065502342ba64ea213726500f225",
+      "phash": "e6999964c9329b66",
+      "width": 238,
+      "height": 212,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "green-glass/green-glass483.jpg",
+      "category": "green-glass",
+      "sha256": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa",
+      "phash": "e699196599669966",
+      "width": 225,
+      "height": 225,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "trash/trash370.jpg",
+      "category": "trash",
+      "sha256": "1b0faf18e5377016a3a4354f6492a44d94f3278fd3ccf95f7264435290c45fcf",
+      "phash": "e699996699669926",
+      "width": 225,
+      "height": 225,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "trash/trash409.jpg",
+      "category": "trash",
+      "sha256": "eddda9f6b609ec2a3487bd98f421584e37678440569d493ea1d667df7fbd30b1",
+      "phash": "e699996699669932",
+      "width": 225,
+      "height": 225,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "trash/trash413.jpg",
+      "category": "trash",
+      "sha256": "a9ca5f1b6e79bf91e7305d73f353d9ccd3579bca287bf7bd6ae3d73d1dbc7f08",
+      "phash": "e699996699269966",
+      "width": 225,
+      "height": 225,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "trash/trash437.jpg",
+      "category": "trash",
+      "sha256": "20638d52363b57276f556b38a73e00a8b5e61f5c27d27221b3a2ce32730942b5",
+      "phash": "e699996699329966",
+      "width": 225,
+      "height": 225,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "trash/trash463.jpg",
+      "category": "trash",
+      "sha256": "abbef462e3407f7b4a180b70646e0dcb5d83ea164a4ef1de5a14361892e479ed",
+      "phash": "e699996689669966",
+      "width": 225,
+      "height": 225,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "trash/trash631.jpg",
+      "category": "trash",
+      "sha256": "a7c0eb3d74db1867bc3df47cfd3162d0086de9abb8a89f31f3b2490d46699985",
+      "phash": "e699992699669933",
+      "width": 265,
+      "height": 190,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "trash/trash652.jpg",
+      "category": "trash",
+      "sha256": "b3edf23ea6c47e92e413bdfed0c745a6a0d22b88249b3e0f0675714dd4046d5c",
+      "phash": "e699996699269966",
+      "width": 265,
+      "height": 190,
+      "group": "09a4bb10600969a2b1d666efdab101ab5bcb7b044079820cb552ada52c8a7ffa"
+    },
+    {
+      "path": "brown-glass/brown-glass373.jpg",
+      "category": "brown-glass",
+      "sha256": "24b68ff182218daa8d969aedabe04121021b40decfcf8350d61f06ead7b4ce7e",
+      "phash": "99a376c7ea4c44e2",
+      "width": 259,
+      "height": 194,
+      "group": "24b68ff182218daa8d969aedabe04121021b40decfcf8350d61f06ead7b4ce7e"
+    },
+    {
+      "path": "green-glass/green-glass606.jpg",
+      "category": "green-glass",
+      "sha256": "712fa83c1cd1c98c6b48b45d358970293de063f7f079753f73dd67d2abef00db",
+      "phash": "99a376c7ea4c44e2",
+      "width": 259,
+      "height": 194,
+      "group": "24b68ff182218daa8d969aedabe04121021b40decfcf8350d61f06ead7b4ce7e"
+    },
+    {
+      "path": "brown-glass/brown-glass376.jpg",
+      "category": "brown-glass",
+      "sha256": "56ca331ea24c539b4290d4e26be05cf0c680d9e8303a403db0d86b1d1f4793d0",
+      "phash": "e596929919999d99",
+      "width": 178,
+      "height": 284,
+      "group": "56ca331ea24c539b4290d4e26be05cf0c680d9e8303a403db0d86b1d1f4793d0"
+    },
+    {
+      "path": "white-glass/white-glass424.jpg",
+      "category": "white-glass",
+      "sha256": "96859f9b317b276b8810390fbee1678fa232b1aacd215066e30446412105f38e",
+      "phash": "e596869929999d99",
+      "width": 183,
+      "height": 275,
+      "group": "56ca331ea24c539b4290d4e26be05cf0c680d9e8303a403db0d86b1d1f4793d0"
+    },
+    {
+      "path": "brown-glass/brown-glass449.jpg",
+      "category": "brown-glass",
+      "sha256": "37683a97f08d48c7b4737aee5a737b7cc9175456370e0b75b117c0bad6562f04",
+      "phash": "b3cbcc6ccc2ccc32",
+      "width": 225,
+      "height": 225,
+      "group": "37683a97f08d48c7b4737aee5a737b7cc9175456370e0b75b117c0bad6562f04"
+    },
+    {
+      "path": "green-glass/green-glass454.jpg",
+      "category": "green-glass",
+      "sha256": "f460fad61bf82877cd4f7cfbecfb412813ffb93a83d6a654eb3441548b1e3af9",
+      "phash": "b3cb0c6cce3ccc32",
+      "width": 194,
+      "height": 259,
+      "group": "37683a97f08d48c7b4737aee5a737b7cc9175456370e0b75b117c0bad6562f04"
+    },
+    {
+      "path": "brown-glass/brown-glass98.jpg",
+      "category": "brown-glass",
+      "sha256": "dd29ab9b380ad881be49123dd8e82d2fa4ca75643c4e5cd652e66a641cd4c3df",
+      "phash": "b399cc64cc26cd33",
+      "width": 225,
+      "height": 225,
+      "group": "62e736e59a94fbf85e0a83cbee8e1a4c932fd00c7c03f737540f0493b832285e"
+    },
+    {
+      "path": "metal/metal539.jpg",
+      "category": "metal",
+      "sha256": "9b801b6eb4d59fd21f3a2d37fdb69a9de4e9ab962eba6d930db62b1c1fd3c8b8",
+      "phash": "b399cccccc26cc33",
+      "width": 225,
+      "height": 225,
+      "group": "62e736e59a94fbf85e0a83cbee8e1a4c932fd00c7c03f737540f0493b832285e"
+    },
+    {
+      "path": "metal/metal718.jpg",
+      "category": "metal",
+      "sha256": "62e736e59a94fbf85e0a83cbee8e1a4c932fd00c7c03f737540f0493b832285e",
+      "phash": "f399cc4c8c66cc33",
+      "width": 275,
+      "height": 183,
+      "group": "62e736e59a94fbf85e0a83cbee8e1a4c932fd00c7c03f737540f0493b832285e"
+    },
+    {
+      "path": "cardboard/cardboard464.jpg",
+      "category": "cardboard",
+      "sha256": "775225dacc84a7985c498dd35c260fa99036186c945cdf8189f8b6b4ce325d03",
+      "phash": "b3266626cc99d999",
+      "width": 225,
+      "height": 225,
+      "group": "775225dacc84a7985c498dd35c260fa99036186c945cdf8189f8b6b4ce325d03"
+    },
+    {
+      "path": "trash/trash500.jpg",
+      "category": "trash",
+      "sha256": "be06cd836075f9a2114635577f7b48784df822e98742d98aaeb95cc30433f418",
+      "phash": "b36666668c999999",
+      "width": 200,
+      "height": 252,
+      "group": "775225dacc84a7985c498dd35c260fa99036186c945cdf8189f8b6b4ce325d03"
+    },
+    {
+      "path": "trash/trash564.jpg",
+      "category": "trash",
+      "sha256": "a8847fe02975331c04d66cd558b884e5228c7946c329d753df92fe21006d635c",
+      "phash": "b3666626cc999999",
+      "width": 225,
+      "height": 225,
+      "group": "775225dacc84a7985c498dd35c260fa99036186c945cdf8189f8b6b4ce325d03"
+    },
+    {
+      "path": "green-glass/green-glass408.jpg",
+      "category": "green-glass",
+      "sha256": "8c30c1f69e867c5dd8126ceb124ac30acc9fbc524dc75974631060588dc5a619",
+      "phash": "e69b99cc99669924",
+      "width": 225,
+      "height": 225,
+      "group": "8c30c1f69e867c5dd8126ceb124ac30acc9fbc524dc75974631060588dc5a619"
+    },
+    {
+      "path": "trash/trash498.jpg",
+      "category": "trash",
+      "sha256": "c923184fcccba0e4194cb815b93d55a5173fe0b363d5b771a11d0e40aeb13a58",
+      "phash": "e69999cc9966994c",
+      "width": 225,
+      "height": 224,
+      "group": "8c30c1f69e867c5dd8126ceb124ac30acc9fbc524dc75974631060588dc5a619"
+    },
+    {
+      "path": "green-glass/green-glass481.jpg",
+      "category": "green-glass",
+      "sha256": "abaecba271086b7d04cbf28eb7ad2eb68be6851410bd2fffbfe8d80f01b07dff",
+      "phash": "b3cccc32cc9933cc",
+      "width": 187,
+      "height": 269,
+      "group": "abaecba271086b7d04cbf28eb7ad2eb68be6851410bd2fffbfe8d80f01b07dff"
+    },
+    {
+      "path": "plastic/plastic714.jpg",
+      "category": "plastic",
+      "sha256": "b8063ce8d065b45896d26ba1496abcac38195217957692eb83be265c3725ce95",
+      "phash": "b3cccc33cc9c31cc",
+      "width": 259,
+      "height": 194,
+      "group": "abaecba271086b7d04cbf28eb7ad2eb68be6851410bd2fffbfe8d80f01b07dff"
+    },
+    {
+      "path": "trash/trash521.jpg",
+      "category": "trash",
+      "sha256": "ed617c677e930ef654d2c7821d24f788e5b1b7188f30aba81cf8dda56feac8a2",
+      "phash": "b3cccc338ccc33cc",
+      "width": 225,
+      "height": 225,
+      "group": "abaecba271086b7d04cbf28eb7ad2eb68be6851410bd2fffbfe8d80f01b07dff"
+    },
+    {
+      "path": "metal/metal459.jpg",
+      "category": "metal",
+      "sha256": "81546d1362d75fc60718e5852593c58f66f813e8c1e9d1eae6871fedb02e2868",
+      "phash": "f363092c67333b89",
+      "width": 512,
+      "height": 384,
+      "group": "81546d1362d75fc60718e5852593c58f66f813e8c1e9d1eae6871fedb02e2868"
+    },
+    {
+      "path": "white-glass/white-glass412.jpg",
+      "category": "white-glass",
+      "sha256": "81546d1362d75fc60718e5852593c58f66f813e8c1e9d1eae6871fedb02e2868",
+      "phash": "f363092c67333b89",
+      "width": 512,
+      "height": 384,
+      "group": "81546d1362d75fc60718e5852593c58f66f813e8c1e9d1eae6871fedb02e2868"
+    },
+    {
+      "path": "metal/metal81.jpg",
+      "category": "metal",
+      "sha256": "1bc190a99efaeaeb043af606f8597b42bb2c0563b94ac9a19f13fadd40eb27b6",
+      "phash": "e63199ce66399866",
+      "width": 512,
+      "height": 384,
+      "group": "1bc190a99efaeaeb043af606f8597b42bb2c0563b94ac9a19f13fadd40eb27b6"
+    },
+    {
+      "path": "plastic/plastic250.jpg",
+      "category": "plastic",
+      "sha256": "506370e2423c2b1f319eab858cabb55417b813900286171480c871d619dbd25b",
+      "phash": "e63199ce663199c6",
+      "width": 512,
+      "height": 384,
+      "group": "1bc190a99efaeaeb043af606f8597b42bb2c0563b94ac9a19f13fadd40eb27b6"
+    },
+    {
+      "path": "metal/metal86.jpg",
+      "category": "metal",
+      "sha256": "2db6e692e6f70e497acd068167546bb14ee4b3e423e8c80deb5a35a7215c2453",
+      "phash": "e66699996666c919",
+      "width": 512,
+      "height": 384,
+      "group": "2db6e692e6f70e497acd068167546bb14ee4b3e423e8c80deb5a35a7215c2453"
+    },
+    {
+      "path": "plastic/plastic398.jpg",
+      "category": "plastic",
+      "sha256": "b086f7eb43ec7d3b990c5e1a4250ac23472c4b79b093fb5d33b3bcac75ea072e",
+      "phash": "e666999966668999",
+      "width": 512,
+      "height": 384,
+      "group": "2db6e692e6f70e497acd068167546bb14ee4b3e423e8c80deb5a35a7215c2453"
+    },
+    {
+      "path": "plastic/plastic698.jpg",
+      "category": "plastic",
+      "sha256": "a3efece98d053c208ec7b46073e47fd2d52aaeed99c2200b21b6e7df625ac960",
+      "phash": "e666998966669999",
+      "width": 267,
+      "height": 189,
+      "group": "2db6e692e6f70e497acd068167546bb14ee4b3e423e8c80deb5a35a7215c2453"
+    },
+    {
+      "path": "plastic/plastic159.jpg",
+      "category": "plastic",
+      "sha256": "e971f4f8f50e960e454ea724cec922fc2988bbf4027aa48b553e139bb5890968",
+      "phash": "ea4e91b5873292b6",
+      "width": 512,
+      "height": 384,
+      "group": "e971f4f8f50e960e454ea724cec922fc2988bbf4027aa48b553e139bb5890968"
+    },
+    {
+      "path": "white-glass/white-glass129.jpg",
+      "category": "white-glass",
+      "sha256": "e971f4f8f50e960e454ea724cec922fc2988bbf4027aa48b553e139bb5890968",
+      "phash": "ea4e91b5873292b6",
+      "width": 512,
+      "height": 384,
+      "group": "e971f4f8f50e960e454ea724cec922fc2988bbf4027aa48b553e139bb5890968"
+    },
+    {
+      "path": "plastic/plastic555.jpg",
+      "category": "plastic",
+      "sha256": "ee6421c3fae8647b3127b353ddc361711b3e64d3842faa8633fd1e237bc3622a",
+      "phash": "e69b996699992626",
+      "width": 190,
+      "height": 266,
+      "group": "c5065d1f52dc8ae200ab009ff8e2f83b644f0d9322b5257c3c1488b7c13fbe91"
+    },
+    {
+      "path": "white-glass/white-glass29.jpg",
+      "category": "white-glass",
+      "sha256": "c5065d1f52dc8ae200ab009ff8e2f83b644f0d9322b5257c3c1488b7c13fbe91",
+      "phash": "e6db996498996626",
+      "width": 512,
+      "height": 384,
+      "group": "c5065d1f52dc8ae200ab009ff8e2f83b644f0d9322b5257c3c1488b7c13fbe91"
+    },
+    {
+      "path": "plastic/plastic556.jpg",
+      "category": "plastic",
+      "sha256": "c41b99aec8a3257c8668a2144ebbaf8042018f0a85d88e22bf4e413b43693dd8",
+      "phash": "95e5f8aa074b264d",
+      "width": 512,
+      "height": 384,
+      "group": "c41b99aec8a3257c8668a2144ebbaf8042018f0a85d88e22bf4e413b43693dd8"
+    },
+    {
+      "path": "white-glass/white-glass761.jpg",
+      "category": "white-glass",
+      "sha256": "c41b99aec8a3257c8668a2144ebbaf8042018f0a85d88e22bf4e413b43693dd8",
+      "phash": "95e5f8aa074b264d",
+      "width": 512,
+      "height": 384,
+      "group": "c41b99aec8a3257c8668a2144ebbaf8042018f0a85d88e22bf4e413b43693dd8"
+    },
+    {
+      "path": "plastic/plastic735.jpg",
+      "category": "plastic",
+      "sha256": "e9717c83d30cd53c5ebaecf05f55c88a0336e744b843d7c25440f04e4bc5bf90",
+      "phash": "b233c3cccccccccc",
+      "width": 183,
+      "height": 275,
+      "group": "60c9730147c996d78c5c4ff2c2d5a713422f9e8946d50d5c073a2502acbece16"
+    },
+    {
+      "path": "white-glass/white-glass317.jpg",
+      "category": "white-glass",
+      "sha256": "7cd65fefc335c0a145304ab467e5a339fbdcdf63d6748e7ea8296e1c37a7cade",
+      "phash": "b33333cccccccc8c",
+      "width": 225,
+      "height": 225,
+      "group": "60c9730147c996d78c5c4ff2c2d5a713422f9e8946d50d5c073a2502acbece16"
+    },
+    {
+      "path": "white-glass/white-glass452.jpg",
+      "category": "white-glass",
+      "sha256": "60c9730147c996d78c5c4ff2c2d5a713422f9e8946d50d5c073a2502acbece16",
+      "phash": "b23333cccccccccc",
+      "width": 225,
+      "height": 225,
+      "group": "60c9730147c996d78c5c4ff2c2d5a713422f9e8946d50d5c073a2502acbece16"
+    },
+    {
+      "path": "trash/trash368.jpg",
+      "category": "trash",
+      "sha256": "0f2a5ab0933a175196f3af0b48fee4f4ef2268e99e0e283f25a51734e4b61cf2",
+      "phash": "b3333333338ccccc",
+      "width": 225,
+      "height": 225,
+      "group": "0f2a5ab0933a175196f3af0b48fee4f4ef2268e99e0e283f25a51734e4b61cf2"
+    },
+    {
+      "path": "white-glass/white-glass408.jpg",
+      "category": "white-glass",
+      "sha256": "23b8e4591693047e4bc3d589b3b32fd5a2a20ba4347acf69d59395e060e0b988",
+      "phash": "b33363333398cccc",
+      "width": 225,
+      "height": 225,
+      "group": "0f2a5ab0933a175196f3af0b48fee4f4ef2268e99e0e283f25a51734e4b61cf2"
+    },
+    {
+      "path": "trash/trash448.jpg",
+      "category": "trash",
+      "sha256": "28e38d1741e6779d3c6a9009818216ff7255c272837ddde95d62fc0358fcc183",
+      "phash": "b3cccc3333338c33",
+      "width": 225,
+      "height": 225,
+      "group": "28e38d1741e6779d3c6a9009818216ff7255c272837ddde95d62fc0358fcc183"
+    },
+    {
+      "path": "white-glass/white-glass223.jpg",
+      "category": "white-glass",
+      "sha256": "5eb78e6c8b7ff92b3a89337598fcaf0ed9392e7af6cfaa86257a144de9c6115e",
+      "phash": "b3cccc333334cc33",
+      "width": 197,
+      "height": 256,
+      "group": "28e38d1741e6779d3c6a9009818216ff7255c272837ddde95d62fc0358fcc183"
+    }
+  ],
+  "excluded_exact_duplicates": [
+    {
+      "path": "clothes/clothes5234.jpg",
+      "category": "clothes",
+      "sha256": "3ba6968afff8fc059b69a0dbb03ae11fc7cf43a4fa604d2254b0ede373c5f77a",
+      "phash": "b99b53b10b52f4a1",
+      "width": 400,
+      "height": 533,
+      "group": "3ba6968afff8fc059b69a0dbb03ae11fc7cf43a4fa604d2254b0ede373c5f77a"
+    },
+    {
+      "path": "green-glass/green-glass443.jpg",
+      "category": "green-glass",
+      "sha256": "83b9ef0088af4acfab7b963bef31466c06fd97fc113da36672f2f730a2c56698",
+      "phash": "dd80827ea87ec72a",
+      "width": 275,
+      "height": 183,
+      "group": "7526f86bb3da57b34de1cdc8ad8301c66bc5f898c01013550c30c631137d1809"
+    },
+    {
+      "path": "green-glass/green-glass530.jpg",
+      "category": "green-glass",
+      "sha256": "6459b86829072594aea6d5f89946a5deb2b8302cf810dfd8fe2e05091f66a79d",
+      "phash": "e1139e239e79866c",
+      "width": 259,
+      "height": 194,
+      "group": "6459b86829072594aea6d5f89946a5deb2b8302cf810dfd8fe2e05091f66a79d"
+    },
+    {
+      "path": "green-glass/green-glass555.jpg",
+      "category": "green-glass",
+      "sha256": "0d6aa0fb5d7b506d9e032c548a0a5038744754746fb3cf9d2d8decef38d521f0",
+      "phash": "e69a9b69658c86c9",
+      "width": 225,
+      "height": 225,
+      "group": "0d6aa0fb5d7b506d9e032c548a0a5038744754746fb3cf9d2d8decef38d521f0"
+    },
+    {
+      "path": "green-glass/green-glass554.jpg",
+      "category": "green-glass",
+      "sha256": "2fac090c28407dcf657fab4a3443fde433060ba699b75e74294d79b7fe29f290",
+      "phash": "f88d97669170867a",
+      "width": 180,
+      "height": 280,
+      "group": "2fac090c28407dcf657fab4a3443fde433060ba699b75e74294d79b7fe29f290"
+    },
+    {
+      "path": "green-glass/green-glass461.jpg",
+      "category": "green-glass",
+      "sha256": "8a618bfec987fe51b0dbec4a4cd84255314953b8a5641e2475b81a2fed5ca111",
+      "phash": "e6939668996699a6",
+      "width": 225,
+      "height": 225,
+      "group": "8a618bfec987fe51b0dbec4a4cd84255314953b8a5641e2475b81a2fed5ca111"
+    },
+    {
+      "path": "green-glass/green-glass459.jpg",
+      "category": "green-glass",
+      "sha256": "3fc22a23ecac1de0fc12c487650571327f7adb3aaffb6fb7884d8889e11124d1",
+      "phash": "bcd3c32cd394c3b0",
+      "width": 275,
+      "height": 183,
+      "group": "3fc22a23ecac1de0fc12c487650571327f7adb3aaffb6fb7884d8889e11124d1"
+    },
+    {
+      "path": "green-glass/green-glass564.jpg",
+      "category": "green-glass",
+      "sha256": "17e65561542286d6b6d915bd65054a972bfee7a7b8e76e6d762a97ed0f73efbd",
+      "phash": "f887c31e89699578",
+      "width": 149,
+      "height": 339,
+      "group": "17e65561542286d6b6d915bd65054a972bfee7a7b8e76e6d762a97ed0f73efbd"
+    },
+    {
+      "path": "green-glass/green-glass517.jpg",
+      "category": "green-glass",
+      "sha256": "709b013b4857bf75debff4248cc5deab8924e11e563c6471b71057a3bac64acd",
+      "phash": "e69b9b649924cc66",
+      "width": 225,
+      "height": 225,
+      "group": "709b013b4857bf75debff4248cc5deab8924e11e563c6471b71057a3bac64acd"
+    },
+    {
+      "path": "green-glass/green-glass563.jpg",
+      "category": "green-glass",
+      "sha256": "709b013b4857bf75debff4248cc5deab8924e11e563c6471b71057a3bac64acd",
+      "phash": "e69b9b649924cc66",
+      "width": 225,
+      "height": 225,
+      "group": "709b013b4857bf75debff4248cc5deab8924e11e563c6471b71057a3bac64acd"
+    },
+    {
+      "path": "green-glass/green-glass482.jpg",
+      "category": "green-glass",
+      "sha256": "da2a0c005bc07f15a27c5940a9b5f9658fdaa7b4f79a47e7446955e3efe45b93",
+      "phash": "f59a92939ada4c19",
+      "width": 259,
+      "height": 194,
+      "group": "da2a0c005bc07f15a27c5940a9b5f9658fdaa7b4f79a47e7446955e3efe45b93"
+    },
+    {
+      "path": "green-glass/green-glass561.jpg",
+      "category": "green-glass",
+      "sha256": "42d4f169ff5d7f045f45a561bb61de342ad80218236f7a6fa98e9f14f0e154a1",
+      "phash": "f897c7089e689c69",
+      "width": 171,
+      "height": 294,
+      "group": "42d4f169ff5d7f045f45a561bb61de342ad80218236f7a6fa98e9f14f0e154a1"
+    },
+    {
+      "path": "green-glass/green-glass565.jpg",
+      "category": "green-glass",
+      "sha256": "3b83999c47c07b0f4647a552b6ac82c344670afbcf695544e4189dcf1f3f6f43",
+      "phash": "edf1c68ed20ed029",
+      "width": 243,
+      "height": 208,
+      "group": "3b83999c47c07b0f4647a552b6ac82c344670afbcf695544e4189dcf1f3f6f43"
+    },
+    {
+      "path": "green-glass/green-glass544.jpg",
+      "category": "green-glass",
+      "sha256": "4866996c89523ccabe83e966063d08b27d1b82698ab2250377652a1c4af3daee",
+      "phash": "ec9191469666936f",
+      "width": 201,
+      "height": 250,
+      "group": "4866996c89523ccabe83e966063d08b27d1b82698ab2250377652a1c4af3daee"
+    },
+    {
+      "path": "green-glass/green-glass492.jpg",
+      "category": "green-glass",
+      "sha256": "28df9278c6345536ecdd34f88c48768c0ba04843e3a1aa95476aed81dd5e22aa",
+      "phash": "eea4b4921bcbc94c",
+      "width": 118,
+      "height": 400,
+      "group": "28df9278c6345536ecdd34f88c48768c0ba04843e3a1aa95476aed81dd5e22aa"
+    },
+    {
+      "path": "green-glass/green-glass592.jpg",
+      "category": "green-glass",
+      "sha256": "9c5fd3711ea84dd0c49c3ba2587943d7279197747df75cda950018756156e097",
+      "phash": "e5989e269a639a65",
+      "width": 225,
+      "height": 225,
+      "group": "9c5fd3711ea84dd0c49c3ba2587943d7279197747df75cda950018756156e097"
+    }
+  ],
+  "counts": {
+    "train": {
+      "battery": 659,
+      "biological": 689,
+      "brown-glass": 418,
+      "cardboard": 622,
+      "clothes": 3726,
+      "green-glass": 422,
+      "metal": 534,
+      "paper": 734,
+      "plastic": 599,
+      "shoes": 1383,
+      "trash": 472,
+      "white-glass": 535
+    },
+    "val": {
+      "battery": 142,
+      "biological": 148,
+      "brown-glass": 90,
+      "cardboard": 134,
+      "clothes": 799,
+      "green-glass": 91,
+      "metal": 115,
+      "paper": 158,
+      "plastic": 129,
+      "shoes": 297,
+      "trash": 102,
+      "white-glass": 115
+    },
+    "test": {
+      "battery": 141,
+      "biological": 148,
+      "brown-glass": 90,
+      "cardboard": 134,
+      "clothes": 799,
+      "green-glass": 91,
+      "metal": 115,
+      "paper": 158,
+      "plastic": 129,
+      "shoes": 297,
+      "trash": 101,
+      "white-glass": 115
+    }
+  },
+  "train_sha256": "8976a9c98b37a2d8778a870c65188c930870a39021fd84564935c6d629966908",
+  "val_sha256": "d5681ff950614b90ac0e05ee4cdeb1be933503a26b4869f78a5e7d47043801c4",
+  "test_sha256": "b2042dc8c146c703d679f47d370787e59de3d65018d3e5950ceef8cb6b864aa7",
+  "dataset_sha256": "5a9d11cba6505a7c727a29cb9d374a5e0e7a8c26712cfdf9db448ea8d9f1cc5f"
+}

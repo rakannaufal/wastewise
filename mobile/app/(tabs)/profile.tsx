@@ -1,0 +1,46 @@
+import { Text, View } from "react-native";
+import { router } from "expo-router";
+import { useSession } from "../../src/session";
+import { Button, Screen, styles } from "../../src/ui";
+
+export default function Profile() {
+  const { user, logout } = useSession();
+  return (
+    <Screen>
+      <Text style={styles.title}>Profil akun</Text>
+      <View style={styles.panel}>
+        <Text style={styles.label}>NAMA LENGKAP</Text>
+        <Text style={styles.heading}>{user?.full_name}</Text>
+        <Text style={styles.label}>EMAIL</Text>
+        <Text style={styles.text}>{user?.email}</Text>
+        <Text style={styles.label}>PERAN</Text>
+        <Text style={styles.text}>
+          {user?.role === "admin" ? "Pengelola" : "Pelapor"}
+        </Text>
+      </View>
+      <View style={styles.action}>
+        <Text style={styles.heading}>Laporanmu bersifat privat.</Text>
+        <Text style={styles.text}>
+          Laporan dan lokasinya dapat dilihat oleh pemilik akun dan pengelola.
+          Hapus laporan melalui halaman detail bila tidak diperlukan lagi.
+        </Text>
+      </View>
+      <Button
+        secondary
+        title="Buka laporan"
+        onPress={() => router.push("/reports")}
+      />
+      <Button
+        secondary
+        title="Panduan memilah"
+        onPress={() => router.push("/guide")}
+      />
+      <Button
+        title="Keluar dari akun"
+        onPress={() => {
+          void logout();
+        }}
+      />
+    </Screen>
+  );
+}

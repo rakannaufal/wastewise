@@ -1,0 +1,4 @@
+
+> wastewise-web@1.0.0 check
+> tsc -b && eslint .
+

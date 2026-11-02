@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "WasteWise",
+    "slug": "wastewise",
+    "scheme": "wastewise",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "id.wastewise.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Ambil foto material untuk laporan WasteWise.",
+        "NSPhotoLibraryUsageDescription": "Pilih foto material untuk laporan WasteWise.",
+        "NSLocationWhenInUseUsageDescription": "Tambahkan lokasi saat ini ke laporan pilihanmu."
+      }
+    },
+    "android": {
+      "package": "id.wastewise.app",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Pilih foto material untuk WasteWise.",
+          "cameraPermission": "Ambil foto material untuk WasteWise.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-status-bar"
+    ],
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    }
+  }
+}

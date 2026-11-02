@@ -1,0 +1,14 @@
+[
+  {"id":"battery","name":"Baterai","english_name":"Battery","description":"Baterai sekali pakai dan isi ulang.","action":"Pisahkan dari sampah rumah tangga. Bawa ke titik pengumpulan baterai atau limbah B3.","family":"Penanganan khusus"},
+  {"id":"biological","name":"Organik","english_name":"Biological","description":"Sisa makanan, kulit buah, dan bahan organik.","action":"Pisahkan kemasan. Masukkan bahan organik yang sesuai ke komposter atau pengumpulan organik.","family":"Organik"},
+  {"id":"brown-glass","name":"Kaca cokelat","english_name":"Brown glass","description":"Botol dan kemasan kaca berwarna cokelat.","action":"Kosongkan dan bilas. Pisahkan menurut warna bila fasilitas setempat memintanya.","family":"Kaca"},
+  {"id":"cardboard","name":"Karton","english_name":"Cardboard","description":"Kardus dan kemasan karton.","action":"Jaga tetap kering, lepas sisa makanan, lalu lipat sebelum dikumpulkan.","family":"Kertas dan karton"},
+  {"id":"clothes","name":"Pakaian","english_name":"Clothes","description":"Pakaian dan kain rumah tangga.","action":"Pisahkan yang masih layak untuk digunakan kembali. Cari pengumpulan tekstil untuk yang rusak.","family":"Tekstil"},
+  {"id":"green-glass","name":"Kaca hijau","english_name":"Green glass","description":"Botol dan kemasan kaca berwarna hijau.","action":"Kosongkan dan bilas. Pisahkan menurut warna bila fasilitas setempat memintanya.","family":"Kaca"},
+  {"id":"metal","name":"Logam","english_name":"Metal","description":"Kaleng dan kemasan berbahan logam.","action":"Kosongkan, bilas bila perlu, dan serahkan ke pengumpulan logam. Jangan menusuk kaleng bertekanan.","family":"Daur ulang"},
+  {"id":"paper","name":"Kertas","english_name":"Paper","description":"Kertas bekas, koran, dan lembaran cetak.","action":"Jaga tetap bersih dan kering. Pisahkan kertas yang tercemar minyak atau makanan.","family":"Kertas dan karton"},
+  {"id":"plastic","name":"Plastik","english_name":"Plastic","description":"Botol, wadah, dan kemasan plastik.","action":"Kosongkan dan bersihkan. Periksa jenis plastik yang diterima pengumpulan setempat.","family":"Daur ulang"},
+  {"id":"shoes","name":"Sepatu","english_name":"Shoes","description":"Sepatu, sandal, dan alas kaki.","action":"Utamakan perbaikan atau penggunaan kembali. Serahkan yang rusak ke pengumpulan alas kaki bila tersedia.","family":"Tekstil"},
+  {"id":"trash","name":"Residu","english_name":"Trash","description":"Sampah campuran yang tidak masuk kategori lain.","action":"Periksa kembali bahan yang masih dapat dipisahkan. Buang residu sesuai layanan setempat.","family":"Residu"},
+  {"id":"white-glass","name":"Kaca bening","english_name":"White glass","description":"Botol dan kemasan kaca bening.","action":"Kosongkan dan bilas. Jangan campur kaca kemasan dengan keramik atau kaca lampu.","family":"Kaca"}
+]

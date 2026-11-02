@@ -1,0 +1,57 @@
+
+> wastewise-mobile@1.0.0 export
+> expo export --platform all
+
+Starting Metro Bundler
+
+| (node:65924) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:65924) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:65924) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+iOS Bundled 5310ms node_modules/expo-router/entry.js (1163 modules)
+Android Bundled 9067ms node_modules/expo-router/entry.js (1193 modules)
+Static rendering is enabled. Learn more: https://docs.expo.dev/router/web/static-rendering/
+λ Bundled 550ms node_modules/@expo/router-server/node/render.js (880 modules)
+Web Bundled 800ms node_modules/expo-router/entry.js (685 modules)
+
+› ios bundles (1):
+_expo/static/js/ios/entry-7bf8554b3393871f896846feb141cc84.hbc (2.7MB)
+
+› android bundles (1):
+_expo/static/js/android/entry-84ac4a8a089a5efc5d55b751081801bb.hbc (2.6MB)
+
+› web bundles (13):
+_expo/static/js/web/__common-8843d5a15065ee3ac3d133bcd1fb3e9a.js (38KB)
+_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js (3.8KB)
+_expo/static/js/web/_layout-932c5002a0850a9becf3576ba78fb6c3.js (66KB)
+_expo/static/js/web/_layout-f3413dc9618e2956652749737e875c5b.js (890B)
+_expo/static/js/web/[id]-95926e1b83551bf54b91ac858ccbb35c.js (3KB)
+_expo/static/js/web/classify-85ee305e9aee47f176d1c8c3635361ed.js (2.8KB)
+_expo/static/js/web/entry-1bb39a8c917f56a6676d4d2acf0d79c2.js (1.1MB)
+_expo/static/js/web/guide-5a33c5d09784ab2c22a10e4dc5e580cb.js (1.2KB)
+_expo/static/js/web/index-2e82571a9e58453dbfe9515c335476bf.js (2.4KB)
+_expo/static/js/web/login-ff9a7177a7f9b9c88b87220d5c9432ea.js (2.2KB)
+_expo/static/js/web/new-report-0882797170329d0972d9fe3e2714201e.js (17KB)
+_expo/static/js/web/profile-311ac18c0ac86a0a238862cd4d5e5202.js (1.5KB)
+_expo/static/js/web/reports-65d4287a633e0702089f5f94aa480383.js (3.4KB)
+
+› Static routes (15):
+/login (20KB)
+/guide (20KB)
+/ (index) (20KB)
+/profile (20KB)
+/reports (20KB)
+/_sitemap (19KB)
+/classify (20KB)
+/new-report (20KB)
+/+not-found (19KB)
+/report/[id] (20KB)
+/(tabs)/guide (20KB)
+/(tabs) (20KB)
+/(tabs)/profile (20KB)
+/(tabs)/reports (20KB)
+/(tabs)/classify (20KB)
+
+Exported: dist

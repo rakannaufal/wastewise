@@ -1,0 +1,24 @@
+{
+  "checked_at": "2026-11-02T05:40:10.183333+00:00",
+  "provider": "Supabase",
+  "checks": [
+    "live browser login, reload session and logout",
+    "real provider password login",
+    "verified profile provisioning",
+    "role metadata ignored",
+    "trained checkpoint inference",
+    "report persisted remotely",
+    "private signed image readable",
+    "other owner denied",
+    "anonymous public image denied",
+    "database role change effective",
+    "admin status change",
+    "delete and durable cleanup",
+    "deleted object absent from storage inventory",
+    "remote readiness"
+  ],
+  "email_delivery_tested": false,
+  "test_identities": "admin-created confirmed disposable identities",
+  "result": "pass",
+  "qa_cleanup": "completed"
+}

@@ -1,0 +1,57 @@
+{
+  "classes": [
+    "battery",
+    "biological",
+    "brown-glass",
+    "cardboard",
+    "clothes",
+    "green-glass",
+    "metal",
+    "paper",
+    "plastic",
+    "shoes",
+    "trash",
+    "white-glass"
+  ],
+  "class_to_idx": {
+    "battery": 0,
+    "biological": 1,
+    "brown-glass": 2,
+    "cardboard": 3,
+    "clothes": 4,
+    "green-glass": 5,
+    "metal": 6,
+    "paper": 7,
+    "plastic": 8,
+    "shoes": 9,
+    "trash": 10,
+    "white-glass": 11
+  },
+  "preprocess": {
+    "resize": 256,
+    "crop": 224,
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ]
+  },
+  "architecture": "mobilenet_v2",
+  "version": "wastewise-mobilenetv2-v1",
+  "seed": 42,
+  "dataset_sha256": "5a9d11cba6505a7c727a29cb9d374a5e0e7a8c26712cfdf9db448ea8d9f1cc5f",
+  "split_sha256": {
+    "train": "8976a9c98b37a2d8778a870c65188c930870a39021fd84564935c6d629966908",
+    "val": "d5681ff950614b90ac0e05ee4cdeb1be933503a26b4869f78a5e7d47043801c4",
+    "test": "b2042dc8c146c703d679f47d370787e59de3d65018d3e5950ceef8cb6b864aa7"
+  },
+  "torch_version": "2.15.0",
+  "best_val_macro_f1": 0.9356984190493279,
+  "training_seconds": 12.864049911499023,
+  "checkpoint_sha256": "dbc357905538c29e82f40119b58d73c4e69405a07a10840543ebda1aee09a88d"
+}

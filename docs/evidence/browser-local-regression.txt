@@ -1,0 +1,14 @@
+
+> wastewise-web@1.0.0 e2e
+> playwright test
+
+
+Running 3 tests using 1 worker
+
+(node:77663) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 e2e/admin.spec.ts:5:1 › administrator status, user roles, dialog keyboard and request failures (8.4s)
+  ✓  2 e2e/mobile-web.spec.ts:5:1 › Expo web shares real authentication, prediction and reporting (8.6s)
+  ✓  3 e2e/smoke.spec.ts:7:1 › register, classify, report, filter, guide, responsive navigation, delete (14.3s)
+
+  3 passed (47.6s)

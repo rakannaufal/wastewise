@@ -1,0 +1,19 @@
+{
+  "source": "https://www.kaggle.com/datasets/mostafaabla/garbage-classification",
+  "author": "Mostafa Abla",
+  "license": "Database: Open Database, Contents: \u00a9 Original Authors",
+  "files": {
+    "battery.jpg": "garbage_classification/battery/battery1.jpg",
+    "biological.jpg": "garbage_classification/biological/biological1.jpg",
+    "brown-glass.jpg": "garbage_classification/brown-glass/brown-glass1.jpg",
+    "cardboard.jpg": "garbage_classification/cardboard/cardboard1.jpg",
+    "clothes.jpg": "garbage_classification/clothes/clothes1.jpg",
+    "green-glass.jpg": "garbage_classification/green-glass/green-glass1.jpg",
+    "metal.jpg": "garbage_classification/metal/metal1.jpg",
+    "paper.jpg": "garbage_classification/paper/paper1.jpg",
+    "plastic.jpg": "garbage_classification/plastic/plastic1.jpg",
+    "shoes.jpg": "garbage_classification/shoes/shoes1.jpg",
+    "trash.jpg": "garbage_classification/trash/trash1.jpg",
+    "white-glass.jpg": "garbage_classification/white-glass/white-glass1.jpg"
+  }
+}

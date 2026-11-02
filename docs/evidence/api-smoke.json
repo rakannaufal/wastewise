@@ -1,0 +1,29 @@
+{
+  "/health/live": {
+    "status": 200,
+    "content_type": "application/json"
+  },
+  "/health/ready": {
+    "status": 200,
+    "content_type": "application/json"
+  },
+  "/api/v1/categories": {
+    "status": 200,
+    "content_type": "application/json"
+  },
+  "/docs": {
+    "status": 200,
+    "content_type": "text/html; charset=utf-8"
+  },
+  "/redoc": {
+    "status": 200,
+    "content_type": "text/html; charset=utf-8"
+  },
+  "/openapi.json": {
+    "status": 200,
+    "content_type": "application/json"
+  },
+  "category_count": 12,
+  "openapi_matches_export": true,
+  "checkpoint_sha256": "dbc357905538c29e82f40119b58d73c4e69405a07a10840543ebda1aee09a88d"
+}
