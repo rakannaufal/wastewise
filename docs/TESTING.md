@@ -9,7 +9,7 @@ cd backend-ml
 .venv/bin/mypy app
 ```
 
-Runner membuat/reuse DB wastewise_test terpisah, menerapkan migrasi lalu menjalankan pytest dengan ENVIRONMENT=test. Fixture hanya membersihkan akun/path yang dibuat tes tersebut. Tidak menyentuh DB aplikasi; role test lokal dibuat/dirotasi khusus runner dan tidak memakai URL database cloud. Tujuh belas tes mencakup validasi/register/login, anti role injection, kepemilikan list/detail/delete, filter/pagination, statistik 12 kategori, status admin, spoof AI, upload invalid/oversize/koordinat invalid, model degraded/manual report, outbox cleanup, JWT/media expiry, role DB current, last-admin concurrent demotion, rate limiting, checkpoint korup, penghapusan akun, filter pengguna, dan fingerprint/group leakage split.
+Runner membuat/reuse DB wastewise_test terpisah, menerapkan migrasi lalu menjalankan pytest dengan ENVIRONMENT=test. Fixture hanya membersihkan akun/path yang dibuat tes tersebut. Tidak menyentuh DB aplikasi; role test lokal dibuat/dirotasi khusus runner dan tidak memakai URL database cloud. Sembilan belas tes mencakup validasi/register/login, anti role injection, kepemilikan list/detail/delete, filter/pagination, statistik 12 kategori, status admin, spoof AI, upload invalid/oversize/koordinat invalid, model degraded/manual report, outbox cleanup, JWT/media expiry, role DB current, last-admin concurrent demotion, rate limiting, checkpoint korup, penghapusan akun, filter pengguna, dan fingerprint/group leakage split.
 
 Prediksi tertentu dalam tes unit/integrasi dimock secara eksplisit untuk menguji metadata server. Ini tidak menjadi bukti akurasi model; model nyata diukur oleh evaluasi test dan dipakai dalam browser smoke test.
 
@@ -65,3 +65,5 @@ cd backend-ml
 ```
 
 Hanya jalankan pada konfigurasi development/staging yang memang diizinkan untuk QA. API dan Vite harus hidup. Memerlukan key server privat; membuat dua identitas QA admin-confirmed, menguji backend/bucket/browser nyata, membersihkan UUID yang dibuat. Worker normal memproses job due; jangan arahkan ke produksi. Flag browser memerlukan Node24 dan Google Chrome. Output bukti disanitasi tanpa password/token; tidak menguji email masuk. Signed URL yang sudah dicache tidak dijamin langsung tercabut saat object dihapus.
+
+Rekonsiliasi: dua tes tambahan memeriksa grace24jam, pengecualian objek aktif/baru/asing, enqueue idempoten, worker menjaga referensi, dan inventory parsial tidak menambahkan job. Audit cloud nyata menemukan0objek dan0orphan. Penghapusan orphan tua cloud belum diuji; jangan menyamakan audit kosong dengan bukti penghapusan24jam.

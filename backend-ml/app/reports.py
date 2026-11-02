@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
+from app.config import settings
 from app.db import get_db
 from app.inference import predictor
 from app.models import STATUSES, CleanupJob, Report, User
@@ -66,7 +67,7 @@ def owned(db, user, report_id):
 
 
 def enqueue(db, path):
-    db.add(CleanupJob(object_path=path))
+    db.add(CleanupJob(object_path=path, bucket=settings.storage_bucket))
 
 
 @router.get("/categories", tags=["Metadata"], response_model=Envelope[list[CategoryRead]])

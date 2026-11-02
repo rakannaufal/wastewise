@@ -1,0 +1,16 @@
+{
+  "run_url": "https://github.com/rakannaufal/wastewise/actions/runs/41395632665",
+  "commit": "5220f96705cf59c839dfcbb77bbbca5b68a1c515",
+  "jobs": [
+    {
+      "name": "clients",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "backend",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

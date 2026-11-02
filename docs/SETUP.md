@@ -51,7 +51,7 @@ Sesi Supabase native disimpan SecureStore dalam chunk; Expo web memakai browser 
 5. Periksa readiness, signup/login, report create/list/filter/detail/delete, perubahan status, sesi kedaluwarsa, recovery worker dan backup/restore. Lakukan tinjauan hak distribusi dataset/foto sebelum mempublikasikan contoh gambar.
 6. Tambahkan monitoring error tanpa foto/token, rekonsiliasi orphan, shared rate limiter jika multi-worker, kebijakan retensi dan prosedur penghapusan data. Simpan rollback checkpoint/database migration plan sebelum rilis.
 
-CI GitHub tersedia, belum dieksekusi remote. Tidak ada URL produksi. Hosting belum dipilih/dibeli; biaya lokal nol untuk layanan cloud, biaya hosting bergantung paket provider dan trafik aktual. Tarif belum diverifikasi, sehingga tidak dicantumkan sebagai harga pasti.
+CI GitHub berjalan otomatis pada repository pengguna; hasil terakhir lihat tab Actions. Tidak ada URL produksi. Hosting belum dipilih/dibeli; biaya lokal nol untuk layanan cloud, biaya hosting bergantung paket provider dan trafik aktual. Tarif belum diverifikasi, sehingga tidak dicantumkan sebagai harga pasti.
 
 ## Supabase server
 
@@ -64,3 +64,14 @@ Auth: aktifkan email, pertahankan konfirmasi email, isi Site URL dan daftar redi
 Koneksi remote pada workspace ini sudah diverifikasi menggunakan role wastewise_runtime melalui session pooler dan `sslmode=verify-full`, dengan CA Supabase resmi. Untuk mesin/hosting baru, unduh sertifikat dari Database → Settings → Download certificate, gabungkan dengan CA publik bila perlu, lalu gunakan `sslrootcert` yang menunjuk path deployment tersebut. Jangan menonaktifkan verifikasi TLS untuk mengatasi CA yang belum terpasang. Rahasia dan path absolut workspace tidak disertakan di Git.
 
 Bucket remote dan migrasi sudah dibuat; tidak perlu membuat ulang/reset proyek pengguna. Gunakan migration owner untuk perubahan berikutnya, pertahankan runtime tanpa ownership. Foto lama lokal tidak otomatis dimigrasikan. Signed URL15menit dapat tersimpan dalam cache sampai expiry meskipun object sudah dihapus.
+
+## Rekonsiliasi orphan
+
+```bash
+cd backend-ml
+.venv/bin/python -m app.reconcile
+.venv/bin/python -m app.reconcile --enqueue --grace-hours 24
+.venv/bin/python -m app.cleanup --once
+```
+
+Perintah pertama hanya membaca inventory dan DB. Tinjau jumlah kandidat sebelum enqueue; perintah kedua membuat job, worker melakukan penghapusan. Hanya key milik aplikasi UUID/UUID.jpg, minimal24jam, tidak ada referensi laporan, serta bucket konfigurasi yang diproses. Inventory yang terputus tidak membuat job parsial. Grace menghindari upload baru/in-flight; key tidak pernah digunakan ulang API. Worker juga memeriksa referensi sebelum delete dan mencatat ReferencedObjectPreserved bila masih dipakai. Gunakan staging sebelum menjalankan enqueue pada produksi. Penyimpanan baru meminta cache-control0; URL yang pernah dicache tetap dapat bertahan sampai expiry.

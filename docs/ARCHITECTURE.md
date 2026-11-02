@@ -25,7 +25,7 @@ Foto menggunakan key acak UUID di bawah folder pemilik. Respons menerbitkan sign
 
 ## Konsistensi dan kegagalan
 
-Penghapusan row laporan/akun dan pembuatan job cleanup terjadi dalam transaksi yang sama. Worker memakai SKIP LOCKED, lease 60 detik dan exponential backoff maksimal satu jam. Delete object idempoten; job selesai tetap disimpan untuk audit. Jika commit laporan gagal sesudah upload, server mencoba kompensasi; jika storage delete gagal, job dicatat. Gangguan DB yang juga menghalangi pencatatan kompensasi memerlukan rekonsiliasi orphan sebelum produksi.
+Penghapusan row laporan/akun dan pembuatan job cleanup terjadi dalam transaksi yang sama. Worker memakai SKIP LOCKED, lease 60 detik dan exponential backoff maksimal satu jam. Delete object idempoten; job selesai tetap disimpan untuk audit. Jika commit laporan gagal sesudah upload, server mencoba kompensasi; jika storage delete gagal, job dicatat. Gangguan DB yang juga menghalangi pencatatan kompensasi ditangani audit/rekonsiliasi app.reconcile: kandidat minimal24jam di luar referensi laporan dimasukkan outbox secara idempoten. Worker memeriksa bucket dan mempertahankan object yang masih digunakan laporan.
 
 Readiness memeriksa DB dan storage. Model hilang menghasilkan status degraded dengan HTTP 200, sehingga alur manual tetap hidup; `/predict` tetap 503. Dependency DB/storage gagal menjadikan readiness 503.
 

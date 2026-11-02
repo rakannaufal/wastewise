@@ -6,8 +6,9 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import or_, select
 
+from app.config import settings
 from app.db import SessionLocal
-from app.models import CleanupJob
+from app.models import CleanupJob, Report
 from app.storage import storage
 
 
@@ -17,6 +18,7 @@ def run_once():
         job = db.scalar(
             select(CleanupJob)
             .where(
+                CleanupJob.bucket == settings.storage_bucket,
                 CleanupJob.status != "completed",
                 CleanupJob.next_attempt_at <= now,
                 or_(CleanupJob.locked_until.is_(None), CleanupJob.locked_until < now),
@@ -27,6 +29,11 @@ def run_once():
         )
         if job is None:
             return False
+        if db.scalar(select(Report.id).where(Report.image_path == job.object_path)):
+            job.status = "completed"
+            job.locked_until = None
+            job.last_error_code = "ReferencedObjectPreserved"
+            return True
         job.status = "processing"
         job.attempts += 1
         job.locked_until = now + timedelta(seconds=60)
