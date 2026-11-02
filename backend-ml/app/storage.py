@@ -3,12 +3,12 @@ import uuid
 import warnings
 from datetime import UTC, datetime, timedelta
 
-import httpx
 import jwt
 from fastapi import HTTPException, UploadFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from app.config import settings
+from app.http_pool import supabase_client
 
 MAX_BYTES = 5 * 1024 * 1024
 Image.MAX_IMAGE_PIXELS = 20_000_000
@@ -54,19 +54,18 @@ class Storage:
         return path
 
     def request(self, method, suffix, **kwargs):
-        with httpx.Client(timeout=15) as client:
-            response = client.request(
-                method,
-                settings.supabase_url.rstrip("/") + "/storage/v1/" + suffix,
-                headers={
-                    "Authorization": "Bearer " + settings.supabase_service_key.get_secret_value(),
-                    "apikey": settings.supabase_service_key.get_secret_value(),
-                    **kwargs.pop("headers", {}),
-                },
-                **kwargs,
-            )
-            response.raise_for_status()
-            return response
+        response = supabase_client().request(
+            method,
+            settings.supabase_url.rstrip("/") + "/storage/v1/" + suffix,
+            headers={
+                "Authorization": "Bearer " + settings.supabase_service_key.get_secret_value(),
+                "apikey": settings.supabase_service_key.get_secret_value(),
+                **kwargs.pop("headers", {}),
+            },
+            **kwargs,
+        )
+        response.raise_for_status()
+        return response
 
     def put(self, owner, content):
         key = f"{owner}/{uuid.uuid4()}.jpg"

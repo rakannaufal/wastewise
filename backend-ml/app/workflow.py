@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 
 from fastapi import HTTPException
 from sqlalchemy import select, text
+from sqlalchemy.dialects.postgresql import insert
 
 from app.config import ROOT, settings
 from app.inference import predictor
@@ -72,14 +73,17 @@ def event(db, row, user, kind, details, reason=None):
 
 
 def enqueue(db, path):
-    if not path:
-        return
-    if not db.scalar(
-        select(CleanupJob.id).where(
-            CleanupJob.bucket == settings.storage_bucket, CleanupJob.object_path == path
+    enqueue_many(db, [path])
+
+
+def enqueue_many(db, paths):
+    paths = list(dict.fromkeys(path for path in paths if path))
+    if paths:
+        db.execute(
+            insert(CleanupJob)
+            .values([{"object_path": path, "bucket": settings.storage_bucket} for path in paths])
+            .on_conflict_do_nothing(index_elements=["bucket", "object_path"])
         )
-    ):
-        db.add(CleanupJob(object_path=path, bucket=settings.storage_bucket))
 
 
 def location_data(row):

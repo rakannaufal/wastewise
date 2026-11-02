@@ -1,0 +1,21 @@
+{
+  "checked_at": "2026-11-02T11:27:34.241416+00:00",
+  "label": "after",
+  "samples": [
+    {
+      "create_and_category_ms": 4138.9,
+      "delete_ack_ms": 2382.8
+    },
+    {
+      "create_and_category_ms": 3332.1,
+      "delete_ack_ms": 2440.8
+    },
+    {
+      "create_and_category_ms": 3034.6,
+      "delete_ack_ms": 1854.3
+    }
+  ],
+  "image_bytes": 8042,
+  "scope": "local HTTP client/backend, real Supabase Auth/Postgres/Storage, sequential 3 samples; not phone latency or p95",
+  "qa_cleanup": "completed"
+}

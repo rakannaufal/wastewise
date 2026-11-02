@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-02T08:26:35.208780+00:00",
+  "checked_at": "2026-11-02T11:32:05.482531+00:00",
   "provider": "Supabase",
   "checks": [
     "real provider password login",

@@ -30,7 +30,7 @@ Cleanup melindungi foto/thumbnail dengan referensi laporan aktif atau draft belu
 
 ## Bukti verifikasi
 
-- Backend: **24 tes lulus**, PostgreSQL lokal terisolasi. Ruff dan mypy lulus. Cakupan: ownership/RBAC, UUID retry, concurrent finalization, spoof kategori, GPS, camera timestamp, expiry, model failure/retry, edit/revision, review, transisi/event, timezone boundary, replacement thumbnail/cleanup, dan regresi lama.
+- Backend: **28 tes lulus**, PostgreSQL lokal terisolasi. Ruff dan mypy lulus. Cakupan: ownership/RBAC, UUID retry, concurrent finalization, spoof kategori, GPS, camera timestamp, expiry, model failure/retry, edit/revision, review, transisi/event, timezone boundary, replacement thumbnail/cleanup, dan regresi lama.
 - Auth browser: **4 tes lulus** dengan provider tiruan; tidak menguji inbox email.
 - EXIF parser: **2 tes lulus**, byte order TIFF, southern latitude, metadata rusak/truncated, denominator0, pointer di luar segmen. Metadata rusak menjadi absent, bukan koordinat palsu.
 - Smoke Supabase nyata: **22 pemeriksaan lulus**, termasuk Expo web memilih galeri, ML otomatis, konfirmasi GPS, submit, dashboard web admin, filter URL, review, perubahan status dan sinkronisasi kembali ke Expo web. Foto privat, batch signing, thumbnail, role dan cleanup diuji. Semua UUID QA yang dibuat dibersihkan. Bukti: evidence/supabase-smoke.json.
@@ -71,3 +71,7 @@ Tidak ada perubahan identitas visual besar atau model retraining pada pekerjaan 
 Screenshot iPhone menunjukkan foto tersedia tetapi kategori tidak muncul dan pesan koneksi gagal. Log API pada waktu tersebut mencatat request Auth/statistik berhasil, tanpa request draft. Penyebab direproduksi pada serializer Expo58 terpasang: objek multipart lama `{uri, name, type}` ditolak dengan `Unsupported FormDataPart implementation` sebelum jaringan digunakan. Ini bukan bukti checkpoint gagal atau password salah.
 
 `mobile/src/photo.ts` kini mengirim `File` expo-file-system yang menyediakan bytes(), sesuai serializer fetch default SDK58. Analisis tetap dipicu otomatis setelah shutter/galeri; hasil kategori ditempatkan langsung setelah foto, indikator menjelaskan proses yang sedang berjalan. Tidak ada penetapan kategori dari nama file, input pengguna atau dugaan visual. Backend/model tidak diubah. Dua regresi native serializer disertakan dalam CI; File I/O pada tes memakai pengganti eksplisit. Konfirmasi upload kamera di HP fisik tetap diperlukan setelah reload Expo.
+
+## Optimasi kategori dan hapus draft
+
+Unggah asli/thumbnail dan inferensi berjalan paralel; koneksi HTTPS dipakai ulang, query profil dan antrean cleanup diringkas tanpa cache otorisasi. Median tiga sampel Supabase nyata: kategori5429,6→3332,1ms; konfirmasi hapus4266,4→2382,8ms. UI menyembunyikan pratinjau selama penghapusan, pulih bila gagal. DELETE dapat diulang dan menerima draft kedaluwarsa; consumed tetap409. Detail/batas pengukuran: [DRAFT_PERFORMANCE.md](DRAFT_PERFORMANCE.md).

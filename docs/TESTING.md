@@ -11,7 +11,7 @@ cd backend-ml
 .venv/bin/mypy app
 ```
 
-Runner memakai PostgreSQL lokal port54339, database `wastewise_test` dan role tes terpisah; konfigurasi cloud tidak digunakan. Sebanyak24tes mencakup Auth/RBAC, ownership, input/upload invalid, UUID/hash/idempotensi, concurrent finalization, larangan kategori/lokasi manual, GPS kamera/galeri, SQL CHECK termasuk NULL, expiry, model failure/retry, edit/revision409, review yang menjaga AI asli, transisi/riwayat, agregasi/timezone, thumbnail/cleanup, rekonsiliasi, batas admin terakhir dan split leakage. Fixture membersihkan hanya akun/path buatannya.
+Runner memakai PostgreSQL lokal port54339, database `wastewise_test` dan role tes terpisah; konfigurasi cloud tidak digunakan. Sebanyak28tes mencakup Auth/RBAC, ownership, input/upload invalid, UUID/hash/idempotensi, concurrent finalization, larangan kategori/lokasi manual, GPS kamera/galeri, SQL CHECK termasuk NULL, expiry, model failure/retry, edit/revision409, review yang menjaga AI asli, transisi/riwayat, agregasi/timezone, thumbnail/cleanup, rekonsiliasi, batas admin terakhir dan split leakage. Fixture membersihkan hanya akun/path buatannya.
 
 Sebagian prediksi dimock untuk menguji kontrak/failure path. Akurasi berasal dari evaluasi checkpoint, bukan mock. Browser memakai checkpoint nyata. Ada satu peringatan deprecation Starlette/httpx; tes tetap lulus. Migrasi8a4d7c209e51 diterapkan ke Supabase setelah rehearsal pada restore app_private; satu laporan legacy dipertahankan. Ini bukan restore seluruh Auth/Storage atau downgrade produksi.
 
@@ -30,7 +30,7 @@ npm --prefix web run e2e:auth
 
 Runner mengelola database `wastewise_browser`, API8001, Vite5180 dan Expo web8083; ekspor di `.local/mobile-browser`. Layanan sementara dihentikan setelah tes; API/Metro pengguna dipertahankan. Setup/teardown membersihkan identitas QA lokal saja. Jangan arahkan ke produksi. GPS browser ditiru secara eksplisit.
 
-Tiga skenario:
+Tiga skenario, termasuk DELETE tertahan/gagal, pemulihan draft dan retry sukses pada kedua client:
 
 1. Pengguna web: register, galeri, ML nyata tanpa input kategori/koordinat, konfirmasi GPS, reload/login dan resume draft/deskripsi, finalisasi, edit, axe/responsif, hapus.
 2. Admin: agregasi dashboard, filter tanggal/URL/pencarian, review, revision, status In Progress/Completed/reopen beralasan, riwayat, axe/enam viewport.
@@ -89,3 +89,5 @@ backend-ml/.venv/bin/python -m pip_audit --format json
 ```
 
 Bukti tersanitasi di `docs/evidence/`. Audit berlaku pada lock/tanggal pemeriksaan. Jangan menyimpan token, password, `.env`, atau trace browser berisi sesi ke Git/arsip distribusi.
+
+Pengukuran kategori/penghapusan Supabase dan cara mengulangnya: [DRAFT_PERFORMANCE.md](DRAFT_PERFORMANCE.md).

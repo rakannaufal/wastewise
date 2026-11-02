@@ -4,10 +4,12 @@ export function PhotoInput({
   file,
   onChange,
   preview = "",
+  disabled = false,
 }: {
   file: File | null;
   onChange: (file: File | null) => void;
   preview?: string;
+  disabled?: boolean;
 }) {
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
@@ -41,6 +43,7 @@ export function PhotoInput({
         {file || preview ? "Ganti foto" : "Pilih foto"}
         <input
           type="file"
+          disabled={disabled}
           accept="image/jpeg,image/png,image/webp"
           className="sr-only"
           onChange={(event) => {

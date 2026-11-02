@@ -213,3 +213,7 @@ ID/key bukan urutan kelas. GET categories mengembalikan nama Indonesia, family, 
 Worker `python -m app.cleanup` wajib berjalan untuk menuntaskan delete foto. Signed URL berlaku900detik; cache CDN/browser yang sudah menerima foto dapat bertahan sampai expiry dan tidak dijamin tercabut instan setelah delete; tautan berlaku sebagai bearer capability, jangan dibagikan. Access log bawaan Uvicorn dinonaktifkan; log aplikasi memakai template route agar token media tidak tercetak. Respons aplikasi mengirim no-store, nosniff, Referrer-Policy dan request ID.
 
 Model wajib untuk finalisasi laporan baru. Inferensi gagal mempertahankan draft analysis_failed untuk retry; laporan belum dibuat. Readiness503 karena dependency tidak sehat melaporkan status dependency tanpa secret; error request database tak terduga memakai envelope500 generik.
+
+## Penghapusan draft
+
+`DELETE /api/v1/report-drafts/{id}` bersifat idempoten:200 bila draft belum dikonsumsi berhasil dihapus, sudah tidak ada, atau tidak dimiliki pemanggil. Respons untuk ID asing tidak membocorkan keberadaan draft dan tidak mengubah data pemilik lain. Draft kedaluwarsa tetap dapat dibuang. Draft milik sendiri yang sudah menjadi laporan tetap409. Hapus metadata dan enqueue foto/thumbnail berlangsung dalam satu transaksi; worker membersihkan objek privat sesudahnya. Client mempertahankan data lokal sampai200, menampilkan kembali pratinjau bila request gagal.

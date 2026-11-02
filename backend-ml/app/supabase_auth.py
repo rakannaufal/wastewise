@@ -9,19 +9,20 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.http_pool import supabase_client
 from app.models import BlockedIdentity, User
 
 
 def verified_identity(token: str) -> dict:
     try:
-        with httpx.Client(timeout=10, follow_redirects=False) as client:
-            response = client.get(
-                settings.supabase_url.rstrip("/") + "/auth/v1/user",
-                headers={
-                    "apikey": settings.supabase_publishable_key,
-                    "Authorization": "Bearer " + token,
-                },
-            )
+        response = supabase_client().get(
+            settings.supabase_url.rstrip("/") + "/auth/v1/user",
+            headers={
+                "apikey": settings.supabase_publishable_key,
+                "Authorization": "Bearer " + token,
+            },
+            timeout=10,
+        )
         if response.status_code in {401, 403}:
             raise HTTPException(401, "Sesi Supabase tidak valid atau kedaluwarsa")
         if response.status_code != 200:
@@ -39,6 +40,15 @@ def verified_identity(token: str) -> dict:
 
 def profile_for(identity: dict, db: Session) -> User:
     subject = UUID(identity["id"])
+    email = identity["email"].strip().lower()
+    user = db.scalar(
+        select(User).where(
+            User.id == subject,
+            ~select(BlockedIdentity.id).where(BlockedIdentity.id == subject).exists(),
+        )
+    )
+    if user and user.auth_provider == "supabase" and user.email == email:
+        return user
     # Deleted profiles must not reappear when an existing provider token is used again.
     db.execute(
         text("SELECT pg_advisory_xact_lock(hashtextextended(:identity, 0))"),
@@ -46,7 +56,6 @@ def profile_for(identity: dict, db: Session) -> User:
     )
     if db.get(BlockedIdentity, subject):
         raise HTTPException(403, "Akses akun aplikasi telah dinonaktifkan")
-    email = identity["email"].strip().lower()
     user = db.get(User, subject)
     if user and user.auth_provider != "supabase":
         raise HTTPException(409, "Identitas akun perlu ditinjau pengelola")

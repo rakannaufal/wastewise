@@ -131,12 +131,14 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
       });
       if (version !== generation.current) return;
       setDraft(row);
-      if (prepared.location)
+      if (prepared.location) {
+        setBusy("Menyimpan lokasi foto…");
         row = await api<PhotoDraft>(`/api/v1/report-drafts/${row.id}`, {
           method: "PATCH",
           body: JSON.stringify(prepared.location),
           signal: controller.signal,
         });
+      }
       if (version === generation.current) setDraft(row);
     } catch (e) {
       if (!controller.signal.aborted && version === generation.current)
@@ -190,8 +192,10 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
       setBusy("");
     }
   }
+  const deleting = busy === "Menghapus draft…";
   const result = draft?.prediction;
   async function discard() {
+    if (busy) return;
     setBusy("Menghapus draft…");
     setError(null);
     try {
@@ -202,6 +206,7 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
       setFile(null);
       setConfirmed(false);
       setDescription(original?.description || "");
+      setLocationError("");
     } catch (e) {
       setError(e as Error);
     } finally {
@@ -233,7 +238,7 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
       <div className="new-report-grid">
         <section className="panel padded">
           <h2>Foto sampah</h2>
-          {(file || draft) && (
+          {!deleting && (file || draft) && (
             <button
               className="button secondary"
               disabled={!!busy}
@@ -245,8 +250,9 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
             </button>
           )}
           <PhotoInput
-            file={file}
-            preview={draft?.image_url}
+            file={deleting ? null : file}
+            preview={deleting ? "" : draft?.image_url}
+            disabled={!!busy}
             onChange={(value) => {
               void choose(value);
             }}
@@ -269,7 +275,7 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
         <section className="panel padded" aria-live="polite">
           <h2>Hasil otomatis</h2>
           {busy && <p role="status">{busy}</p>}
-          {result ? (
+          {!deleting && result ? (
             <>
               <h3>{categoryName(result.category)}</h3>
               <p>{result.confidence.toFixed(1)}% confidence model</p>
@@ -281,9 +287,13 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
               </p>
             </>
           ) : (
-            <p className="muted">Pilih foto untuk memulai analisis.</p>
+            <p className="muted">
+              {deleting
+                ? "Foto disembunyikan selama penghapusan. Jika gagal, draft ditampilkan kembali."
+                : "Pilih foto untuk memulai analisis."}
+            </p>
           )}
-          {draft && !result && (
+          {!deleting && draft && !result && (
             <button
               className="button secondary"
               disabled={!!busy}
@@ -306,7 +316,7 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
               Coba analisis tanpa upload ulang
             </button>
           )}
-          {draft && (
+          {!deleting && draft && (
             <>
               <h3>Lokasi laporan</h3>
               {draft.latitude !== null ? (
@@ -352,7 +362,7 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
           <label htmlFor="report-description">Deskripsi</label>
           <textarea
             id="report-description"
-            disabled={!!editId && !original}
+            disabled={deleting || (!!editId && !original)}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             minLength={10}

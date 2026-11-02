@@ -130,3 +130,14 @@ Screenshot pengguna18.01menunjukkan foto lokal, tanpa kategori, dengan kegagalan
 Dua tes regresi menjalankan serializer Expo terpasang: reproduksi penolakan objek lama, lalu verifikasi byte JPEG/MIME/filename dan parsing multipart jalur appendPhoto yang baru. File I/O perangkat diganti secara eksplisit; tes ini tidak mengklaim pemotretan fisik. Root check/typecheck lulus; ekspor iOS/Android/web lulus. Tiga E2E lokal lulus lagi (1,5menit), termasuk kategori otomatis sebelum konfirmasi GPS dan submit. Bukti: evidence/native-upload-*.txt. CI menyertakan regresi serializer.
 
 Metro/API pengguna tetap aktif. Reload Expo Go lalu ambil foto baru untuk verifikasi iPhone. Draft lama yang gagal dapat dicoba ulang dengan tombol foto yang sama; tidak perlu memilih kategori atau menekan Kirim laporan untuk memulai analisis.
+
+
+## Respons kategori dan penghapusan draft (2 November 2026)
+
+Unggah asli/thumbnail dan inferensi diparalelkan. Thumbnail disiapkan sebelum upload untuk mencegah objek tertinggal bila pemrosesan lokal gagal. Pool HTTPS Supabase mengurangi handshake; profil lama memakai query dengan pengecualian identitas terblokir; provisioning tetap terkunci. Auth tetap diverifikasi per request, role tidak dicache. Antrean cleanup batch/upsert menjaga idempotensi. DELETE draft menerima expiry dan pengulangan, mengisolasi pemilik, menolak draft consumed.
+
+Web/mobile menyembunyikan foto/kategori/lokasi selama DELETE, menampilkan proses, memulihkan draft jika gagal; file lokal baru dibuang setelah konfirmasi server. Hasil ML tampil sebelum penyimpanan GPS selesai. Pemilihan foto/submit diblokir selama proses agar request tidak saling menimpa.
+
+28tes backend lulus59,18detik;3E2E web/Expo lulus31,4detik, termasuk respons DELETE tertahan/gagal/retry nyata.22pemeriksaan Supabase nyata lulus dengan cleanup QA selesai. Check/typecheck/build/Ruff/mypy, ekspor iOS/Android/web,2regresi serializer dan2tes EXIF lulus; audit npm kedua client0kerentanan. Peringatan Starlette/httpx lama tetap ada.
+
+Median3sampel Supabase: kategori5429,6→3332,1ms (38,6%); hapus4266,4→2382,8ms (44,2%). Sampel memakai komputer lokal/gambar8042byte, bukan latency HP atau p95. Detail: [DRAFT_PERFORMANCE.md](DRAFT_PERFORMANCE.md). Kamera/GPS fisik dan produksi tetap gate terbuka. Tidak ada migrasi atau retraining.

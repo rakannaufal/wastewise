@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
-import { mobileURL } from "./helpers";
+import { checkDraftDeletion, mobileURL } from "./helpers";
 
 test("Expo gallery, automatic ML/GPS, report and editable history", async ({
   page,
@@ -35,6 +35,15 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
   await expect(
     page.getByText("KATEGORI OTOMATIS", { exact: true }),
   ).toBeVisible({ timeout: 30000 });
+  await checkDraftDeletion(page, true);
+  const again = page.waitForEvent("filechooser");
+  await page
+    .getByRole("button", { name: "Pilih gambar dari galeri", exact: true })
+    .click();
+  await (await again).setFiles(path.resolve("public/materials/plastic.jpg"));
+  await expect(
+    page.getByText("KATEGORI OTOMATIS", { exact: true }),
+  ).toBeVisible();
   await page
     .getByRole("button", {
       name: "Foto diambil di sini: konfirmasi & ambil GPS",

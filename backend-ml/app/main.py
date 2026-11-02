@@ -16,6 +16,7 @@ from app.config import settings
 from app.dashboard import router as dashboard_router
 from app.db import engine
 from app.drafts import router as drafts_router
+from app.http_pool import close_http_pool
 from app.inference import predictor
 from app.reports import ok
 from app.reports import router as reports_router
@@ -30,7 +31,10 @@ logging.getLogger("uvicorn.access").disabled = True
 @asynccontextmanager
 async def lifespan(app):
     predictor.load()
-    yield
+    try:
+        yield
+    finally:
+        close_http_pool()
 
 
 app = FastAPI(

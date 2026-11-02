@@ -32,7 +32,7 @@ def configure(monkeypatch):
     monkeypatch.setattr(settings, "supabase_publishable_key", "sb_publishable_fixture")
 
 
-def test_provider_validation_and_fail_closed(monkeypatch):
+def test_provider_validation_and_fail_closed(monkeypatch, request):
     configure(monkeypatch)
     original = httpx.Client
     data = identity()
@@ -44,11 +44,9 @@ def test_provider_validation_and_fail_closed(monkeypatch):
         assert request.headers["authorization"] == "Bearer provider-token"
         return httpx.Response(status, json=data)
 
-    monkeypatch.setattr(
-        supabase_auth.httpx,
-        "Client",
-        lambda **kwargs: original(transport=httpx.MockTransport(handler), **kwargs),
-    )
+    provider = original(transport=httpx.MockTransport(handler), follow_redirects=False)
+    request.addfinalizer(provider.close)
+    monkeypatch.setattr(supabase_auth, "supabase_client", lambda: provider)
     assert supabase_auth.verified_identity("provider-token")["id"] == data["id"]
     for code, expected in [(401, 401), (403, 401), (500, 503), (302, 503)]:
         status = code

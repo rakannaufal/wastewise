@@ -60,3 +60,74 @@ export async function createReport(
   expect(response.status()).toBe(201);
   return (await response.json()).data as { id: string; category: string };
 }
+
+// Hold a failing DELETE to verify immediate feedback and recovery before a real retry.
+export async function checkDraftDeletion(
+  page: import("@playwright/test").Page,
+  native = false,
+) {
+  const { expect } = await import("@playwright/test");
+  const result = native
+    ? page.getByText("KATEGORI OTOMATIS", { exact: true })
+    : page.getByText(/confidence model/);
+  const preview = native
+    ? page.getByRole("img", { name: "Foto yang dianalisis" })
+    : page.getByRole("img", { name: "Pratinjau foto yang dipilih" });
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let intercepted!: () => void;
+  const arrived = new Promise<void>((resolve) => {
+    intercepted = resolve;
+  });
+  await page.route("**/api/v1/report-drafts/*", async (route) => {
+    if (route.request().method() !== "DELETE") return route.continue();
+    intercepted();
+    await held;
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: false,
+        message: "Penghapusan uji gagal. Coba lagi.",
+        data: null,
+      }),
+    });
+  });
+  try {
+    await page
+      .getByRole("button", { name: "Hapus draft foto", exact: true })
+      .click();
+    await arrived;
+    await expect(preview).toBeHidden();
+    await expect(result).toBeHidden();
+    await expect(
+      page.getByText("Menghapus draft…", { exact: true }).first(),
+    ).toBeVisible();
+  } finally {
+    release();
+  }
+  await expect(result).toBeVisible();
+  await expect(preview).toBeVisible();
+  await expect(
+    page.getByText("Penghapusan uji gagal. Coba lagi.", { exact: true }),
+  ).toBeVisible();
+  await page.unroute("**/api/v1/report-drafts/*");
+  await page
+    .getByRole("button", { name: "Hapus draft foto", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Hapus draft foto", exact: true }),
+  ).toBeHidden();
+  await expect(result).toBeHidden();
+  await expect(preview).toBeHidden();
+  await expect(
+    native
+      ? page.getByRole("button", {
+          name: "Pilih gambar dari galeri",
+          exact: true,
+        })
+      : page.locator("input[type=file]"),
+  ).toBeEnabled();
+}

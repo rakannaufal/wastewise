@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import path from "node:path";
+import { checkDraftDeletion } from "./helpers";
 
 test("photo automatically becomes an owned report; edit, resume, search, delete", async ({
   page,
@@ -33,6 +34,11 @@ test("photo automatically becomes an owned report; edit, resume, search, delete"
   await expect(page.getByText(/confidence model/)).toBeVisible({
     timeout: 30000,
   });
+  await checkDraftDeletion(page);
+  await page
+    .locator("input[type=file]")
+    .setInputFiles(path.resolve("public/materials/plastic.jpg"));
+  await expect(page.getByText(/confidence model/)).toBeVisible();
   expect(await page.getByLabel("Latitude", { exact: true }).count()).toBe(0);
   expect(await page.getByRole("combobox").count()).toBe(0);
   await page.getByLabel("Foto ini diambil di lokasi saya saat ini.").check();

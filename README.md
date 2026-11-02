@@ -155,3 +155,7 @@ Smoke Supabase development dengan identitas QA sementara: `(cd backend-ml && .ve
 Implementasi dan bukti terbaru tercatat di [PROGRESS](docs/PROGRESS.md). Supabase Auth, PostgreSQL dan Storage privat sudah diuji dengan akun QA sementara, termasuk login browser nyata, sesi reload, upload/signed URL/delete. Tes pengiriman email masuk belum dilakukan; identitas QA dibuat admin-confirmed. Belum ada deployment publik, build terpasang pada perangkat, ataupun pengujian kamera lapangan. Rekonsiliasi orphan tersedia melalui `python -m app.reconcile` (audit default); panduan enqueue/cleanup dan gate rilis berada di [SETUP](docs/SETUP.md).
 
 `SPEC.md` adalah blueprint asli dan dipertahankan. Keputusan WasteWise/12 kategori terbaru berada di [DECISIONS](docs/DECISIONS.md). [Prompt lanjutan](PROMPT_LANJUTAN.md) menyasar pekerjaan verifikasi dan deployment berikutnya.
+
+### Respons kategori dan hapus draft
+
+Setelah mengambil/memilih foto, kategori muncul otomatis; tidak perlu menekan Kirim laporan. Model dan unggah foto berjalan paralel. Saat **Hapus draft foto** ditekan, pratinjau disembunyikan selama server memproses; jika gagal, draft tampil kembali untuk dicoba ulang. Worker cleanup harus aktif untuk menghapus objek privat dari Storage. Pengukuran dan batas verifikasi: [docs/DRAFT_PERFORMANCE.md](docs/DRAFT_PERFORMANCE.md). Reload Expo Go setelah pembaruan aplikasi.

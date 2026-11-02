@@ -123,12 +123,14 @@ export function ReportComposer({
         signal: controller.signal,
       });
       if (version === generation.current) setDraft(row);
-      if (value.location && version === generation.current)
+      if (value.location && version === generation.current) {
+        setBusy("Menyimpan lokasi foto…");
         row = await api<PhotoDraft>(`/api/v1/report-drafts/${row.id}`, {
           method: "PATCH",
           body: JSON.stringify(value.location),
           signal: controller.signal,
         });
+      }
       if (version === generation.current) setDraft(row);
     } catch (e) {
       if (!controller.signal.aborted && version === generation.current)
@@ -232,8 +234,10 @@ export function ReportComposer({
       setBusy("");
     }
   }
+  const deleting = busy === "Menghapus draft…";
   const result = draft?.prediction;
   async function discard() {
+    if (busy) return;
     setBusy("Menghapus draft…");
     setError("");
     try {
@@ -244,6 +248,7 @@ export function ReportComposer({
       setPhoto(null);
       setDraft(null);
       setDescription(original?.description || "");
+      setGpsError("");
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -281,7 +286,7 @@ export function ReportComposer({
             void gallery();
           }}
         />
-        {(photo || draft) && (
+        {!deleting && (photo || draft) && (
           <Image
             source={{ uri: photo?.uri || draft?.image_url }}
             style={styles.photo}
@@ -293,14 +298,14 @@ export function ReportComposer({
           <View style={styles.panel} accessibilityLiveRegion="polite">
             <ActivityIndicator color="#245e43" />
             <Text style={styles.text}>{busy}</Text>
-            {!result && (
+            {!deleting && !result && (
               <Text style={styles.text}>
                 Kategori sampah akan muncul otomatis setelah analisis selesai.
               </Text>
             )}
           </View>
         ) : null}
-        {result && (
+        {!deleting && result && (
           <View style={styles.panel} accessibilityLiveRegion="polite">
             <Text style={styles.label}>KATEGORI OTOMATIS</Text>
             <Text style={styles.heading}>{categoryName(result.category)}</Text>
@@ -315,7 +320,7 @@ export function ReportComposer({
             </Text>
           </View>
         )}
-        {(photo || draft) && (
+        {!deleting && (photo || draft) && (
           <Button
             secondary
             title="Hapus draft foto"
@@ -325,7 +330,7 @@ export function ReportComposer({
             }}
           />
         )}
-        {draft && !result && (
+        {!deleting && draft && !result && (
           <>
             <Text style={styles.text}>
               Model belum tersedia. Foto sudah disimpan sebagai draft; laporan
@@ -364,7 +369,7 @@ export function ReportComposer({
             }}
           />
         )}
-        {draft && (
+        {!deleting && draft && (
           <View style={styles.panel}>
             <Text style={styles.heading}>Lokasi otomatis</Text>
             {draft.latitude !== null ? (
@@ -414,7 +419,7 @@ export function ReportComposer({
         )}
         <Input
           label="Deskripsi kondisi sampah"
-          editable={!editId || !!original}
+          editable={!deleting && (!editId || !!original)}
           value={description}
           onChangeText={setDescription}
           multiline

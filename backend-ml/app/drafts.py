@@ -1,4 +1,5 @@
 import hashlib
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from typing import Literal
 from uuid import UUID
@@ -15,7 +16,7 @@ from app.responses import DraftRead, Envelope
 from app.schemas import LocationUpdate
 from app.security import current_user, limit
 from app.storage import sanitize_upload, storage, thumbnail
-from app.workflow import classification, enqueue, location_data, lock_request
+from app.workflow import classification, enqueue_many, location_data, lock_request
 
 router = APIRouter(prefix="/api/v1/report-drafts", tags=["Report drafts"])
 
@@ -106,11 +107,23 @@ def store_draft(db, user, request_id, photo_source, captured_at, content, now):
         return {"success": True, "message": "Draft dipulihkan", "data": draft_data(existing)}
     paths = []
     try:
-        path = storage.put(str(user.id), content)
-        paths.append(path)
-        thumb = storage.put(str(user.id), thumbnail(content))
-        paths.append(thumb)
-        prediction = analyze(content)
+        thumb_content = thumbnail(content)
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            uploads = [
+                pool.submit(storage.put, str(user.id), content),
+                pool.submit(storage.put, str(user.id), thumb_content),
+            ]
+            inference = pool.submit(analyze, content)
+            failure = None
+            for upload in uploads:
+                try:
+                    paths.append(upload.result())
+                except Exception as exc:
+                    failure = exc
+            prediction = inference.result()
+            if failure:
+                raise failure
+        path, thumb = paths
         row = ReportDraft(
             user_id=user.id,
             request_id=request_id,
@@ -127,8 +140,7 @@ def store_draft(db, user, request_id, photo_source, captured_at, content, now):
         db.commit()
     except Exception as exc:
         db.rollback()
-        for path in paths:
-            enqueue(db, path)
+        enqueue_many(db, paths)
         db.commit()
         raise HTTPException(503, "Draft belum tersimpan. Coba lagi dengan foto yang sama.") from exc
     return {
@@ -198,9 +210,16 @@ def retry(
 
 @router.delete("/{draft_id}", response_model=Envelope[None])
 def discard(draft_id: UUID, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    row = get_draft(db, user, draft_id)
-    enqueue(db, row.image_path)
-    enqueue(db, row.thumbnail_path)
+    row = db.scalar(
+        select(ReportDraft)
+        .where(ReportDraft.id == draft_id, ReportDraft.user_id == user.id)
+        .with_for_update()
+    )
+    if row is None:
+        return {"success": True, "message": "Draft sudah dibatalkan", "data": None}
+    if row.consumed_at:
+        raise HTTPException(409, "Draft sudah menjadi laporan")
+    enqueue_many(db, [row.image_path, row.thumbnail_path])
     db.delete(row)
     db.commit()
     return {"success": True, "message": "Draft dibatalkan", "data": None}

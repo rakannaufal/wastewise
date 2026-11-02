@@ -301,3 +301,98 @@ def test_replacement_cleanup_and_time_boundary(client, accounts):
         ]
         == 0
     )
+
+
+def test_draft_uploads_and_inference_overlap(client, accounts, monkeypatch):
+    from threading import Barrier
+
+    barrier = Barrier(3, timeout=5)
+    original_put = storage.put
+
+    def put(*args):
+        barrier.wait()
+        return original_put(*args)
+
+    def predict(_):
+        barrier.wait()
+        return {"category": "paper", "confidence": 93, "model_version": "test-only"}
+
+    monkeypatch.setattr(storage, "put", put)
+    monkeypatch.setattr(predictor, "predict", predict)
+    response = draft(client, accounts["owner"])
+    assert response.status_code == 201, response.text
+    assert response.json()["data"]["prediction"]["category"] == "paper"
+
+
+def test_thumbnail_failure_starts_no_remote_upload(client, accounts, monkeypatch):
+    from app import drafts
+
+    def fail_thumbnail(_):
+        raise RuntimeError("Injected thumbnail failure")
+
+    calls = []
+    monkeypatch.setattr(drafts, "thumbnail", fail_thumbnail)
+    monkeypatch.setattr(storage, "put", lambda *args: calls.append(args))
+    response = draft(client, accounts["owner"])
+    assert response.status_code == 503
+    assert calls == []
+
+
+def test_partial_upload_failure_queues_successful_sibling(client, accounts, monkeypatch):
+    from threading import Lock
+
+    from sqlalchemy import select
+
+    from app.models import CleanupJob
+
+    original_put = storage.put
+    lock = Lock()
+    calls = []
+    paths = []
+
+    def put(*args):
+        with lock:
+            calls.append(True)
+            first = len(calls) == 1
+        if first:
+            raise RuntimeError("Injected upload failure")
+        path = original_put(*args)
+        paths.append(path)
+        return path
+
+    monkeypatch.setattr(storage, "put", put)
+    response = draft(client, accounts["owner"])
+    assert response.status_code == 503
+    assert len(paths) == 1
+    with SessionLocal() as db:
+        job = db.scalar(select(CleanupJob).where(CleanupJob.object_path == paths[0]))
+        assert job is not None and job.status == "pending"
+        assert db.scalar(select(ReportDraft).where(ReportDraft.image_path == paths[0])) is None
+    while run_once():
+        pass
+    assert not storage.path(paths[0]).exists()
+
+
+def test_discard_is_idempotent_expired_and_owner_scoped(client, accounts):
+    from sqlalchemy import select
+
+    from app.models import CleanupJob
+
+    row = draft(client, accounts["owner"]).json()["data"]
+    url = f"/api/v1/report-drafts/{row['id']}"
+    assert client.delete(url, headers=accounts["other"]["headers"]).status_code == 200
+    with SessionLocal.begin() as db:
+        value = db.get(ReportDraft, UUID(row["id"]))
+        assert value is not None
+        paths = [value.image_path, value.thumbnail_path]
+        value.expires_at = datetime.now(UTC) - timedelta(seconds=1)
+    for _ in range(2):
+        assert client.delete(url, headers=accounts["owner"]["headers"]).status_code == 200
+    with SessionLocal() as db:
+        assert db.get(ReportDraft, UUID(row["id"])) is None
+        assert (
+            len(list(db.scalars(select(CleanupJob).where(CleanupJob.object_path.in_(paths))))) == 2
+        )
+    while run_once():
+        pass
+    assert all(not storage.path(path).exists() for path in paths)
