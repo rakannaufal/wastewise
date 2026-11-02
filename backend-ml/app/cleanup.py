@@ -8,11 +8,42 @@ from sqlalchemy import or_, select
 
 from app.config import settings
 from app.db import SessionLocal
-from app.models import CleanupJob, Report
+from app.models import CleanupJob, Report, ReportDraft
 from app.storage import storage
+from app.workflow import enqueue
+
+
+def referenced(db, path):
+    return db.scalar(
+        select(Report.id).where(or_(Report.image_path == path, Report.thumbnail_path == path))
+    ) or db.scalar(
+        select(ReportDraft.id).where(
+            ReportDraft.consumed_at.is_(None),
+            or_(ReportDraft.image_path == path, ReportDraft.thumbnail_path == path),
+        )
+    )
+
+
+def expire_drafts():
+    with SessionLocal.begin() as db:
+        rows = db.scalars(
+            select(ReportDraft)
+            .where(
+                ReportDraft.expires_at <= datetime.now(UTC),
+                ~select(Report.id).where(Report.source_draft_id == ReportDraft.id).exists(),
+            )
+            .with_for_update(skip_locked=True)
+            .limit(20)
+        ).all()
+        for row in rows:
+            enqueue(db, row.image_path)
+            enqueue(db, row.thumbnail_path)
+            db.delete(row)
+        return len(rows)
 
 
 def run_once():
+    expire_drafts()
     now = datetime.now(UTC)
     with SessionLocal.begin() as db:
         job = db.scalar(
@@ -29,7 +60,7 @@ def run_once():
         )
         if job is None:
             return False
-        if db.scalar(select(Report.id).where(Report.image_path == job.object_path)):
+        if referenced(db, job.object_path):
             job.status = "completed"
             job.locked_until = None
             job.last_error_code = "ReferencedObjectPreserved"

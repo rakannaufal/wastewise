@@ -1,4 +1,6 @@
-# Pengujian
+# Pengujian WasteWise
+
+Baseline terbaru: [WORKFLOW_IMPLEMENTATION.md](WORKFLOW_IMPLEMENTATION.md). Bukti lokal/cloud dibedakan dari perangkat fisik dan deployment publik.
 
 ## Backend dan database
 
@@ -9,61 +11,78 @@ cd backend-ml
 .venv/bin/mypy app
 ```
 
-Runner membuat/reuse DB wastewise_test terpisah, menerapkan migrasi lalu menjalankan pytest dengan ENVIRONMENT=test. Fixture hanya membersihkan akun/path yang dibuat tes tersebut. Tidak menyentuh DB aplikasi; role test lokal dibuat/dirotasi khusus runner dan tidak memakai URL database cloud. Sembilan belas tes mencakup validasi/register/login, anti role injection, kepemilikan list/detail/delete, filter/pagination, statistik 12 kategori, status admin, spoof AI, upload invalid/oversize/koordinat invalid, model degraded/manual report, outbox cleanup, JWT/media expiry, role DB current, last-admin concurrent demotion, rate limiting, checkpoint korup, penghapusan akun, filter pengguna, dan fingerprint/group leakage split.
+Runner memakai PostgreSQL lokal port54339, database `wastewise_test` dan role tes terpisah; konfigurasi cloud tidak digunakan. Sebanyak24tes mencakup Auth/RBAC, ownership, input/upload invalid, UUID/hash/idempotensi, concurrent finalization, larangan kategori/lokasi manual, GPS kamera/galeri, SQL CHECK termasuk NULL, expiry, model failure/retry, edit/revision409, review yang menjaga AI asli, transisi/riwayat, agregasi/timezone, thumbnail/cleanup, rekonsiliasi, batas admin terakhir dan split leakage. Fixture membersihkan hanya akun/path buatannya.
 
-Prediksi tertentu dalam tes unit/integrasi dimock secara eksplisit untuk menguji metadata server. Ini tidak menjadi bukti akurasi model; model nyata diukur oleh evaluasi test dan dipakai dalam browser smoke test.
+Sebagian prediksi dimock untuk menguji kontrak/failure path. Akurasi berasal dari evaluasi checkpoint, bukan mock. Browser memakai checkpoint nyata. Ada satu peringatan deprecation Starlette/httpx; tes tetap lulus. Migrasi8a4d7c209e51 diterapkan ke Supabase setelah rehearsal pada restore app_private; satu laporan legacy dipertahankan. Ini bukan restore seluruh Auth/Storage atau downgrade produksi.
 
-## Web
+## Web dan Expo web terisolasi
+
+Dari root, dengan Node24/npm dan Google Chrome:
 
 ```bash
-npm --prefix web run check
-npm --prefix web run build
-npm --prefix web run e2e
+npm run check
+npm run build
+node --experimental-strip-types --test shared/photo-location.test.ts
+(cd backend-ml && .venv/bin/python scripts/test_browser.py)
+npm --prefix web run e2e:auth
 ```
 
-E2E memerlukan API localhost:8000, Vite 127.0.0.1:5173, ekspor Expo web 127.0.0.1:8081, Google Chrome, dan dataset lokal. Jalankan ekspor mobile terlebih dahulu, tunggu selesai, lalu layani dengan `python3 -m http.server 8081 --bind 127.0.0.1 --directory mobile/dist` dari root. Izinkan keempat origin localhost/127.0.0.1 port 5173/8081 melalui CORS_ORIGINS backend. Jangan mengganti bundel Expo ketika tes berjalan.
+Runner mengelola database `wastewise_browser`, API8001, Vite5180 dan Expo web8083; ekspor di `.local/mobile-browser`. Layanan sementara dihentikan setelah tes; API/Metro pengguna dipertahankan. Setup/teardown membersihkan identitas QA lokal saja. Jangan arahkan ke produksi. GPS browser ditiru secara eksplisit.
 
-Tiga skenario browser:
+Tiga skenario:
 
-1. Web pengguna: register/login, empty dashboard, axe WCAG2A/AA/2.1AA, klasifikasi nyata, koreksi kategori, simpan laporan lokasi manual, detail, ringkasan jumlah nyata dan grafik 12 kategori/4 status, viewport 390/1440, drawer, filter kosong, panduan 12 kategori, delete dengan dialog, logout.
-2. Web pengelola: login keyboard, show password, perubahan status, filter dan perubahan peran pengguna, proteksi pengelola, penghapusan akun, dialog Escape, offline banner, kegagalan request dan retry.
-3. Expo web: register/login, pilih foto galeri, prediksi nyata, draft tanpa foto dalam URL, simpan/detail/hapus laporan, filter status, profil, navigasi panduan, logout dan overflow pada viewport 390.
+1. Pengguna web: register, galeri, ML nyata tanpa input kategori/koordinat, konfirmasi GPS, reload/login dan resume draft/deskripsi, finalisasi, edit, axe/responsif, hapus.
+2. Admin: agregasi dashboard, filter tanggal/URL/pencarian, review, revision, status In Progress/Completed/reopen beralasan, riwayat, axe/enam viewport.
+3. Expo web: register/login, galeri, ML, konfirmasi GPS, kirim/detail/edit/hapus, filter/profil/navigasi dan lebar390px.
 
-Screenshot berada di docs/evidence. Akun QA memakai password acak; setup/teardown hanya mengelola akun uji lokal dengan nama dan pola email yang dibatasi. Jangan menjalankan tes di produksi.
+Web diperiksa pada320/360/390/768/1024/1440px; tabel admin menggunakan scroll wilayah sendiri tanpa menyembunyikan status. Axe menguji WCAG2A/AA/2.1AA yang tersedia; nol pelanggaran bukan sertifikasi penuh. Empat tes Auth memakai provider tiruan: konfirmasi/resend/reset, PKCE, sesi reload/logout saat provider gagal. Dua tes EXIF mencakup TIFF kedua byte order, koordinat selatan, metadata rusak/truncated dan denominator0.
 
-## Mobile
+## Mobile native
 
 ```bash
 npm --prefix mobile run typecheck
 npm --prefix mobile run export
 ```
 
-Export memeriksa bundel iOS/Android/web. Ini tidak menggantikan pemasangan pada emulator/perangkat. Belum diverifikasi pada perangkat: kamera, izin ditolak/revoked, SecureStore reboot, keyboard/safe area seluruh ukuran layar, jaringan lambat/offline/retry, tanda tangan build dan publikasi toko.
+Ekspor memeriksa bundel iOS/Android/web; bukan bukti pemasangan IPA/APK. Checklist perangkat sebelum rilis:
 
-## Model
+- Kamera: izin pertama/ditolak/revoked, batal, shutter20siklus, preview/orientasi.
+- GPS: precise/approximate/ditolak, layanan mati, fix lambat, batas50m/30detik, foreground/background, tak ada tracking setelah kamera ditutup.
+- Galeri: JPEG/PNG/HEIC, EXIF ada/tidak, konfirmasi lokasi unggah, resolusi tinggi, metadata rusak.
+- Draft: jaringan terputus saat upload/inference/finalisasi, retry tanpa duplikat, restart/reboot, pergantian akun, logout/discard/expiry24jam, foto pengganti.
+- Layar kecil/tablet, keyboard/safe area, font besar, target sentuh44px, pembaca layar.
+- Ukur foto→hasil, frame/memori/jaringan pada HP; periksa URL API LAN/HTTPS dapat dijangkau.
+
+## Model dan performa
 
 ```bash
 cd backend-ml
 .venv/bin/python -m ml.evaluate
+.venv/bin/python -m ml.calibrate_review
+.venv/bin/python -m ml.check_compression
 ```
 
-Checkpoint dan test manifest harus cocok checksum. Output: metrics.json, predictions.jsonl, confusion_matrix.png, training_curves.png. Accuracy >0,85 dan setiap kelas F1>=0,75; evaluasi gagal tidak boleh diubah menjadi PASS. Test tidak boleh dipakai memilih hyperparameter. Ulang evaluasi checkpoint sama boleh untuk reproduksi, bukan untuk menyetel model terhadap test.
+Evaluasi memeriksa checksum checkpoint/test manifest dan menghasilkan accuracy, confusion matrix, classification report. Accuracy95,86%/macroF194,10% tetap berasal dari2318test. Review policy dipilih dari2320validation; jangan memilih threshold melalui test. Compression memakai120validation sebagai smoke, bukan holdout lapangan atau bukti kesetaraan encoder native.
 
-## Audit keamanan
+`python scripts/benchmark_dashboard.py` hanya menerima mode test/storage/database lokal. Fixture10.000laporan dihapus setelah30request warm/concurrency1; hasil tidak membuktikan latency Supabase atau Core Web Vitals produksi.
 
-`npm audit --prefix web`, `npm audit --prefix mobile`, dan `python -m pip_audit`. Override glob/minimatch diterapkan untuk temuan transitif; pip diperbarui untuk temuan toolchain. Simpan JSON audit di docs/evidence; hasil sesuai tanggal pemeriksaan, bukan jaminan tidak ada kerentanan baru.
-
-Downgrade migrasi dan backup/restore production tidak dijalankan. Supabase remote telah diuji dengan identitas QA sementara; deployment publik, email delivery dan pengujian lapangan belum diverifikasi.
-
-## Kontrak Auth dan smoke Supabase
-
-`npm --prefix web run e2e:auth` memakai provider tiruan eksplisit dan tidak memerlukan akun Supabase. Jangan menafsirkan hasilnya sebagai pengiriman email nyata. Empat skenario memeriksa konfirmasi, recovery PKCE, sesi reload dan logout saat provider gagal.
+## Supabase nyata
 
 ```bash
 cd backend-ml
 .venv/bin/python -m scripts.supabase_smoke --run --browser
 ```
 
-Hanya jalankan pada konfigurasi development/staging yang memang diizinkan untuk QA. API dan Vite harus hidup. Memerlukan key server privat; membuat dua identitas QA admin-confirmed, menguji backend/bucket/browser nyata, membersihkan UUID yang dibuat. Worker normal memproses job due; jangan arahkan ke produksi. Flag browser memerlukan Node24 dan Google Chrome. Output bukti disanitasi tanpa password/token; tidak menguji email masuk. Signed URL yang sudah dicache tidak dijamin langsung tercabut saat object dihapus.
+Development/staging yang diizinkan saja. Memerlukan API8000, web5173, Expo web8081, server key privat, DB dan Chrome. Smoke membuat identitas admin-confirmed sementara; menguji Auth, draft ML/GPS, finalisasi, foto/thumbnail privat, ownership, dashboard/review/status/history, sinkronisasi Expo web, sesi dan cleanup.22pemeriksaan terakhir lulus; UUID QA dibersihkan. Inbox email/GPS hardware/deployment publik belum diuji. Cache signed URL tidak dijamin langsung tercabut.
 
-Rekonsiliasi: dua tes tambahan memeriksa grace24jam, pengecualian objek aktif/baru/asing, enqueue idempoten, worker menjaga referensi, dan inventory parsial tidak menambahkan job. Audit cloud nyata menemukan0objek dan0orphan. Penghapusan orphan tua cloud belum diuji; jangan menyamakan audit kosong dengan bukti penghapusan24jam.
+Rekonsiliasi default read-only, grace24jam. Tes lokal mencakup inventory parsial, key asing/baru/aktif, enqueue idempoten dan perlindungan referensi. Audit cloud kosong bukan bukti penghapusan orphan tua.
+
+## Audit dependensi dan bukti
+
+```bash
+npm audit --prefix web --json
+npm audit --prefix mobile --json
+backend-ml/.venv/bin/python -m pip_audit --format json
+```
+
+Bukti tersanitasi di `docs/evidence/`. Audit berlaku pada lock/tanggal pemeriksaan. Jangan menyimpan token, password, `.env`, atau trace browser berisi sesi ke Git/arsip distribusi.

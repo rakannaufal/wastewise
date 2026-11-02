@@ -44,6 +44,7 @@ excluded = {
     ".mypy_cache",
     "dist",
     "test-results",
+    "auth-test-results",
     "playwright-report",
     ".expo",
     "release",

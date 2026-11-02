@@ -5,12 +5,12 @@ import json
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
+from app.cleanup import referenced
 from app.config import settings
 from app.db import SessionLocal
-from app.models import CleanupJob, Report
+from app.models import CleanupJob
 from app.storage import storage
 
 
@@ -81,7 +81,7 @@ def reconcile(*, enqueue=False, grace_hours=24):
             scanned += 1
             if not canonical(key) or created > cutoff:
                 continue
-            if db.scalar(select(Report.id).where(Report.image_path == key)):
+            if referenced(db, key):
                 continue
             candidates += 1
             if enqueue:

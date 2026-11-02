@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-11-02T06:24:31.578Z",
+  "result": "pass",
+  "checks": [
+    "accessibility classification: zero tested violations",
+    "signed report image rendered on web",
+    "accessibility report: zero tested violations",
+    "accessibility dashboard: zero tested violations",
+    "accessibility guide-mobile: zero tested violations",
+    "live web classify, create, detail, charts, mobile drawer, guide, delete",
+    "signed report image rendered on Expo web",
+    "live Expo web login, reload session, gallery, classify, create, delete, logout",
+    "zero uncaught browser errors"
+  ],
+  "native_device_tested": false,
+  "email_delivery_tested": false
+}

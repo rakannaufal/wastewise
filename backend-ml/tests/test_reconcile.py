@@ -14,7 +14,11 @@ from tests.test_api import create
 
 
 def test_reconcile_grace_idempotency_and_referenced_image_protection(client, accounts, monkeypatch):
-    monkeypatch.setattr(predictor, "predict", lambda _: None)
+    monkeypatch.setattr(
+        predictor,
+        "predict",
+        lambda _: {"category": "plastic", "confidence": 90, "model_version": "test-only"},
+    )
     response = create(client, accounts["owner"])
     assert response.status_code == 201
     with SessionLocal() as db:

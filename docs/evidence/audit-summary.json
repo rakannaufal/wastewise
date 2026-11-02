@@ -1,0 +1,117 @@
+{
+  "checked_at": "2026-11-02T06:27:49.351337+00:00",
+  "application_commit": "ec058f8287267e77401291a493235605d77a2bcc",
+  "backend_tests": {
+    "passed": 19,
+    "warnings": 1,
+    "seconds": 64.91
+  },
+  "auth_contract_browser_tests": {
+    "passed": 4,
+    "provider": "explicit mock",
+    "seconds": 35.5
+  },
+  "web_check": "pass",
+  "web_build": "pass",
+  "mobile_typecheck": "pass",
+  "mobile_exports": [
+    "android",
+    "ios",
+    "web"
+  ],
+  "ruff": "pass",
+  "mypy": {
+    "result": "pass",
+    "source_files": 16
+  },
+  "supabase_smoke": {
+    "checked_at": "2026-11-02T06:17:04.380054+00:00",
+    "provider": "Supabase",
+    "checks": [
+      "live browser login, reload session and logout",
+      "real provider password login",
+      "verified profile provisioning",
+      "role metadata ignored",
+      "trained checkpoint inference",
+      "report persisted remotely",
+      "private signed image readable",
+      "other owner denied",
+      "anonymous public image denied",
+      "database role change effective",
+      "admin status change",
+      "delete and durable cleanup",
+      "deleted object absent from storage inventory",
+      "remote readiness"
+    ],
+    "email_delivery_tested": false,
+    "test_identities": "admin-created confirmed disposable identities",
+    "result": "pass",
+    "qa_cleanup": "completed"
+  },
+  "cloud_browser": {
+    "checked_at": "2026-11-02T06:24:31.578Z",
+    "result": "pass",
+    "checks": [
+      "accessibility classification: zero tested violations",
+      "signed report image rendered on web",
+      "accessibility report: zero tested violations",
+      "accessibility dashboard: zero tested violations",
+      "accessibility guide-mobile: zero tested violations",
+      "live web classify, create, detail, charts, mobile drawer, guide, delete",
+      "signed report image rendered on Expo web",
+      "live Expo web login, reload session, gallery, classify, create, delete, logout",
+      "zero uncaught browser errors"
+    ],
+    "native_device_tested": false,
+    "email_delivery_tested": false
+  },
+  "dependency_audit": {
+    "web_known_vulnerabilities": 0,
+    "mobile_known_vulnerabilities": 0,
+    "python_packages": 101,
+    "python_known_vulnerabilities": 0
+  },
+  "artifacts": {
+    "archives_crc_and_manifest": "pass",
+    "checkpoint_checksum": "pass",
+    "dataset_categories": 12,
+    "dataset_jpg_count": 15515,
+    "saved_test_predictions": 2318,
+    "saved_prediction_metrics_recomputed_and_match": true,
+    "current_audit_in_existing_release_zips": false
+  },
+  "runtime": {
+    "health_status": 200,
+    "readiness": {
+      "status": "ready",
+      "database": "ready",
+      "storage": "ready",
+      "model": "ready"
+    },
+    "continuous_cleanup_worker_running": true,
+    "configured_bucket": "waste-images",
+    "pending_cleanup_jobs": 0,
+    "disposable_qa_profiles_remaining": 0,
+    "active_reports": 0
+  },
+  "openapi_matches_runtime": true,
+  "database_revision": "41ba8d170ab2",
+  "github_ci": {
+    "result": "success",
+    "url": "https://github.com/rakannaufal/wastewise/actions/runs/41396207638"
+  },
+  "credential_check": {
+    "tracked_files_scanned": 209,
+    "active_private_credentials_found": 0,
+    "env_mode": "0600",
+    "whole_git_history_scanned": false
+  },
+  "unverified": [
+    "real email delivery and mailbox recovery",
+    "public deployment",
+    "native installation and device features",
+    "production backup/restore and monitoring",
+    "external field model holdout"
+  ],
+  "verdict": "local demo usable with confirmed Supabase account; public/native release incomplete"
+}

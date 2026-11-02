@@ -1,34 +1,44 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Plus, Search } from "lucide-react";
 import { api } from "../api";
 import type { ReportsPage } from "../types";
 import { categories, Failure, Loading, statusName } from "../ui";
 import { ReportTable } from "../components/ReportTable";
+import { useAuth } from "../Auth";
 export default function Reports() {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [draft, setDraft] = useState("");
-  const [status, setStatus] = useState("");
-  const [category, setCategory] = useState("");
+  const { user } = useAuth();
+  const [params, setParams] = useSearchParams();
+  const page = Math.max(1, Number(params.get("page")) || 1);
+  const search = params.get("search") || "";
+  const [draft, setDraft] = useState(search);
+  const status = params.get("status") || "";
+  const category = params.get("category") || "";
+  function change(key: string, value: string) {
+    setParams((old) => {
+      const next = new URLSearchParams(old);
+      if (value) next.set(key, value);
+      else next.delete(key);
+      if (key !== "page") next.delete("page");
+      return next;
+    });
+  }
+  const setPage = (value: number) => change("page", String(value));
   const navigate = useNavigate();
-  const query = new URLSearchParams({
-    page: String(page),
-    per_page: "10",
-    search,
-    ...(status && { status }),
-    ...(category && { category }),
-  });
+  const query = new URLSearchParams(params);
+  query.set("page", String(page));
+  query.set("per_page", "10");
   const result = useQuery({
-    queryKey: ["reports", page, search, status, category],
-    queryFn: () => api<ReportsPage>(`/api/v1/reports?${query}`),
+    queryKey: ["reports", user?.id, query.toString()],
+    queryFn: ({ signal }) =>
+      api<ReportsPage>(`/api/v1/reports?${query}`, { signal }),
+    staleTime: 30000,
   });
   return (
     <>
       <div className="page-heading">
         <div>
-          <span className="eyebrow">Catat dan pantau</span>
           <h1>Laporan sampah</h1>
           <p className="muted">
             Foto, lokasi, dan perkembangan penanganan dalam satu tempat.
@@ -45,8 +55,7 @@ export default function Reports() {
             className="search-field"
             onSubmit={(e) => {
               e.preventDefault();
-              setSearch(draft);
-              setPage(1);
+              change("search", draft);
             }}
           >
             <Search size={18} />
@@ -65,8 +74,7 @@ export default function Reports() {
             aria-label="Filter status"
             value={status}
             onChange={(e) => {
-              setStatus(e.target.value);
-              setPage(1);
+              change("status", e.target.value);
             }}
           >
             <option value="">Semua status</option>
@@ -80,8 +88,7 @@ export default function Reports() {
             aria-label="Filter kategori"
             value={category}
             onChange={(e) => {
-              setCategory(e.target.value);
-              setPage(1);
+              change("category", e.target.value);
             }}
           >
             <option value="">Semua material</option>
@@ -92,6 +99,75 @@ export default function Reports() {
             ))}
           </select>
         </div>
+        <div className="filters secondary-filters">
+          <label>
+            Dari tanggal
+            <input
+              type="date"
+              value={params.get("date_from")?.slice(0, 10) || ""}
+              onChange={(e) =>
+                change(
+                  "date_from",
+                  e.target.value ? `${e.target.value}T00:00:00+07:00` : "",
+                )
+              }
+            />
+          </label>
+          <label>
+            Sebelum tanggal
+            <input
+              type="date"
+              value={
+                params.get("date_to")
+                  ? new Date(params.get("date_to")!).toLocaleDateString(
+                      "en-CA",
+                      { timeZone: "Asia/Jakarta" },
+                    )
+                  : ""
+              }
+              onChange={(e) =>
+                change(
+                  "date_to",
+                  e.target.value ? `${e.target.value}T00:00:00+07:00` : "",
+                )
+              }
+            />
+          </label>
+          <label>
+            Urutan
+            <select
+              value={params.get("sort") || "newest"}
+              onChange={(e) => change("sort", e.target.value)}
+            >
+              <option value="newest">Terbaru</option>
+              <option value="oldest">Terlama</option>
+            </select>
+          </label>
+          {user?.role === "admin" && (
+            <label className="confirmation">
+              <input
+                type="checkbox"
+                checked={params.get("needs_review") === "true"}
+                onChange={(e) =>
+                  change("needs_review", e.target.checked ? "true" : "")
+                }
+              />
+              Perlu review AI
+            </label>
+          )}
+          {params.get("user_id") && (
+            <p className="caption">Filter pelapor aktif</p>
+          )}
+          <button
+            className="text-button"
+            onClick={() => {
+              setParams({});
+              setDraft("");
+            }}
+          >
+            Reset filter
+          </button>
+        </div>
         {result.isPending ? (
           <Loading />
         ) : result.isError ? (
@@ -99,6 +175,7 @@ export default function Reports() {
         ) : (
           <>
             <ReportTable
+              admin={user?.role === "admin"}
               reports={result.data.reports}
               open={(id) => navigate(`/reports/${id}`)}
             />

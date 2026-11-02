@@ -6,7 +6,7 @@ Status: API terimplementasi dan diuji lokal. Schema executable tersedia di `/ope
 
 - Development origin: `http://localhost:8000`; prefix: `/api/v1`.
 - Production origin: belum tersedia. Jangan memakai URL contoh SPEC sebagai deployment nyata.
-- JSON untuk register/login/update. `multipart/form-data` untuk laporan dan prediksi.
+- JSON untuk register/login/update. `multipart/form-data` untuk upload draft dan prediksi; JSON untuk finalisasi/edit laporan.
 - Header autentikasi: `Authorization: Bearer <access_token>`.
 - Tanggal: ISO 8601 UTC. ID: UUID. Confidence/probabilities API: persen `0..100`, bukan pecahan `0..1`.
 - Pagination: `page >= 1`, `per_page` default 10, maksimum 100. Urutan stabil `created_at DESC, id DESC`.
@@ -59,6 +59,15 @@ Urutan kelas tensor ML tidak ditentukan oleh tabel ini; baca metadata checkpoint
 | POST | `/api/v1/auth/login` | Publik, mode lokal, dibatasi laju | `200`, TokenRead |
 | GET | `/api/v1/auth/me` | Login | `200`, UserRead |
 | GET | `/api/v1/categories` | Publik | `200`, metadata 12 kategori |
+| POST | `/api/v1/report-drafts` | Login | `201`, DraftRead |
+| GET | `/api/v1/report-drafts/{id}` | Pemilik | `200`, DraftRead |
+| PATCH | `/api/v1/report-drafts/{id}` | Pemilik | `200`, LocationUpdate menjadi DraftRead |
+| POST | `/api/v1/report-drafts/{id}/retry` | Pemilik | `200`, DraftRead, tanpa upload baru |
+| DELETE | `/api/v1/report-drafts/{id}` | Pemilik | `200`, discard draft belum dikonsumsi |
+| GET | `/api/v1/admin/dashboard` | Admin | `200`, cohort, backlog, queues, trend, timing |
+| PATCH | `/api/v1/reports/{id}` | Pemilik Pending/admin | `200`, ReportRead |
+| PATCH | `/api/v1/reports/{id}/review` | Admin | `200`, ReportRead |
+| GET | `/api/v1/reports/{id}/events` | Pemilik/admin | `200`, maksimal100 event terbaru |
 | GET | `/api/v1/reports` | Milik sendiri; admin semua | `200`, reports + pagination |
 | POST | `/api/v1/reports` | Login | `201`, ReportRead |
 | GET | `/api/v1/reports/{id}` | Pemilik/admin | `200`, ReportRead |
@@ -72,7 +81,7 @@ Urutan kelas tensor ML tidak ditentukan oleh tabel ini; baca metadata checkpoint
 | GET | `/health/live` | Publik | `200`, status proses |
 | GET | `/health/ready` | Publik | `200` jika DB dan Storage siap; selain itu `503`; status model dilaporkan terpisah |
 
-Readiness tidak membeberkan koneksi, path internal, atau secrets. Respons menyediakan status dependency yang ringkas. Jika DB dan Storage siap tetapi model tidak tersedia, readiness tetap `200` dengan `data.status: "degraded"` dan `data.model: "unavailable"`; laporan manual tetap dilayani. Jika semuanya siap, status `ready`. Jangan membuat load balancer menghentikan seluruh traffic hanya karena fitur prediksi opsional tidak siap. Liveness tetap `200` selama proses hidup; `/predict` tetap `503` bila model tidak siap.
+Readiness tidak membeberkan koneksi, path internal, atau secrets. Respons menyediakan status dependency yang ringkas. Jika DB dan Storage siap tetapi model tidak tersedia, readiness tetap `200` dengan `data.status: "degraded"` dan `data.model: "unavailable"`; draft tetap dapat dibuat, namun finalisasi menunggu prediksi yang berhasil. Jika semuanya siap, status `ready`. Jangan membuat load balancer menghentikan seluruh traffic hanya karena model tidak siap; browsing laporan dan retry draft tetap diperlukan. Liveness tetap `200` selama proses hidup; `/predict` tetap `503` bila model tidak siap.
 
 ## Autentikasi
 
@@ -88,49 +97,51 @@ Paragraf register/login berikut berlaku untuk `AUTH_PROVIDER=local`.
 
 UserRead berisi `id`, `email`, `full_name`, `role`, `created_at`, `updated_at`. Tidak ada endpoint refresh/logout WasteWise; pada mode Supabase SDK menangani refresh dan logout. Pada mode lokal, logout hanya menghapus token perangkat.
 
-## Laporan
+## Draft foto, lokasi dan finalisasi
 
-`GET /reports` menerima `page`, `per_page`, `search`, `status`, `category`, `user_id`. `search` mencari deskripsi, panjang maksimum 200 karakter. `user_id` hanya boleh digunakan admin; pengguna yang mengirim parameter itu mendapat `403`. Filter tidak mengganti batas kepemilikan. Count dan hasil menggunakan predicate yang sama. Halaman valid di luar hasil menjawab array kosong, tetap mengembalikan total sebenarnya.
+`POST /report-drafts`: multipart dengan **hanya** `image`, `request_id` UUID, `photo_source=camera|gallery`, opsional `captured_at` ISO8601 berzona. Field berulang/tidak dikenal ditolak422. Kamera wajib captured_at dalam24jam terakhir, toleransi clock masa depan5detik. Gambar JPEG/PNG/WebP maksimum5MiB; request6MiB, decode20juta pixel. Client menormalisasi maksimal1600px/JPEG.82; server melakukan decode, orientasi, membuang EXIF, RGB JPEG.90 maksimal2048px, lalu inferensi pada bytes yang disimpan. Thumbnail JPEG320px disimpan privat.
 
-`POST /reports` menerima:
+Request UUID scoped akun. Foto/sumber/waktu yang sama dengan UUID sama mengembalikan draft sebelumnya tanpa menyimpan/inferensi lagi. UUID sama dengan payload foto berbeda409. Draft24jam, hanya pemilik, tidak dibagi dengan admin. DraftRead: `id`, `image_url`, `image_url_expires_at`, `prediction`, `classification_state`, `expires_at`, `latitude`, `longitude`, `photo_source`, `captured_at`, `location_source`, `location_recorded_at`, `location_accuracy_m`. Nilai belum diketahui null / legacy_unknown. Prediction menggunakan kontrak PredictionRead.
 
-| Field | Tipe | Validasi |
-| --- | --- | --- |
-| `image` | File, wajib | JPEG/PNG/WebP, maksimum 5 MiB = 5,242,880 byte; isi gambar harus dapat didekode |
-| `category` | Enum, wajib | Kategori final pilihan pengguna |
-| `description` | String, wajib | Trim, 10..5000 karakter |
-| `latitude` | Number, wajib | Finite, -90 sampai 90 |
-| `longitude` | Number, wajib | Finite, -180 sampai 180 |
+Model gagal terkendali: draft201 dengan prediction=null dan analysis_failed. `POST /report-drafts/{id}/retry` membaca foto yang sudah tersimpan, menjalankan model hanya jika hasil belum ada. Tidak meng-upload ulang. Draft habis masa simpan409. `DELETE` memasukkan foto/thumbnail ke cleanup lalu menghapus draft yang belum dikonsumsi; draft dikonsumsi409.
 
-Field AI, `status`, dan `user_id` dari client ditolak `422`. Verifikasi MIME dari isi, batasi dimensi hasil decode, tangani decompression bomb, dan hapus metadata EXIF sebelum menyimpan. Standar output upload adalah RGB JPEG dengan sisi terpanjang maksimal 2048 px; tampilkan hasil kompresi di client bila dilakukan di client. Inferensi saat menyimpan laporan memakai gambar yang sudah disanitasi, sama dengan gambar yang disimpan. Perlakukan `NaN` dan infinity sebagai input tidak valid.
+`PATCH /report-drafts/{id}` menerima LocationUpdate JSON:
 
-Backend menentukan pemilik dari token dan status awal `Pending`. Saat model siap, server menghitung prediksi dan menyimpan kategori prediksi, confidence, versi model. Kategori final tetap pilihan pengguna. Model tidak tersedia atau inferensi gagal secara terkendali: ketiga field AI `null`, laporan manual tetap `201`. Kegagalan Storage/DB tidak boleh dilaporkan sebagai sukses.
+| Field | Aturan |
+| --- | --- |
+| latitude, longitude | Bilangan finite, -90..90 / -180..180 |
+| location_source | device_capture, photo_exif, device_upload_confirmed |
+| location_recorded_at | Timestamp berzona, nullable hanya untuk EXIF; masa depan maks5detik |
+| location_accuracy_m | 0..50 meter untuk GPS perangkat; EXIF boleh null |
+| confirmed | true wajib untuk device_upload_confirmed |
 
-ReportRead berisi:
+Kamera hanya menerima device_capture dengan fix berbeda ≤30detik dari captured_at. Galeri tidak dapat mengklaim device_capture. GPS konfirmasi galeri harus berumur ≤30detik saat PATCH. EXIF menyatakan metadata foto, bukan GPS terverifikasi. API tidak membuktikan keberadaan fisik atau keaslian EXIF. Tidak menerima alamat/koordinat yang diketik melalui formulir produk.
 
-```text
-id: UUID
-user_id: UUID
-user_name: string
-category: WasteCategory
-description: string
-image_url: signed URL
-image_url_expires_at: UTC timestamp
-latitude: JSON number
-longitude: JSON number
-status: ReportStatus
-ai_predicted_category: WasteCategory | null
-ai_confidence: number 0..100 | null
-ai_model_version: string | null
-created_at: UTC timestamp
-updated_at: UTC timestamp
-```
+`POST /reports`: JSON `{"draft_id":"UUID","description":"10..5000 karakter setelah trim"}` dengan header wajib `Idempotency-Key: UUID`. Kategori, confidence, model, sumber foto/lokasi, pemilik dan status awal ditentukan backend dari draft dan token; tambahan field ditolak422. Draft wajib dimiliki, belum dikonsumsi, belum kedaluwarsa, memiliki prediksi dan lokasi valid. Model belum berhasil503; lokasi kurang422. Status awal Pending. Satu draft hanya dapat dikonsumsi sekali.
 
-`user_email` boleh ditambahkan pada detail untuk admin saja. `image_path` internal tidak perlu dipublikasikan. Client mengambil ulang detail saat signed URL kedaluwarsa; jangan terus mengulang request tanpa batas.
+Key finalisasi scoped akun dan fingerprint payload; retry sama mengembalikan laporan sama201, key sama dengan isi berbeda409. Lock transaksi melindungi request serentak. Jika laporan hasil sudah dihapus, retry mengembalikan404. Laporan baru tidak memiliki fallback kategori manual. Hasil lemah boleh difinalisasi sebagai needs_review; classification_state terpisah dari status penanganan.
 
-`PATCH /reports/{id}/status` menerima satu field `status`. Admin dapat memilih salah satu dari empat status, termasuk membuka ulang laporan; mengirim status yang sama bersifat idempoten. Tidak ada workflow petugas tersembunyi pada MVP.
+## Laporan, edit dan riwayat
 
-`DELETE /reports/{id}` menghapus row dan menambahkan job penghapusan gambar dalam transaksi yang sama. Respons `200` berarti row sudah dihapus dan cleanup sudah dijadwalkan secara persisten. Worker menyelesaikan penghapusan object. Jika upload berhasil tetapi commit pembuatan laporan gagal, lakukan compensating delete; kegagalan kompensasi wajib tercatat dan dapat direkonsiliasi.
+`GET /reports`: page/per_page/search/status/category/user_id ditambah `date_from`, `date_to` (berzona, batas `[from,to)`), `needs_review=true`, `sort=newest|oldest`. Search deskripsi maksimum200karakter. user_id hanya admin403. Filter tidak mengganti ownership; count/pagination memakai predicate sama, halaman di luar hasil berisi array kosong. Urutan created_at,id stabil.
+
+ReportRead: `id`, `user_id`, `user_name`, `category`, `description`, `image_url`, `thumbnail_url`, `image_url_expires_at`, `latitude`, `longitude`, `status`, `ai_predicted_category`, `ai_confidence`, `ai_model_version`, `classification_state`, `revision`, `photo_source`, `captured_at`, `location_source`, `location_recorded_at`, `location_accuracy_m`, `created_at`, `updated_at`. Foto/thumbnail signed900detik; ambil ulang resource untuk memperbarui. List/dashboard menggunakan batch signing. Path Storage tidak dikirim.
+
+`PATCH /reports/{id}`: JSON revision>=1, description10..5000, opsional draft_id pengganti. Pemilik dapat mengedit saat Pending; admin lintas status. Deskripsi saja mempertahankan kategori/AI/lokasi. Foto pengganti wajib melalui draft milik pelaku, analisis/lokasi baru; foto lama masuk cleanup. Revisi lama409; setiap perubahan nyata menambah revision dan event edited. Tidak ada perubahan nyata tidak menambah event.
+
+`PATCH /reports/{id}/review`: admin, revision, category enum12kelas, reason setelah trim5..1000karakter. Kategori final menjadi hasil review, classification_state=reviewed. `ai_predicted_category`, confidence dan model asli tetap. Event category_reviewed menyimpan sebelum/sesudah dan alasan. Foto pengganti adalah hasil model baru dan bisa memerlukan review baru.
+
+`PATCH /reports/{id}/status`: admin, revision, status, reason opsional maks1000. Pending→In Progress/Rejected; In Progress→Completed/Rejected; Completed/Rejected→Pending. Rejected dan reopen wajib alasan minimal5karakter. Transisi lain409, alasan kurang422, revision lama409. Status sama dengan revision terkini bersifat idempoten tanpa event tambahan.
+
+`GET /reports/{id}/events`: pemilik/admin, maksimal100 event terbaru (created_at DESC,id DESC). Field id/kind/actor_name/details/reason/created_at. Jenis created, edited, status_changed, category_reviewed. Event dan mutasi satu transaksi; actor yang terhapus nullable. Data lama tidak direkayasa riwayatnya.
+
+`DELETE /reports/{id}`: pemilik/admin; hapus row serta enqueue foto/thumbnail dalam transaksi. Respons200 berarti cleanup persisten dijadwalkan. Worker melindungi referensi laporan aktif dan draft belum dikonsumsi. Draft kedaluwarsa dibersihkan bertahap; consumed draft yang masih direferensikan laporan aktif dipertahankan untuk provenance; metadata tidak terpakai dibersihkan setelah expiry. Penghapusan akun membersihkan aset report dan draft akun itu.
+
+## Dashboard admin
+
+`GET /admin/dashboard`: date_from/date_to berzona (maks366hari), timezone IANA default Asia/Jakarta, category/status opsional. Default30hari termasuk hari ini. `cohort.total/by_status/by_category/needs_review` memakai created_at dalam `[from,to)` dan filter aktif. `previous_total/change_percent` memakai durasi sebelumnya setara; denominator0 menghasilkan null. `trend` mengisi hari kosong0.
+
+`backlog.active/needs_review`, `queue`, `review_queue` mencakup seluruh tanggal dengan filter kategori saja; tidak tersaring periode/status cohort. Queue maksimal5 tertua per jenis. `median_response_hours` memakai transisi pertama ke In Progress; `median_completion_hours` memakai pertama ke Completed. Hanya laporan dengan event created yang dihitung, tanpa mengestimasi updated_at legacy. `generated_at`, zona/filter efektif turut dikembalikan. Penghapusan row menghilangkan kontribusi laporan dari agregat, bukan buku besar permanen.
 
 ## Statistik
 
@@ -168,7 +179,7 @@ Model/checkpoint/metadata tidak tersedia atau tidak cocok menjawab `503`; infere
 | 500 | Error tak terduga dengan pesan generik |
 | 503 | Model, DB, atau Storage yang diperlukan sedang tidak tersedia |
 
-Rate limit yang diimplementasikan (per proses, satu worker API): login 10/menit/IP, register 5/menit/IP, prediksi 30/menit/akun. Gunakan state limit yang konsisten pada deployment multi-worker atau batasi deployment menjadi satu worker dan dokumentasikan batasnya. IP forwarding dipercaya hanya dari reverse proxy yang ditetapkan. Batasi pula concurrency inferensi dan ukuran body sebelum seluruh body dibaca.
+Rate limit yang diimplementasikan (per proses, satu worker API): login 10/menit/IP, register 5/menit/IP, prediksi/retry 30/menit/akun, upload draft30/menit/akun, finalisasi30/menit/akun. Gunakan state limit yang konsisten pada deployment multi-worker atau batasi deployment menjadi satu worker dan dokumentasikan batasnya. IP forwarding dipercaya hanya dari reverse proxy yang ditetapkan. Batasi pula concurrency inferensi dan ukuran body sebelum seluruh body dibaca.
 
 Artefak akhir: `/docs`, `/redoc`, `/openapi.json`, ekspor `docs/openapi.json`, dan contoh cURL yang telah diuji. OpenAPI mendefinisikan Bearer security scheme, multipart, seluruh respons error/envelope, enum, pagination, serta model readiness. Contoh login, laporan, prediksi, filter, perubahan status tersedia pada requests.http. Bukti request nyata disanitasi di docs/evidence; tidak menyertakan token atau password.
 
@@ -183,10 +194,14 @@ curl --fail-with-body -X POST http://localhost:8000/api/v1/auth/login \
   -H 'Content-Type: application/json' --data-binary @login.local.json
 curl --fail-with-body http://localhost:8000/api/v1/predict \
   -H "Authorization: Bearer $TOKEN" -F 'image=@foto.jpg'
-curl --fail-with-body http://localhost:8000/api/v1/reports \
+curl --fail-with-body http://localhost:8000/api/v1/report-drafts \
   -H "Authorization: Bearer $TOKEN" -F 'image=@foto.jpg' \
-  -F 'category=plastic' -F 'description=Botol plastik di dekat taman' \
-  -F 'latitude=-6.2' -F 'longitude=106.8'
+  -F 'request_id=GANTI_UUID_UPLOAD' -F 'photo_source=gallery'
+# PATCH sumber GPS draft sesuai kondisi sebenarnya sebelum finalisasi.
+curl --fail-with-body http://localhost:8000/api/v1/reports \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: GANTI_UUID_FINALISASI' \
+  --data-binary @report.local.json
 curl --fail-with-body 'http://localhost:8000/api/v1/reports?category=plastic&status=Pending&page=1&per_page=10' \
   -H "Authorization: Bearer $TOKEN"
 ```
@@ -197,4 +212,4 @@ ID/key bukan urutan kelas. GET categories mengembalikan nama Indonesia, family, 
 
 Worker `python -m app.cleanup` wajib berjalan untuk menuntaskan delete foto. Signed URL berlaku900detik; cache CDN/browser yang sudah menerima foto dapat bertahan sampai expiry dan tidak dijamin tercabut instan setelah delete; tautan berlaku sebagai bearer capability, jangan dibagikan. Access log bawaan Uvicorn dinonaktifkan; log aplikasi memakai template route agar token media tidak tercetak. Respons aplikasi mengirim no-store, nosniff, Referrer-Policy dan request ID.
 
-Model tetap opsional untuk create report. Ketika inference gagal terkendali, laporan manual menyimpan ketiga field AI null. Readiness503 karena dependency tidak sehat melaporkan status dependency tanpa secret; error request database tak terduga memakai envelope500 generik.
+Model wajib untuk finalisasi laporan baru. Inferensi gagal mempertahankan draft analysis_failed untuk retry; laporan belum dibuat. Readiness503 karena dependency tidak sehat melaporkan status dependency tanpa secret; error request database tak terduga memakai envelope500 generik.

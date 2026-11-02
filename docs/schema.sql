@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict lJbv0sdUdCeK0JeWQx4OFk6n3i18gEdPRHv9cNX0GpS2Zq5bh2FpYkSWKGYLkXj
+\restrict 4q8KFbDB4Y6r200MuBlcUH7TEkPvUjtzuYQW1qLKYWiIg41nqTggFbF4krBnTDX
 
 -- Dumped from database version 17.11 (Homebrew)
 -- Dumped by pg_dump version 17.11 (Homebrew)
@@ -83,6 +83,54 @@ CREATE TABLE app_private.blocked_identities (
 
 
 --
+-- Name: report_drafts; Type: TABLE; Schema: app_private; Owner: -
+--
+
+CREATE TABLE app_private.report_drafts (
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    request_id uuid NOT NULL,
+    image_path text NOT NULL,
+    thumbnail_path text NOT NULL,
+    image_hash character varying(64) NOT NULL,
+    latitude numeric(10,8),
+    longitude numeric(11,8),
+    prediction jsonb,
+    classification_state character varying(24) NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    consumed_at timestamp with time zone,
+    result_report_id uuid,
+    finalization_key uuid,
+    finalization_hash character varying(64),
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    photo_source character varying(16),
+    captured_at timestamp with time zone,
+    location_source character varying(32) DEFAULT 'legacy_unknown'::character varying NOT NULL,
+    location_recorded_at timestamp with time zone,
+    location_accuracy_m numeric(10,2),
+    CONSTRAINT ck_report_drafts_draft_coordinates CHECK ((((latitude IS NULL) AND (longitude IS NULL)) OR ((latitude IS NOT NULL) AND (longitude IS NOT NULL) AND ((latitude >= ('-90'::integer)::numeric) AND (latitude <= (90)::numeric)) AND ((longitude >= ('-180'::integer)::numeric) AND (longitude <= (180)::numeric))))),
+    CONSTRAINT ck_report_drafts_draft_photo_source CHECK (((photo_source IS NOT NULL) AND ((photo_source)::text = ANY ((ARRAY['camera'::character varying, 'gallery'::character varying])::text[])) AND (((photo_source)::text <> 'camera'::text) OR (captured_at IS NOT NULL)))),
+    CONSTRAINT ck_report_drafts_draft_prediction CHECK (((((classification_state)::text = 'analysis_failed'::text) AND (prediction IS NULL)) OR (((classification_state)::text = ANY ((ARRAY['classified'::character varying, 'needs_review'::character varying])::text[])) AND (prediction IS NOT NULL))))
+);
+
+
+--
+-- Name: report_events; Type: TABLE; Schema: app_private; Owner: -
+--
+
+CREATE TABLE app_private.report_events (
+    id uuid NOT NULL,
+    report_id uuid NOT NULL,
+    actor_id uuid,
+    kind character varying(32) NOT NULL,
+    details jsonb NOT NULL,
+    reason text,
+    created_at timestamp with time zone NOT NULL
+);
+
+
+--
 -- Name: storage_cleanup_jobs; Type: TABLE; Schema: app_private; Owner: -
 --
 
@@ -98,7 +146,7 @@ CREATE TABLE app_private.storage_cleanup_jobs (
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL,
     CONSTRAINT ck_storage_cleanup_jobs_attempts_nonnegative CHECK ((attempts >= 0)),
-    CONSTRAINT ck_storage_cleanup_jobs_valid_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'processing'::character varying, 'completed'::character varying])::text[])))
+    CONSTRAINT ck_storage_cleanup_jobs_valid_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('processing'::character varying)::text, ('completed'::character varying)::text])))
 );
 
 
@@ -139,11 +187,22 @@ CREATE TABLE app_private.waste_reports (
     ai_model_version text,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL,
+    photo_source character varying(16),
+    captured_at timestamp with time zone,
+    location_source character varying(32) DEFAULT 'legacy_unknown'::character varying NOT NULL,
+    location_recorded_at timestamp with time zone,
+    location_accuracy_m numeric(10,2),
+    source_draft_id uuid,
+    thumbnail_path text,
+    classification_state character varying(24) DEFAULT 'legacy'::character varying NOT NULL,
+    revision integer DEFAULT 1 NOT NULL,
     CONSTRAINT ck_waste_reports_ai_complete CHECK ((((ai_predicted_category IS NULL) AND (ai_confidence IS NULL) AND (ai_model_version IS NULL)) OR ((ai_predicted_category IS NOT NULL) AND (ai_confidence IS NOT NULL) AND (ai_model_version IS NOT NULL)))),
     CONSTRAINT ck_waste_reports_confidence_range CHECK (((ai_confidence IS NULL) OR ((ai_confidence >= (0)::numeric) AND (ai_confidence <= (100)::numeric)))),
     CONSTRAINT ck_waste_reports_description_length CHECK (((char_length(btrim(description)) >= 10) AND (char_length(btrim(description)) <= 5000))),
     CONSTRAINT ck_waste_reports_latitude_range CHECK (((latitude >= ('-90'::integer)::numeric) AND (latitude <= (90)::numeric))),
-    CONSTRAINT ck_waste_reports_longitude_range CHECK (((longitude >= ('-180'::integer)::numeric) AND (longitude <= (180)::numeric)))
+    CONSTRAINT ck_waste_reports_longitude_range CHECK (((longitude >= ('-180'::integer)::numeric) AND (longitude <= (180)::numeric))),
+    CONSTRAINT ck_waste_reports_report_automatic CHECK ((((classification_state)::text = 'legacy'::text) OR (((classification_state)::text = ANY ((ARRAY['classified'::character varying, 'needs_review'::character varying, 'reviewed'::character varying])::text[])) AND (ai_predicted_category IS NOT NULL) AND (source_draft_id IS NOT NULL) AND (photo_source IS NOT NULL) AND ((photo_source)::text = ANY ((ARRAY['camera'::character varying, 'gallery'::character varying])::text[])) AND ((location_source)::text = ANY ((ARRAY['device_capture'::character varying, 'photo_exif'::character varying, 'device_upload_confirmed'::character varying])::text[]))))),
+    CONSTRAINT ck_waste_reports_report_revision CHECK ((revision >= 1))
 );
 
 
@@ -153,6 +212,22 @@ CREATE TABLE app_private.waste_reports (
 
 ALTER TABLE ONLY app_private.blocked_identities
     ADD CONSTRAINT pk_blocked_identities PRIMARY KEY (id);
+
+
+--
+-- Name: report_drafts pk_report_drafts; Type: CONSTRAINT; Schema: app_private; Owner: -
+--
+
+ALTER TABLE ONLY app_private.report_drafts
+    ADD CONSTRAINT pk_report_drafts PRIMARY KEY (id);
+
+
+--
+-- Name: report_events pk_report_events; Type: CONSTRAINT; Schema: app_private; Owner: -
+--
+
+ALTER TABLE ONLY app_private.report_events
+    ADD CONSTRAINT pk_report_events PRIMARY KEY (id);
 
 
 --
@@ -177,6 +252,38 @@ ALTER TABLE ONLY app_private.users
 
 ALTER TABLE ONLY app_private.waste_reports
     ADD CONSTRAINT pk_waste_reports PRIMARY KEY (id);
+
+
+--
+-- Name: report_drafts uq_drafts_owner_finalize; Type: CONSTRAINT; Schema: app_private; Owner: -
+--
+
+ALTER TABLE ONLY app_private.report_drafts
+    ADD CONSTRAINT uq_drafts_owner_finalize UNIQUE (user_id, finalization_key);
+
+
+--
+-- Name: report_drafts uq_drafts_owner_request; Type: CONSTRAINT; Schema: app_private; Owner: -
+--
+
+ALTER TABLE ONLY app_private.report_drafts
+    ADD CONSTRAINT uq_drafts_owner_request UNIQUE (user_id, request_id);
+
+
+--
+-- Name: report_drafts uq_report_drafts_image_path; Type: CONSTRAINT; Schema: app_private; Owner: -
+--
+
+ALTER TABLE ONLY app_private.report_drafts
+    ADD CONSTRAINT uq_report_drafts_image_path UNIQUE (image_path);
+
+
+--
+-- Name: waste_reports uq_reports_source_draft; Type: CONSTRAINT; Schema: app_private; Owner: -
+--
+
+ALTER TABLE ONLY app_private.waste_reports
+    ADD CONSTRAINT uq_reports_source_draft UNIQUE (source_draft_id);
 
 
 --
@@ -211,6 +318,20 @@ CREATE INDEX ix_cleanup_due ON app_private.storage_cleanup_jobs USING btree (sta
 
 
 --
+-- Name: ix_drafts_expiry; Type: INDEX; Schema: app_private; Owner: -
+--
+
+CREATE INDEX ix_drafts_expiry ON app_private.report_drafts USING btree (expires_at);
+
+
+--
+-- Name: ix_events_report_created; Type: INDEX; Schema: app_private; Owner: -
+--
+
+CREATE INDEX ix_events_report_created ON app_private.report_events USING btree (report_id, created_at);
+
+
+--
 -- Name: ix_reports_category_created; Type: INDEX; Schema: app_private; Owner: -
 --
 
@@ -232,6 +353,38 @@ CREATE INDEX ix_reports_status_created ON app_private.waste_reports USING btree 
 
 
 --
+-- Name: report_drafts fk_report_drafts_user_id; Type: FK CONSTRAINT; Schema: app_private; Owner: -
+--
+
+ALTER TABLE ONLY app_private.report_drafts
+    ADD CONSTRAINT fk_report_drafts_user_id FOREIGN KEY (user_id) REFERENCES app_private.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: report_events fk_report_events_actor_id; Type: FK CONSTRAINT; Schema: app_private; Owner: -
+--
+
+ALTER TABLE ONLY app_private.report_events
+    ADD CONSTRAINT fk_report_events_actor_id FOREIGN KEY (actor_id) REFERENCES app_private.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: report_events fk_report_events_report_id; Type: FK CONSTRAINT; Schema: app_private; Owner: -
+--
+
+ALTER TABLE ONLY app_private.report_events
+    ADD CONSTRAINT fk_report_events_report_id FOREIGN KEY (report_id) REFERENCES app_private.waste_reports(id) ON DELETE CASCADE;
+
+
+--
+-- Name: waste_reports fk_reports_source_draft; Type: FK CONSTRAINT; Schema: app_private; Owner: -
+--
+
+ALTER TABLE ONLY app_private.waste_reports
+    ADD CONSTRAINT fk_reports_source_draft FOREIGN KEY (source_draft_id) REFERENCES app_private.report_drafts(id) ON DELETE SET NULL;
+
+
+--
 -- Name: waste_reports fk_waste_reports_user_id; Type: FK CONSTRAINT; Schema: app_private; Owner: -
 --
 
@@ -243,5 +396,5 @@ ALTER TABLE ONLY app_private.waste_reports
 -- PostgreSQL database dump complete
 --
 
-\unrestrict lJbv0sdUdCeK0JeWQx4OFk6n3i18gEdPRHv9cNX0GpS2Zq5bh2FpYkSWKGYLkXj
+\unrestrict 4q8KFbDB4Y6r200MuBlcUH7TEkPvUjtzuYQW1qLKYWiIg41nqTggFbF4krBnTDX
 

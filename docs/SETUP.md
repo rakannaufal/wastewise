@@ -38,7 +38,7 @@ Pydantic menolak secret JWT pendek dan local storage pada production. `.env.exam
 
 ## Mobile dan platform
 
-`npm --prefix mobile run export` menghasilkan JavaScript/assets untuk iOS/Android/web, bukan APK/IPA terpasang. Untuk perangkat: Expo Go yang sesuai SDK atau development build, IP LAN backend, izin kamera/foto/lokasi. Jika izin lokasi ditolak, isi latitude/longitude manual. Gallery menyediakan alternatif kamera. Android/iOS entitlement/signing, bundle ID final dan privacy disclosure harus diperiksa sebelum toko aplikasi.
+`npm --prefix mobile run export` menghasilkan JavaScript/assets untuk iOS/Android/web, bukan APK/IPA terpasang. Untuk perangkat: Expo Go yang sesuai SDK atau development build, IP LAN backend, izin kamera/foto/lokasi. Jika izin lokasi ditolak, klasifikasi tetap dapat berjalan, tetapi pengiriman menunggu GPS yang valid. Galeri memakai metadata lokasi atau GPS saat unggah setelah konfirmasi tempat; tidak ada input koordinat manual. Kamera menyediakan GPS yang terikat waktu shutter. Android/iOS entitlement/signing, bundle ID final dan privacy disclosure harus diperiksa sebelum toko aplikasi.
 
 Sesi Supabase native disimpan SecureStore dalam chunk; Expo web memakai browser storage SDK. Mode lokal native tetap SecureStore, web memori. SDK memperbarui sesi; perubahan status foreground native memulai/menghentikan refresh. Tidak ada antrean submit offline; kegagalan ditampilkan untuk dicoba ulang tanpa sukses palsu.
 

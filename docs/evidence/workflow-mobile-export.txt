@@ -1,0 +1,56 @@
+
+> wastewise-mobile@1.0.0 export
+> expo export --platform all --output-dir ../.local/mobile-browser
+
+Starting Metro Bundler
+
+| (node:37080) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+iOS Bundled 6268ms node_modules/expo-router/entry.js (1274 modules)
+Android Bundled 11455ms node_modules/expo-router/entry.js (1287 modules)
+Static rendering is enabled. Learn more: https://docs.expo.dev/router/web/static-rendering/
+λ Bundled 668ms node_modules/@expo/router-server/node/render.js (690 modules)
+Web Bundled 960ms node_modules/expo-router/entry.js (959 modules)
+
+› ios bundles (1):
+_expo/static/js/ios/entry-4e6911e0290b2f464c5840a4e5455a0e.hbc (3.5MB)
+
+› android bundles (1):
+_expo/static/js/android/entry-edcbc7b9b85946c45b6f10c6bb82161a.hbc (3.4MB)
+
+› web bundles (15):
+_expo/static/js/web/__common-2c7a0a31fb58728d05063ba48ebab03a.js (373KB)
+_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js (3.8KB)
+_expo/static/js/web/_layout-01ed74a8e47868c605dda3dcb58f7dfe.js (973B)
+_expo/static/js/web/_layout-63fe685f8bcbd76fc668dab159cc45d0.js (66KB)
+_expo/static/js/web/[id]-32fb5794ccb9e3e1a90371e81964d87f.js (6.3KB)
+_expo/static/js/web/camera-2c134f5aead9e2f5e5f33eadb789d1ee.js (28KB)
+_expo/static/js/web/classify-22084438632e38634e6583bd049c0cf4.js (270B)
+_expo/static/js/web/entry-33673fb710aba463c4eafd3906b23f02.js (1.1MB)
+_expo/static/js/web/guide-efafc4ecf18f9bb216a57fd81cf09852.js (1.2KB)
+_expo/static/js/web/index-5bf6443abcce2b049389e61fc14fcd2e.js (45KB)
+_expo/static/js/web/index-7451c98d5a3f889da9dd4b7edaac7502.js (2.6KB)
+_expo/static/js/web/login-dbec38a34130d49cbcbd1bf550ac91e6.js (3KB)
+_expo/static/js/web/new-report-7049543153c0dbf7fa553f8b267719df.js (46KB)
+_expo/static/js/web/profile-58e2644ae5275fb37b28712ccc57a859.js (1.5KB)
+_expo/static/js/web/reports-ec8a741450671a40f87db6ee5153337f.js (3.8KB)
+
+› Static routes (16):
+/login (20KB)
+/guide (20KB)
+/ (index) (20KB)
+/camera (20KB)
+/profile (20KB)
+/reports (20KB)
+/_sitemap (19KB)
+/classify (20KB)
+/new-report (20KB)
+/+not-found (19KB)
+/report/[id] (20KB)
+/(tabs)/guide (20KB)
+/(tabs) (20KB)
+/(tabs)/profile (20KB)
+/(tabs)/reports (20KB)
+/(tabs)/classify (20KB)
+
+Exported: ../.local/mobile-browser

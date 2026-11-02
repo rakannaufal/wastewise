@@ -13,7 +13,9 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.auth import router as auth_router
 from app.config import settings
+from app.dashboard import router as dashboard_router
 from app.db import engine
+from app.drafts import router as drafts_router
 from app.inference import predictor
 from app.reports import ok
 from app.reports import router as reports_router
@@ -46,7 +48,7 @@ app.add_middleware(
     allow_origins=settings.cors_origins.split(","),
     allow_credentials=False,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_headers=["Authorization", "Content-Type", "Idempotency-Key"],
     expose_headers=["X-Request-ID"],
 )
 
@@ -191,3 +193,5 @@ def media(token: str):
 
 app.include_router(auth_router)
 app.include_router(reports_router)
+app.include_router(drafts_router)
+app.include_router(dashboard_router)

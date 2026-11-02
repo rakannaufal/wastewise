@@ -17,3 +17,7 @@ Risks: dataset imbalance/near duplicates; model quality gate may fail; Supabase 
 5. Continue independent release gaps: storage reconciliation and deployment configuration. Remote DB/storage changes require project access beyond a publishable key; native device verification requires a device.
 
 Use existing DESIGN.md and ui-craft/antislop during for auth states. No redesign, no model retraining.
+
+## Mobile-first system improvements (implemented, device verification pending, 2 November 2026)
+
+See [docs/SYSTEM_IMPROVEMENT_PLAN.md](docs/SYSTEM_IMPROVEMENT_PLAN.md) for the proposed camera/gallery-to-ML reporting flow, automatic location provenance, transactional report drafts, admin workflow/statistics, responsive behavior, performance budgets, rollout and acceptance tests. The user confirmed current-device GPS may be used for gallery images without GPS after an explicit statement that the photo was taken there. Implementation is available; see docs/WORKFLOW_IMPLEMENTATION.md for verified behavior and outstanding device/deployment gates.

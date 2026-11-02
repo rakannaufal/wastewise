@@ -14,7 +14,12 @@ import type { ReportsPage, Summary } from "../types";
 import { categories, Failure, Loading } from "../ui";
 import { ReportTable } from "../components/ReportTable";
 import { ReportDistribution } from "../components/ReportDistribution";
+import AdminDashboard from "./AdminDashboard";
 export default function Dashboard() {
+  const { user } = useAuth();
+  return user?.role === "admin" ? <AdminDashboard /> : <UserDashboard />;
+}
+function UserDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const summary = useQuery({

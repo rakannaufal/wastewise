@@ -16,7 +16,7 @@ from sqlalchemy import delete, select
 from app.cleanup import run_once
 from app.config import ROOT, settings
 from app.db import SessionLocal
-from app.models import BlockedIdentity, CleanupJob, Report, User
+from app.models import BlockedIdentity, CleanupJob, Report, ReportDraft, User
 from app.storage import storage
 
 
@@ -33,6 +33,7 @@ def main():
     identities = []
     jobs = []
     checks = []
+    credentials = []
     provider = settings.supabase_url + "/auth/v1"
     headers = {"apikey": secret, "Authorization": "Bearer " + secret}
     image = (ROOT / "web/public/materials/plastic.jpg").read_bytes()
@@ -44,6 +45,7 @@ def main():
             for _ in range(2):
                 email = f"wastewise-qa-{uuid.uuid4().hex}@example.com"
                 password = "WasteWise1!" + secrets.token_urlsafe(24)
+                credentials.append({"email": email, "password": password})
                 response = cloud.post(
                     provider + "/admin/users",
                     headers=headers,
@@ -70,18 +72,6 @@ def main():
                 assert response.status_code == 200 and response.json()["data"]["role"] == "user"
                 if len(identities) == 1:
                     owner = bearer
-                    if args.browser:
-                        browser = subprocess.run(
-                            ["node", "web/scripts/supabase-browser-smoke.mjs"],
-                            input=json.dumps({"email": email, "password": password}),
-                            text=True,
-                            capture_output=True,
-                            timeout=120,
-                            cwd=ROOT,
-                        )
-                        if browser.returncode:
-                            raise RuntimeError("Live browser smoke failed; credentials suppressed")
-                        checks.append("live browser login, reload session and logout")
                 else:
                     outsider = bearer
             checks.extend(
@@ -99,18 +89,51 @@ def main():
             assert response.status_code == 200
             checks.append("trained checkpoint inference")
             response = api.post(
-                "/api/v1/reports",
+                "/api/v1/report-drafts",
                 headers=owner,
-                data={
-                    "category": "plastic",
-                    "description": "Disposable Supabase smoke test report",
-                    "latitude": "-6.2",
-                    "longitude": "106.8",
-                },
+                data={"request_id": str(uuid.uuid4()), "photo_source": "gallery"},
                 files={"image": ("plastic.jpg", image, "image/jpeg")},
             )
+            assert response.status_code == 201, f"Draft creation: {response.status_code}"
+            draft = response.json()["data"]
+            assert (
+                api.patch(
+                    "/api/v1/report-drafts/" + draft["id"],
+                    headers=owner,
+                    json={
+                        "latitude": -6.2,
+                        "longitude": 106.8,
+                        "location_source": "device_upload_confirmed",
+                        "location_recorded_at": datetime.now(UTC).isoformat(),
+                        "location_accuracy_m": 10,
+                        "confirmed": True,
+                    },
+                ).status_code
+                == 200
+            )
+            payload = {
+                "draft_id": draft["id"],
+                "description": "Disposable Supabase smoke test report",
+            }
+            finalize_headers = {**owner, "Idempotency-Key": str(uuid.uuid4())}
+            response = api.post("/api/v1/reports", headers=finalize_headers, json=payload)
             assert response.status_code == 201, f"Report creation: {response.status_code}"
             report = response.json()["data"]
+            assert (
+                api.post("/api/v1/reports", headers=finalize_headers, json=payload).json()["data"][
+                    "id"
+                ]
+                == report["id"]
+            )
+            assert cloud.get(report["thumbnail_url"]).status_code == 200
+            assert api.get("/api/v1/reports", headers=owner).status_code == 200
+            checks.extend(
+                [
+                    "draft automatic classification and confirmed GPS",
+                    "idempotent finalization",
+                    "batch private signing and thumbnail",
+                ]
+            )
             report_id = report["id"]
             assert cloud.get(report["image_url"]).status_code == 200
             assert api.get("/api/v1/reports/" + report_id, headers=outsider).status_code == 404
@@ -136,14 +159,43 @@ def main():
             )
             with SessionLocal.begin() as db:
                 db.get(User, identities[1]).role = "admin"
+            for revision, status in [(1, "In Progress"), (2, "Completed")]:
+                assert (
+                    api.patch(
+                        "/api/v1/reports/" + report_id + "/status",
+                        headers=outsider,
+                        json={"status": status, "revision": revision},
+                    ).status_code
+                    == 200
+                )
             assert (
-                api.patch(
-                    "/api/v1/reports/" + report_id + "/status",
-                    headers=outsider,
-                    json={"status": "Completed"},
-                ).status_code
-                == 200
+                len(
+                    api.get("/api/v1/reports/" + report_id + "/events", headers=owner).json()[
+                        "data"
+                    ]
+                )
+                == 3
             )
+            assert api.get("/api/v1/admin/dashboard", headers=outsider).status_code == 200
+            checks.extend(
+                ["versioned status workflow and events", "real admin dashboard aggregates"]
+            )
+            if args.browser:
+                browser = subprocess.run(
+                    ["node", "web/scripts/supabase-browser-smoke.mjs"],
+                    input=json.dumps({"owner": credentials[0], "admin": credentials[1]}),
+                    text=True,
+                    capture_output=True,
+                    timeout=300,
+                    cwd=ROOT,
+                )
+                if browser.returncode:
+                    diagnostics = browser.stderr
+                    for account in credentials:
+                        diagnostics = diagnostics.replace(account["password"], "[redacted]")
+                    (ROOT / ".local/workflow-browser-error.log").write_text(diagnostics)
+                    raise RuntimeError("Live browser smoke failed; details retained privately")
+                checks.extend(json.loads(browser.stdout)["checks"])
             assert api.delete("/api/v1/reports/" + report_id, headers=owner).status_code == 200
             with SessionLocal() as db:
                 job = db.query(CleanupJob).filter(CleanupJob.object_path == path).one()
@@ -185,12 +237,26 @@ def main():
         finally:
             # Cleanup is exact by generated UUID; never select or delete a human account.
             with SessionLocal.begin() as db:
-                paths = list(
-                    db.scalars(select(Report.image_path).where(Report.user_id.in_(identities)))
-                )
+                paths = set()
+                for model in (Report, ReportDraft):
+                    for photo, thumb in db.execute(
+                        select(model.image_path, model.thumbnail_path).where(
+                            model.user_id.in_(identities)
+                        )
+                    ):
+                        paths.update(path for path in (photo, thumb) if path)
+                qa_jobs = [
+                    row
+                    for row in db.scalars(select(CleanupJob))
+                    if row.object_path.split("/")[0] in {str(value) for value in identities}
+                ]
+                paths.update(row.object_path for row in qa_jobs)
                 db.execute(delete(User).where(User.id.in_(identities)))
                 db.execute(delete(BlockedIdentity).where(BlockedIdentity.id.in_(identities)))
                 db.execute(delete(CleanupJob).where(CleanupJob.id.in_(jobs)))
+                for row in qa_jobs:
+                    if row.id not in jobs:
+                        db.delete(row)
             for path in paths:
                 storage.delete(path)
             failures = []

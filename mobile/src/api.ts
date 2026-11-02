@@ -1,3 +1,4 @@
+import { fetchPayload } from "../../shared/request";
 export const API = (
   process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000"
 ).replace(/\/$/, "");
@@ -13,9 +14,7 @@ export async function api<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  let response: Response;
-  try {
-    response = await fetch(API + path, {
+  const { response, payload } = await fetchPayload(API + path, {
       ...options,
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -25,38 +24,12 @@ export async function api<T>(
         ...options.headers,
       },
     });
-  } catch {
-    throw new Error("Tidak terhubung. Periksa jaringan dan alamat server.");
-  }
-  const payload = await response.json();
   if (!response.ok) {
     if (response.status === 401) expire?.();
-    throw new Error(payload.message || "Permintaan gagal");
+    const errors = payload?.data?.errors?.map((error: { field: string; message: string }) => `${error.field}: ${error.message}`).join("; ");
+    throw new Error(errors || payload?.message || "Permintaan gagal");
   }
-  return payload.data;
+  if (!payload || !("data" in payload)) throw new Error("Respons server tidak valid. Coba kembali.");
+  return payload.data as T;
 }
-export type User = {
-  id: string;
-  full_name: string;
-  email: string;
-  role: "admin" | "user";
-};
-export type Report = {
-  id: string;
-  user_name: string;
-  category: string;
-  description: string;
-  status: string;
-  image_url: string;
-  latitude: number;
-  longitude: number;
-  created_at: string;
-  ai_predicted_category: string | null;
-  ai_confidence: number | null;
-};
-export type Prediction = {
-  category: string;
-  confidence: number;
-  probabilities: Record<string, number>;
-  model_version: string;
-};
+export type { User, Report, Prediction } from "../../shared/contracts";

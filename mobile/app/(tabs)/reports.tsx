@@ -1,9 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { api } from "../../src/api";
 import type { Report } from "../../src/api";
+import { useSession } from "../../src/session";
 import {
   Button,
   categoryName,
@@ -13,6 +14,8 @@ import {
   styles,
 } from "../../src/ui";
 export default function Reports() {
+  const { user } = useSession();
+  const controller = useRef<AbortController | null>(null);
   const [rows, setRows] = useState<Report[]>([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(0);
@@ -22,19 +25,22 @@ export default function Reports() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const load = useCallback(() => {
+    controller.current?.abort(); const abort = new AbortController(); controller.current = abort;
     setBusy(true);
     setError("");
     api<{ reports: Report[]; pagination: { total_pages: number } }>(
       `/api/v1/reports?page=${page}&search=${encodeURIComponent(filter)}${status ? `&status=${encodeURIComponent(status)}` : ""}`,
+      { signal: abort.signal },
     )
       .then((data) => {
+        if (abort.signal.aborted) return;
         setRows(data.reports);
         setPages(data.pagination.total_pages);
       })
-      .catch((e) => setError(e.message))
-      .finally(() => setBusy(false));
-  }, [page, filter, status]);
-  useFocusEffect(load);
+      .catch((e) => { if (!abort.signal.aborted) setError(e.message); })
+      .finally(() => { if (!abort.signal.aborted) setBusy(false); });
+  }, [page, filter, status, user?.id]);
+  useFocusEffect(useCallback(() => { setRows([]); load(); return () => controller.current?.abort(); }, [load]));
   return (
     <SafeAreaView style={styles.screen} edges={["top", "left", "right"]}>
       <FlatList
@@ -117,7 +123,7 @@ export default function Reports() {
             style={[styles.panel, styles.row]}
           >
             <Image
-              source={{ uri: item.image_url }}
+              source={{ uri: item.thumbnail_url || item.image_url }}
               style={{ width: 62, height: 70, borderRadius: 9 }}
             />
             <View style={{ flex: 1, gap: 4 }}>
@@ -125,6 +131,7 @@ export default function Reports() {
               <Text style={styles.text} numberOfLines={2}>
                 {item.description}
               </Text>
+              {item.classification_state === "needs_review" && <Text style={styles.label}>Perlu review AI</Text>}
               <Text style={[styles.label, { color: "#215B3C" }]}>
                 {statusName[item.status]}
               </Text>

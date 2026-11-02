@@ -15,6 +15,7 @@ function Router() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="login" />
         <Stack.Screen name="new-report" options={{ presentation: "modal" }} />
+        <Stack.Screen name="camera" options={{ presentation: "fullScreenModal" }} />
         <Stack.Screen name="report/[id]" />
       </Stack>
     </>

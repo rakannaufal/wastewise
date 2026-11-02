@@ -59,6 +59,69 @@ class ReportRead(BaseModel):
     updated_at: datetime
     image_url: str
     image_url_expires_at: datetime
+    thumbnail_url: str
+    revision: int
+    classification_state: str
+    photo_source: str | None
+    captured_at: datetime | None
+    location_source: str
+    location_recorded_at: datetime | None
+    location_accuracy_m: float | None
+
+
+class DraftRead(BaseModel):
+    id: UUID
+    image_url: str
+    image_url_expires_at: datetime
+    prediction: dict | None
+    classification_state: str
+    expires_at: datetime
+    photo_source: str
+    captured_at: datetime | None
+    latitude: float | None
+    longitude: float | None
+    location_source: str
+    location_recorded_at: datetime | None
+    location_accuracy_m: float | None
+
+
+class EventRead(BaseModel):
+    id: UUID
+    kind: str
+    actor_name: str | None
+    details: dict
+    reason: str | None
+    created_at: datetime
+
+
+class CohortRead(BaseModel):
+    total: int
+    by_status: dict[str, int]
+    by_category: dict[str, int]
+    needs_review: int
+
+
+class TrendPoint(BaseModel):
+    date: str
+    count: int
+
+
+class AdminDashboardRead(BaseModel):
+    generated_at: datetime
+    date_from: datetime
+    date_to: datetime
+    timezone: str
+    category: Category | None
+    status: Status | None
+    cohort: CohortRead
+    previous_total: int
+    change_percent: float | None
+    backlog: dict[str, int]
+    queue: list[ReportRead]
+    review_queue: list[ReportRead]
+    trend: list[TrendPoint]
+    median_response_hours: float | None
+    median_completion_hours: float | None
 
 
 class ReportsPage(BaseModel):
@@ -109,6 +172,7 @@ class StatusRead(BaseModel):
     id: UUID
     status: Status
     updated_at: datetime
+    revision: int
 
 
 class FieldError(BaseModel):

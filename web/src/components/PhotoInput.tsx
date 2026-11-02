@@ -3,9 +3,11 @@ import { Camera, Upload } from "lucide-react";
 export function PhotoInput({
   file,
   onChange,
+  preview = "",
 }: {
   file: File | null;
   onChange: (file: File | null) => void;
+  preview?: string;
 }) {
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
@@ -17,10 +19,10 @@ export function PhotoInput({
   }, [file]);
   return (
     <div className="photo-input">
-      {file && url ? (
+      {(file && url) || preview ? (
         <img
           className="photo-preview"
-          src={url}
+          src={file && url ? url : preview}
           alt="Pratinjau foto yang dipilih"
         />
       ) : (
@@ -36,7 +38,7 @@ export function PhotoInput({
       )}
       <label className="button secondary full">
         <Upload size={18} />
-        {file ? "Ganti foto" : "Pilih foto"}
+        {file || preview ? "Ganti foto" : "Pilih foto"}
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
@@ -46,18 +48,23 @@ export function PhotoInput({
             setError("");
             if (
               value &&
-              (value.size > 5 * 1024 * 1024 ||
+              (value.size > 30 * 1024 * 1024 ||
                 !["image/jpeg", "image/png", "image/webp"].includes(value.type))
             ) {
-              setError("Gunakan JPEG, PNG, atau WebP maksimal 5 MiB.");
+              setError(
+                "Gunakan JPEG, PNG, atau WebP maksimal 30 MiB sebelum kompresi.",
+              );
               event.target.value = "";
               return;
             }
             onChange(value || null);
+            event.target.value = "";
           }}
         />
       </label>
-      <p className="caption">JPEG, PNG, WebP · Maksimal 5 MiB</p>
+      <p className="caption">
+        JPEG, PNG, WebP · Foto dikompresi sebelum dikirim
+      </p>
       {error && (
         <p className="field-error" role="alert">
           {error}

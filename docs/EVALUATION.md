@@ -42,4 +42,16 @@ Test manifest SHA256: `b2042dc8c146c703d679f47d370787e59de3d65018d3e5950ceef8cb6
 
 ## Interpretasi
 
-Hasil berlaku pada distribusi dataset lokal setelah grouping dan exclusion. Angka test tidak membuktikan performa kamera rumah tangga, segmentasi multi-objek, kalibrasi confidence, atau keselamatan penanganan B3. pHash grouping mengurangi duplikat silang split namun tidak menjamin seluruh sumber pengambilan independen. Belum ada external holdout, interval kepercayaan yang dihitung, kalibrasi atau uji lapangan. Kumpulkan holdout lapangan baru dengan hak data yang jelas untuk pengujian berikutnya; jangan menyetel model terhadap test ini.
+Hasil berlaku pada distribusi dataset lokal setelah grouping dan exclusion. Angka test tidak membuktikan performa kamera rumah tangga, segmentasi multi-objek, kalibrasi probabilitas, atau keselamatan penanganan B3. pHash grouping mengurangi duplikat silang split namun tidak menjamin seluruh sumber pengambilan independen. Belum ada external holdout, interval kepercayaan yang dihitung, kalibrasi probabilitas atau uji lapangan. Kumpulkan holdout lapangan baru dengan hak data jelas; jangan menyetel model terhadap test ini.
+
+## Kebijakan review otomatis
+
+`python -m ml.calibrate_review` memakai2320validation, bukan test, untuk memilih confidence minimal50% dan selisih dua kelas teratas minimal30poin. Aturan/checksum di `ml/models/review_policy.json`. Pada validation pemilihan aturan: accepted precision98,02%, coverage93,79%. Angka tidak independen dari pemilihan aturan, bukan akurasi lapangan atau probabilitas terkalibrasi. Checkpoint tidak dilatih ulang; hasil test tetap sama.
+
+Prediksi di bawah batas, checksum/versi tidak cocok atau margin tidak tersedia menjadi `needs_review`. Pengguna boleh mengirim hasil tersebut dengan lokasi valid untuk diperiksa admin. Review beralasan menjaga prediksi AI asli, tanpa retraining otomatis. Model selalu memilih dari12kelas; belum memiliki deteksi OOD atau segmentasi objek campuran.
+
+## Smoke kompresi
+
+`python -m ml.check_compression` mengukur120validation,10perkelas. Aproksimasi1600px/JPEG82 memakai Pillow menghasilkan agreement97,5%; accuracy subset91,67% sebelum/sesudah. Median upload9.629byte; thumbnail maksimum22.205byte. Warm CPU inference p95sekitar351ms dengan beban verifikasi lain; bukan latency end-to-end API/HP.
+
+Bukti: [validation_compression.json](../backend-ml/outputs/validation_compression.json). Encoder Pillow bukan encoder browser/native; dataset resolusi rendah tidak mewakili HEIC/resolusi tinggi dan kondisi lapangan. Target kamera nyata memerlukan holdout dan pengukuran perangkat tersendiri.

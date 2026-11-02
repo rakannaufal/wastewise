@@ -1,0 +1,93 @@
+{
+  "checked_at": "2026-11-02T08:27:10.595104+00:00",
+  "fixture_count": 10000,
+  "requests": 30,
+  "concurrency": 1,
+  "median_ms": 23.01885401539039,
+  "p95_ms": 27.807332982774824,
+  "environment": "macOS arm64, local PostgreSQL17, ASGI TestClient, local JWT and local signed media",
+  "limitation": "Synthetic legacy rows; no Supabase verification/network/Storage or browser included. Does not prove cloud p95<=1s.",
+  "queue_query_plan": [
+    {
+      "Plan": {
+        "Node Type": "Limit",
+        "Parallel Aware": false,
+        "Async Capable": false,
+        "Startup Cost": 155.86,
+        "Total Cost": 155.87,
+        "Plan Rows": 5,
+        "Plan Width": 24,
+        "Actual Startup Time": 1.394,
+        "Actual Total Time": 1.394,
+        "Actual Rows": 5,
+        "Actual Loops": 1,
+        "Plans": [
+          {
+            "Node Type": "Sort",
+            "Parent Relationship": "Outer",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 155.86,
+            "Total Cost": 156.0,
+            "Plan Rows": 55,
+            "Plan Width": 24,
+            "Actual Startup Time": 1.393,
+            "Actual Total Time": 1.394,
+            "Actual Rows": 5,
+            "Actual Loops": 1,
+            "Sort Key": [
+              "created_at",
+              "id"
+            ],
+            "Sort Method": "top-N heapsort",
+            "Sort Space Used": 25,
+            "Sort Space Type": "Memory",
+            "Plans": [
+              {
+                "Node Type": "Bitmap Heap Scan",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Relation Name": "waste_reports",
+                "Alias": "waste_reports",
+                "Startup Cost": 9.0,
+                "Total Cost": 154.95,
+                "Plan Rows": 55,
+                "Plan Width": 24,
+                "Actual Startup Time": 0.175,
+                "Actual Total Time": 1.029,
+                "Actual Rows": 5000,
+                "Actual Loops": 1,
+                "Recheck Cond": "(status = ANY ('{Pending,\"In Progress\"}'::app_private.report_status[]))",
+                "Rows Removed by Index Recheck": 0,
+                "Exact Heap Blocks": 346,
+                "Lossy Heap Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Bitmap Index Scan",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Index Name": "ix_reports_status_created",
+                    "Startup Cost": 0.0,
+                    "Total Cost": 8.98,
+                    "Plan Rows": 55,
+                    "Plan Width": 0,
+                    "Actual Startup Time": 0.141,
+                    "Actual Total Time": 0.141,
+                    "Actual Rows": 5008,
+                    "Actual Loops": 1,
+                    "Index Cond": "(status = ANY ('{Pending,\"In Progress\"}'::app_private.report_status[]))"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "Planning Time": 0.032,
+      "Triggers": [],
+      "Execution Time": 1.402
+    }
+  ]
+}

@@ -1,5 +1,7 @@
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
@@ -67,6 +69,69 @@ class Register(Credentials):
 
 class StatusUpdate(StrictModel):
     status: Status
+    revision: int = Field(ge=1)
+    reason: str = Field(default="", max_length=1000)
+
+
+class LocationUpdate(StrictModel):
+    latitude: float = Field(ge=-90, le=90, allow_inf_nan=False)
+    longitude: float = Field(ge=-180, le=180, allow_inf_nan=False)
+    location_source: Literal["device_capture", "photo_exif", "device_upload_confirmed"]
+    location_recorded_at: datetime | None = None
+    location_accuracy_m: float | None = Field(default=None, ge=0, le=50, allow_inf_nan=False)
+    confirmed: bool = False
+
+    @model_validator(mode="after")
+    def provenance(self):
+        stamp = self.location_recorded_at
+        if stamp is not None and (
+            stamp.tzinfo is None or stamp > datetime.now(UTC) + timedelta(seconds=5)
+        ):
+            raise ValueError("Location time must be timezone-aware and not in the future")
+        if self.location_source != "photo_exif":
+            if stamp is None or self.location_accuracy_m is None:
+                raise ValueError("Device GPS requires a timestamp and accuracy <=50m")
+        if self.location_source == "device_upload_confirmed" and not self.confirmed:
+            raise ValueError("Confirm the gallery photo was taken at this location")
+        return self
+
+
+class ReportCreate(StrictModel):
+    draft_id: UUID
+    description: str = Field(min_length=10, max_length=5000)
+
+    @field_validator("description")
+    @classmethod
+    def trim_description(cls, value):
+        value = value.strip()
+        if len(value) < 10:
+            raise ValueError("Description must contain at least 10 characters")
+        return value
+
+
+class ReportUpdate(StrictModel):
+    revision: int = Field(ge=1)
+    description: str = Field(min_length=10, max_length=5000)
+    draft_id: UUID | None = None
+
+    @field_validator("description")
+    @classmethod
+    def trim_description(cls, value):
+        return ReportCreate.trim_description(value)
+
+
+class ReviewUpdate(StrictModel):
+    revision: int = Field(ge=1)
+    category: Category
+    reason: str = Field(min_length=5, max_length=1000)
+
+    @field_validator("reason")
+    @classmethod
+    def trim_reason(cls, value):
+        value = value.strip()
+        if len(value) < 5:
+            raise ValueError("Review requires a meaningful reason")
+        return value
 
 
 class UserUpdate(StrictModel):

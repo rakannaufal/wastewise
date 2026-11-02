@@ -1,0 +1,9 @@
+Running 3 tests using 1 worker
+
+(node:37287) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 e2e/admin.spec.ts:6:1 › admin aggregates, URL filters, review, revision, workflow and history (5.3s)
+  ✓  2 e2e/mobile-web.spec.ts:5:1 › Expo gallery, automatic ML/GPS, report and editable history (5.1s)
+  ✓  3 e2e/smoke.spec.ts:5:1 › photo automatically becomes an owned report; edit, resume, search, delete (5.2s)
+
+  3 passed (26.4s)

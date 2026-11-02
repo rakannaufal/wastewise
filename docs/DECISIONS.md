@@ -41,3 +41,16 @@ Grafik kategori dan status memakai batang CSS dengan pasangan label/jumlah seman
 SDK resmi menangani signup, konfirmasi, login, persistensi, refresh, PKCE dan pemulihan password web. Backend menghubungi `/auth/v1/user` dengan publishable key untuk setiap request terautentikasi, menolak email belum terkonfirmasi/anonymous dan gagal tertutup saat provider bermasalah. Role tetap dibaca dari PostgreSQL, bukan user_metadata atau claim yang diurai client. UUID identitas menjadi ID profil tanpa password_hash. Email collision dengan akun lokal tidak ditautkan otomatis. Tombstone blocked_identities mencegah profil terhapus dibuat kembali dari token provider yang masih aktif. Penghapusan Auth account tetap operasi admin Supabase terpisah.
 
 Mode lokal dipertahankan untuk tes terisolasi; tidak ada fallback JWT lokal ketika Supabase dipilih. Web menyimpan sesi melalui SDK, native melalui SecureStore yang dipecah per chunk. Pemulihan native memakai web utama, sehingga tidak memerlukan universal link yang belum dikonfigurasi. Kegagalan revoke saat logout tetap menghapus sesi perangkat menurut kontrak SDK terpasang; token yang sudah diterbitkan tetap memiliki masa berlaku provider.
+
+
+## D-11: Laporan otomatis melalui draft (2026-11-02)
+
+`POST /reports` kini menerima JSON draft_id/description dan Idempotency-Key. Kedua client berpindah bersamaan; tidak ada client publik yang telah dirilis. Backend menolak kontrak multipart manual, kategori/AI/status/pemilik tambahan. Draft terikat akun, hash foto dan request UUID; normalnya satu upload/inferensi. Model gagal mempertahankan draft, bukan laporan dengan label manual. Finalisasi dan cleanup memakai lock transaksi agar draft tidak dikonsumsi atau dibersihkan bersamaan. Operasi blocking dijalankan di thread kerja ASGI.
+
+## D-12: Asal lokasi dan review
+
+Kamera menyimpan GPS ≤30 detik dari shutter dan akurasi ≤50 m. Galeri membaca EXIF tanpa mengarang waktu/akurasi; bila GPS tidak ada, pengguna menyatakan foto berasal dari tempat saat ini sebelum GPS unggah disimpan. Timestamp perangkat diberi toleransi masa depan 5 detik. Lokasi client/EXIF tetap dapat dipalsukan; ini provenance, bukan bukti kehadiran. Review policy memakai validation dengan checksum checkpoint. Hasil confidence/margin rendah perlu review. Koreksi kategori admin beralasan menyimpan prediksi asli. Test split/model tidak dituning ulang.
+
+## D-13: Operasi admin dan payload ringan
+
+Status/review terpisah, setiap mutasi ber-revision dan event transaksi. Admin dashboard membedakan cohort tanggal dan antrean seluruh periode; backlog hanya mengikuti filter kategori. Median dihitung dari event nyata, bukan updated_at legacy. Thumbnail320px dan batch signed URL mengurangi transfer serta round-trip Storage. Chart SVG/CSS tidak menambah library grafik. Draft native disimpan dalam direktori privat akun selama24jam; logout membersihkannya. Token tetap SecureStore. API publik HTTPS dan pengujian iOS/Android fisik merupakan gate rilis tersisa.

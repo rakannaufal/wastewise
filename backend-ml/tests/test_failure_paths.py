@@ -28,7 +28,11 @@ def test_invalid_checkpoint_is_degraded(client, tmp_path: Path, monkeypatch):
 
 
 def test_user_delete_enqueues_images(client, accounts, monkeypatch):
-    monkeypatch.setattr(predictor, "predict", lambda _: None)
+    monkeypatch.setattr(
+        predictor,
+        "predict",
+        lambda _: {"category": "plastic", "confidence": 90, "model_version": "test-only"},
+    )
     assert create(client, accounts["owner"]).status_code == 201
     headers = accounts["admin"]["headers"]
     assert (

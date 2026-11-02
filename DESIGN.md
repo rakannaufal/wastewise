@@ -26,7 +26,7 @@ Authentication uses a quiet material collage from the actual dataset, labeled as
 
 ## States and access
 
-Every data region has loading, empty, error/retry, and real-content states. Offline and token expiry are explicit. Prediction unavailable permits manual category selection. Confirm destructive actions. Dialog focus is managed; Escape closes; focus returns to the invoker. All normal text and placeholders reach 4.5:1 contrast. Photo permission denied has gallery/manual-location alternatives.
+Every data region has loading, empty, error/retry, and real-content states. Offline and token expiry are explicit. Prediction unavailable preserves a draft for retry; no manual category or coordinate entry. Confirm destructive actions. Dialog focus is managed; Escape closes; focus returns to the invoker. All normal text and placeholders reach 4.5:1 contrast. Camera permission denied has a gallery alternative. Missing gallery GPS requires explicit current-location confirmation; denied location permission prevents submission until resolved.
 
 Native mobile follows familiar platform navigation, safe area, keyboard avoidance, SecureStore sessions and five tabs. Profile holds account information, privacy guidance and logout. It uses the same colors and material/action signature without copying desktop density.
 

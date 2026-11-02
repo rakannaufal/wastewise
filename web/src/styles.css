@@ -1,4 +1,163 @@
 @import "tailwindcss";
+.admin-dashboard {
+  display: grid;
+  gap: 24px;
+}
+.table-metadata {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+.review-label {
+  color: #8a3b0f;
+  font-weight: 650;
+}
+.admin-dashboard .page-heading {
+  margin-bottom: 0;
+}
+.dashboard-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 20px;
+  align-items: end;
+}
+.dashboard-filter label {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.admin-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.admin-metric {
+  display: grid;
+  gap: 8px;
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+.admin-metric:hover {
+  background: var(--selection);
+}
+.admin-metric strong {
+  font-size: 30px;
+  font-variant-numeric: tabular-nums;
+}
+.admin-metric small {
+  color: var(--muted);
+}
+.admin-dashboard > section.panel:not(.dashboard-filter):not(.report-panel) {
+  padding: 24px;
+}
+.trend-chart {
+  width: 100%;
+  height: 180px;
+  color: var(--action);
+  margin-top: 24px;
+}
+.trend-axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+.trend-data {
+  max-height: 260px;
+  overflow: auto;
+  margin-top: 12px;
+}
+.trend-data p {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+.timing-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  margin: 20px 0;
+}
+.timing-metrics dd {
+  font-size: 22px;
+  margin: 8px 0;
+  font-variant-numeric: tabular-nums;
+}
+.confirmation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+}
+.confirmation input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  flex: 0 0 20px;
+  accent-color: var(--action);
+}
+.workflow-form {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.history-panel {
+  padding: 24px;
+  margin-top: 24px;
+}
+.event-list {
+  padding-left: 22px;
+  margin: 20px 0 0;
+  display: grid;
+  gap: 22px;
+}
+.event-list li {
+  padding-left: 8px;
+  overflow-wrap: anywhere;
+}
+.secondary-filters {
+  flex-wrap: wrap;
+  align-items: end;
+}
+.secondary-filters label {
+  min-width: 150px;
+}
+input,
+textarea {
+  caret-color: var(--action);
+}
+::selection {
+  background: var(--selection);
+  color: var(--ink);
+}
+@media (max-width: 700px) {
+  .admin-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dashboard-filter label {
+    flex-basis: calc(50% - 16px);
+  }
+  .trend-axis {
+    flex-wrap: wrap;
+  }
+  .admin-dashboard .section-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+  .secondary-filters > label {
+    flex: 1 1 140px;
+  }
+}
 :root {
   font-family: "Plus Jakarta Sans Variable", system-ui, sans-serif;
   color: #17281f;
@@ -1490,6 +1649,25 @@ dialog > p {
   }
   .report-table .report-cell span {
     min-width: 0;
+  }
+  .report-table.report-table-admin {
+    min-width: 780px !important;
+    table-layout: auto;
+  }
+  .report-table-admin th:nth-child(2),
+  .report-table-admin td:nth-child(2),
+  .report-table-admin th:nth-child(4),
+  .report-table-admin td:nth-child(4) {
+    display: table-cell;
+  }
+  .report-table-admin th:first-child,
+  .report-table-admin td:first-child {
+    width: 300px;
+  }
+  .table-swipe-hint {
+    padding: 12px 18px;
+    font-size: 12px;
+    color: var(--muted);
   }
   .pagination {
     flex-wrap: wrap;

@@ -1,3 +1,4 @@
+import { fetchPayload } from "../../shared/request";
 const API = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(
   /\/$/,
   "",
@@ -17,22 +18,16 @@ export async function api<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  let response: Response;
-  try {
-    response = await fetch(API + path, {
-      ...options,
-      headers: {
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        ...(options.body && !(options.body instanceof FormData)
-          ? { "Content-Type": "application/json" }
-          : {}),
-        ...options.headers,
-      },
-    });
-  } catch {
-    throw new ApiError("Tidak dapat terhubung. Periksa koneksi dan server.", 0);
-  }
-  const payload = await response.json().catch(() => null);
+  const { response, payload } = await fetchPayload(API + path, {
+    ...options,
+    headers: {
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      ...(options.body && !(options.body instanceof FormData)
+        ? { "Content-Type": "application/json" }
+        : {}),
+      ...options.headers,
+    },
+  });
   if (!response.ok) {
     if (response.status === 401)
       window.dispatchEvent(new Event("session-expired"));
@@ -47,5 +42,10 @@ export async function api<T>(
       response.status,
     );
   }
+  if (!payload || !("data" in payload))
+    throw new ApiError(
+      "Respons server tidak valid. Coba kembali.",
+      response.status,
+    );
   return payload.data as T;
 }

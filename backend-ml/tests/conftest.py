@@ -7,7 +7,7 @@ from sqlalchemy import delete, select
 from app.config import settings
 from app.db import SessionLocal
 from app.main import app
-from app.models import CleanupJob, Report, User
+from app.models import CleanupJob, Report, ReportDraft, User
 from app.security import hash_password
 from app.storage import storage
 
@@ -51,6 +51,19 @@ def accounts(client):
     yield values
     with SessionLocal.begin() as db:
         paths = list(db.scalars(select(Report.image_path).where(Report.user_id.in_(ids))))
+        paths += list(
+            db.scalars(
+                select(Report.thumbnail_path).where(
+                    Report.user_id.in_(ids), Report.thumbnail_path.is_not(None)
+                )
+            )
+        )
+        for image, thumb in db.execute(
+            select(ReportDraft.image_path, ReportDraft.thumbnail_path).where(
+                ReportDraft.user_id.in_(ids)
+            )
+        ):
+            paths.extend([image, thumb])
         jobs = db.scalars(select(CleanupJob)).all()
         for job in jobs:
             if job.object_path.split("/")[0] in {str(value) for value in ids}:

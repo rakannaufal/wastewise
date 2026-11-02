@@ -1,6 +1,8 @@
+import hashlib
 import io
 import logging
 import threading
+from time import perf_counter
 
 import torch
 from PIL import Image
@@ -16,11 +18,13 @@ class Predictor:
         self.net = None
         self.metadata = None
         self.lock = threading.Lock()
+        self.checkpoint_sha256 = None
 
     def load(self):
         try:
             torch.set_num_threads(2)
             self.net, self.metadata = load_model(settings.model_path)
+            self.checkpoint_sha256 = hashlib.sha256(settings.model_path.read_bytes()).hexdigest()
         except Exception:
             self.net = None
             logger.warning("model_unavailable")
@@ -28,7 +32,23 @@ class Predictor:
     def predict(self, content):
         if self.net is None or self.metadata is None:
             return None
-        with self.lock, torch.inference_mode(), Image.open(io.BytesIO(content)) as image:
+        started = perf_counter()
+        if not self.lock.acquire(timeout=2):
+            raise RuntimeError("Inference capacity reached")
+        try:
+            acquired = perf_counter()
+            return self._predict(content)
+        finally:
+            self.lock.release()
+            logger.info(
+                "inference_timing queue_ms=%.1f model_ms=%.1f",
+                (acquired - started) * 1000,
+                (perf_counter() - acquired) * 1000,
+            )
+
+    def _predict(self, content):
+        assert self.net is not None and self.metadata is not None
+        with torch.inference_mode(), Image.open(io.BytesIO(content)) as image:
             probabilities = (
                 self.net(transform()(image.convert("RGB")).unsqueeze(0)).softmax(1)[0].tolist()
             )

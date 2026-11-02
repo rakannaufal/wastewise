@@ -184,8 +184,20 @@ def delete_user(user_id: UUID, user: User = Depends(admin), db: Session = Depend
     if user.role != "admin":
         raise HTTPException(403, "Akses pengelola diperlukan")
     protect_last_admin(db, target)
-    for path in db.scalars(select(Report.image_path).where(Report.user_id == target.id)):
+    from app.models import ReportDraft
+
+    for path, thumb in db.execute(
+        select(Report.image_path, Report.thumbnail_path).where(Report.user_id == target.id)
+    ):
         enqueue(db, path)
+        enqueue(db, thumb)
+    for path, thumb in db.execute(
+        select(ReportDraft.image_path, ReportDraft.thumbnail_path).where(
+            ReportDraft.user_id == target.id
+        )
+    ):
+        enqueue(db, path)
+        enqueue(db, thumb)
     if target.auth_provider == "supabase":
         db.add(BlockedIdentity(id=target.id))
     db.delete(target)

@@ -90,6 +90,18 @@ class Storage:
         else:
             self.request("DELETE", f"object/{settings.storage_bucket}", json={"prefixes": [key]})
 
+    def get(self, key):
+        content = (
+            self.path(key).read_bytes()
+            if self.local
+            else self.request(
+                "GET", f"object/authenticated/{settings.storage_bucket}/{key}"
+            ).content
+        )
+        if len(content) > MAX_BYTES:
+            raise ValueError("Stored image exceeds upload limit")
+        return content
+
     def signed(self, key):
         expires = datetime.now(UTC) + timedelta(seconds=900)
         if self.local:
@@ -106,6 +118,25 @@ class Storage:
             url = settings.supabase_url.rstrip("/") + "/storage/v1" + data["signedURL"]
         return url, expires
 
+    def signed_many(self, keys):
+        keys = list(dict.fromkeys(key for key in keys if key))
+        if self.local:
+            return {key: self.signed(key) for key in keys}
+        if not keys:
+            return {}
+        expires = datetime.now(UTC) + timedelta(seconds=900)
+        rows = self.request(
+            "POST", f"object/sign/{settings.storage_bucket}", json={"expiresIn": 900, "paths": keys}
+        ).json()
+        links = {}
+        for row in rows:
+            path, url = row.get("path"), row.get("signedURL") or row.get("signedUrl")
+            if path and url:
+                links[path] = (settings.supabase_url.rstrip("/") + "/storage/v1" + url, expires)
+        if set(links) != set(keys):
+            raise ValueError("Private image signing incomplete")
+        return links
+
     def ready(self):
         if self.local:
             probe = self.path(".health")
@@ -118,3 +149,11 @@ class Storage:
 
 
 storage = Storage()
+
+
+def thumbnail(content: bytes) -> bytes:
+    with Image.open(io.BytesIO(content)) as image:
+        image.thumbnail((320, 320))
+        output = io.BytesIO()
+        image.convert("RGB").save(output, "JPEG", quality=75)
+        return output.getvalue()

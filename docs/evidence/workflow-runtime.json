@@ -1,0 +1,33 @@
+{
+  "127.0.0.1": {
+    "http_status": 200,
+    "readiness": {
+      "success": true,
+      "message": "Berhasil",
+      "data": {
+        "status": "ready",
+        "database": "ready",
+        "storage": "ready",
+        "model": "ready"
+      }
+    }
+  },
+  "192.168.100.168": {
+    "http_status": 200,
+    "readiness": {
+      "success": true,
+      "message": "Berhasil",
+      "data": {
+        "status": "ready",
+        "database": "ready",
+        "storage": "ready",
+        "model": "ready"
+      }
+    }
+  },
+  "openapi_matches_saved": true,
+  "schema_revision": "8a4d7c209e51",
+  "legacy_reports_preserved": 1,
+  "runtime_is_schema_owner": false,
+  "checked_at": "2026-11-02T10:37:10.616204+00:00"
+}

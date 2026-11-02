@@ -208,6 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.history.replaceState({}, "", "/");
   }
   async function logout() {
+    for (const key of Object.keys(sessionStorage)) if (key.startsWith("wastewise.draft.")) sessionStorage.removeItem(key);
     if (supabase.current) {
       const { error: failure } = await supabase.current.auth.signOut({
         scope: "local",

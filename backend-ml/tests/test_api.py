@@ -22,18 +22,32 @@ def photo():
 
 
 def create(client, account, **fields):
-    data = {
-        "category": "plastic",
-        "description": "Botol plastik di dekat taman",
-        "latitude": "-6.2",
-        "longitude": "106.8",
-        **fields,
-    }
+    draft = client.post(
+        "/api/v1/report-drafts",
+        headers=account["headers"],
+        data={"request_id": str(__import__("uuid").uuid4()), "photo_source": "gallery"},
+        files={"image": ("test.png", photo(), "image/png")},
+    )
+    if draft.status_code != 201:
+        return draft
+    identity = draft.json()["data"]["id"]
+    location = client.patch(
+        f"/api/v1/report-drafts/{identity}",
+        headers=account["headers"],
+        json={
+            "latitude": -6.2,
+            "longitude": 106.8,
+            "location_source": "device_upload_confirmed",
+            "location_recorded_at": datetime.now(UTC).isoformat(),
+            "location_accuracy_m": 10,
+            "confirmed": True,
+        },
+    )
+    assert location.status_code == 200, location.text
     return client.post(
         "/api/v1/reports",
-        headers=account["headers"],
-        data=data,
-        files={"image": ("test.png", photo(), "image/png")},
+        headers={**account["headers"], "Idempotency-Key": str(__import__("uuid").uuid4())},
+        json={"draft_id": identity, "description": "Botol plastik di dekat taman", **fields},
     )
 
 
@@ -86,7 +100,7 @@ def test_scoping_filters_and_metadata(client, accounts, monkeypatch):
     response = create(client, accounts["owner"])
     assert response.status_code == 201, response.text
     row = response.json()["data"]
-    assert row["category"] == "plastic" and row["ai_predicted_category"] == "paper"
+    assert row["category"] == "paper" and row["ai_predicted_category"] == "paper"
     assert row["ai_confidence"] == 82.3
     assert "image_path" not in row
     assert client.get(row["image_url"]).status_code == 200
@@ -113,7 +127,7 @@ def test_scoping_filters_and_metadata(client, accounts, monkeypatch):
         client.get("/api/v1/reports?category=paper", headers=accounts["owner"]["headers"]).json()[
             "data"
         ]["pagination"]["total_items"]
-        == 0
+        == 1
     )
     assert (
         client.get("/api/v1/reports?search=taman", headers=accounts["owner"]["headers"]).json()[
@@ -133,7 +147,7 @@ def test_scoping_filters_and_metadata(client, accounts, monkeypatch):
         client.patch(
             f"/api/v1/reports/{row['id']}/status",
             headers=accounts["owner"]["headers"],
-            json={"status": "Completed"},
+            json={"status": "In Progress", "revision": 1},
         ).status_code
         == 403
     )
@@ -141,7 +155,7 @@ def test_scoping_filters_and_metadata(client, accounts, monkeypatch):
         client.patch(
             f"/api/v1/reports/{row['id']}/status",
             headers=accounts["admin"]["headers"],
-            json={"status": "Completed"},
+            json={"status": "In Progress", "revision": 1},
         ).status_code
         == 200
     )
@@ -167,7 +181,7 @@ def test_upload_validation_and_no_ai_spoof(client, accounts):
     assert response.status_code == 413
 
 
-def test_model_degraded_manual_report(client, accounts, monkeypatch):
+def test_model_degraded_blocks_report(client, accounts, monkeypatch):
     monkeypatch.setattr(predictor, "net", None)
     response = client.get("/health/ready")
     assert response.status_code == 200 and response.json()["data"]["status"] == "degraded"
@@ -180,13 +194,17 @@ def test_model_degraded_manual_report(client, accounts, monkeypatch):
         == 503
     )
     result = create(client, accounts["owner"])
-    assert result.status_code == 201 and result.json()["data"]["ai_confidence"] is None
+    assert result.status_code == 503
 
 
 def test_cleanup_outbox(client, accounts, monkeypatch):
     from app.cleanup import run_once
 
-    monkeypatch.setattr(predictor, "predict", lambda _: None)
+    monkeypatch.setattr(
+        predictor,
+        "predict",
+        lambda _: {"category": "plastic", "confidence": 90, "model_version": "test-only"},
+    )
     row = create(client, accounts["owner"]).json()["data"]
     with SessionLocal() as db:
         path = db.get(Report, UUID(row["id"])).image_path
@@ -202,7 +220,8 @@ def test_cleanup_outbox(client, accounts, monkeypatch):
         assert job.status == "pending"
     assert run_once()
     assert not storage.path(path).exists()
-    assert not run_once()
+    while run_once():
+        pass
 
 
 def test_expired_media_and_session(client, accounts):

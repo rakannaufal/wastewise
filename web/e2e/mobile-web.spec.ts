@@ -1,12 +1,19 @@
 import { test, expect } from "@playwright/test";
-import { randomBytes } from "node:crypto";
 import path from "node:path";
+import { mobileURL } from "./helpers";
 
-test("Expo web shares real authentication, prediction and reporting", async ({
+test("Expo gallery, automatic ML/GPS, report and editable history", async ({
   page,
+  context,
 }) => {
+  await context.grantPermissions(["geolocation"]);
+  await context.setGeolocation({
+    latitude: -6.2,
+    longitude: 106.8,
+    accuracy: 10,
+  });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("http://127.0.0.1:8081/");
+  await page.goto(mobileURL);
   await page.getByRole("button", { name: "Belum punya akun? Daftar" }).click();
   await page
     .getByLabel("Nama lengkap", { exact: true })
@@ -16,101 +23,56 @@ test("Expo web shares real authentication, prediction and reporting", async ({
     .fill(`qa-${Date.now()}@example.com`);
   await page
     .getByLabel("Kata sandi", { exact: true })
-    .fill(`WasteWise1!${randomBytes(12).toString("hex")}`);
+    .fill("WasteWise1!temporary");
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
   await expect(page.getByText("TOTAL LAPORAN", { exact: true })).toBeVisible();
-  await page.screenshot({
-    path: path.resolve("../docs/evidence/expo-web-home.png"),
-    fullPage: true,
-  });
-  await page
-    .getByRole("button", { name: "Klasifikasi foto", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Buat laporan", exact: true }).click();
   const chooser = page.waitForEvent("filechooser");
-  await page.getByRole("button", { name: "Galeri", exact: true }).click();
-  await (await chooser).setFiles(path.resolve("public/materials/plastic.jpg"));
   await page
-    .getByRole("button", { name: "Kenali material", exact: true })
+    .getByRole("button", { name: "Pilih gambar dari galeri", exact: true })
     .click();
-  await expect(page.getByText("PERKIRAAN KATEGORI")).toBeVisible({
-    timeout: 30000,
-  });
-  await page.screenshot({
-    path: path.resolve("../docs/evidence/expo-web-classification.png"),
-    fullPage: true,
-  });
-  await page.getByRole("button", { name: "Lanjutkan menjadi laporan" }).click();
-  expect(page.url()).not.toContain("image");
-  expect(page.url()).not.toContain("uri");
+  await (await chooser).setFiles(path.resolve("public/materials/plastic.jpg"));
   await expect(
-    page.getByRole("img", { name: "Foto laporan yang dipilih" }),
+    page.getByText("KATEGORI OTOMATIS", { exact: true }),
+  ).toBeVisible({ timeout: 30000 });
+  await page
+    .getByRole("button", {
+      name: "Foto diambil di sini: konfirmasi & ambil GPS",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByText("GPS saat unggah, dikonfirmasi pelapor", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("radio", { name: "Plastik", exact: true }).click();
   await page
-    .getByLabel("Deskripsi", { exact: true })
-    .fill("Laporan uji otomatis Expo: botol plastik dekat taman.");
-  await page.getByLabel(/Latitude/).fill("-6.2");
-  await page.getByLabel(/Longitude/).fill("106.8");
+    .getByLabel("Deskripsi kondisi sampah")
+    .fill("Laporan dari Expo galeri dengan lokasi terkonfirmasi.");
   await page
-    .getByRole("button", { name: "Simpan laporan", exact: true })
+    .getByRole("button", { name: "Kirim laporan", exact: true })
     .click();
   await expect(page).toHaveURL(/\/report\/[0-9a-f-]+$/);
+  await page
+    .getByRole("button", { name: "Edit deskripsi / ganti foto", exact: true })
+    .click();
+  await page
+    .getByLabel("Deskripsi kondisi sampah")
+    .fill("Laporan Expo telah diperbaiki tanpa mengganti foto.");
+  await page
+    .getByRole("button", { name: "Simpan perubahan", exact: true })
+    .click();
   await expect(
-    page.getByText("Laporan uji otomatis Expo: botol plastik dekat taman."),
+    page.getByText("Laporan Expo telah diperbaiki tanpa mengganti foto.", {
+      exact: true,
+    }),
   ).toBeVisible();
-  await page.screenshot({
-    path: path.resolve("../docs/evidence/expo-web-report.png"),
-    fullPage: true,
-  });
-  await page
-    .getByRole("button", { name: "Kembali ke laporan", exact: true })
-    .click();
-  await page.getByRole("radio", { name: "Selesai", exact: true }).click();
-  await expect(page.getByText("Belum ada laporan yang cocok.")).toBeVisible();
-  await page.getByRole("radio", { name: "Menunggu", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Laporan Plastik", exact: true })
-    .click();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
   page.once("dialog", (dialog) => dialog.accept());
   await page
     .getByRole("button", { name: "Hapus laporan", exact: true })
     .click();
   await expect(page.getByText("Belum ada laporan yang cocok.")).toBeVisible();
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBeTruthy();
-  await page.getByRole("tab", { name: /Profil/ }).click();
-  await expect(page.getByText("Profil akun", { exact: true })).toBeVisible();
-  await expect(page.getByText("Pelapor", { exact: true })).toBeVisible();
-  await page.screenshot({
-    path: path.resolve("../docs/evidence/expo-web-profile.png"),
-    fullPage: true,
-  });
-  await page.getByRole("button", { name: "Buka laporan", exact: true }).click();
-  await expect(
-    page.getByText("Laporan sampah", { exact: true }).filter({ visible: true }),
-  ).toBeVisible();
-  await page.getByRole("tab", { name: /Profil/ }).click();
-  await page
-    .getByRole("button", { name: "Panduan memilah", exact: true })
-    .click();
-  await expect(
-    page
-      .getByText(
-        "Beda bahan, beda penanganan. Ikuti aturan fasilitas setempat.",
-        { exact: true },
-      )
-      .filter({ visible: true }),
-  ).toBeVisible();
-  await page.getByRole("tab", { name: /Profil/ }).click();
-  await page
-    .getByRole("button", { name: "Keluar dari akun", exact: true })
-    .click();
-  await expect(
-    page
-      .getByText("Selamat datang kembali.", { exact: true })
-      .filter({ visible: true }),
-  ).toBeVisible();
 });

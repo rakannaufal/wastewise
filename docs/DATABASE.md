@@ -1,10 +1,45 @@
 # Database schema dan ERD
 
-Schema PostgreSQL: `app_private`. Migrasi executable: `backend-ml/migrations/versions/`; revisi akhir `41ba8d170ab2`. Upgrade telah dijalankan pada PostgreSQL 17 lokal. Runtime role memperoleh USAGE dan DML, bukan kepemilikan schema. `public.alembic_version` mencatat revisi.
+Schema PostgreSQL: `app_private`. Migrasi executable: `backend-ml/migrations/versions/`; revisi akhir `8a4d7c209e51`. Upgrade diuji pada restore PostgreSQL17 lokal lalu diterapkan dan diverifikasi pada Supabase. Runtime role memperoleh USAGE dan DML, bukan kepemilikan schema. `public.alembic_version` mencatat revisi. CHECK menolak koordinat parsial dan photo_source NULL pada laporan otomatis; data lama tetap legacy.
 
 ```mermaid
 erDiagram
     users ||--o{ waste_reports : submits
+    users ||--o{ report_drafts : owns
+    users o|--o{ report_events : acts
+    report_drafts o|--o| waste_reports : source
+    waste_reports ||--o{ report_events : records
+    report_drafts {
+        uuid id PK
+        uuid user_id FK
+        uuid request_id
+        text image_path UK
+        text thumbnail_path
+        varchar image_hash
+        jsonb prediction
+        varchar classification_state
+        numeric latitude
+        numeric longitude
+        varchar photo_source
+        timestamptz captured_at
+        varchar location_source
+        timestamptz location_recorded_at
+        numeric location_accuracy_m
+        timestamptz expires_at
+        timestamptz consumed_at
+        uuid result_report_id
+        uuid finalization_key
+        varchar finalization_hash
+    }
+    report_events {
+        uuid id PK
+        uuid report_id FK
+        uuid actor_id FK
+        varchar kind
+        jsonb details
+        text reason
+        timestamptz created_at
+    }
     users {
         uuid id PK
         varchar email UK
@@ -27,6 +62,15 @@ erDiagram
         waste_category ai_predicted_category
         numeric ai_confidence
         text ai_model_version
+        uuid source_draft_id FK
+        text thumbnail_path
+        varchar classification_state
+        integer revision
+        varchar photo_source
+        timestamptz captured_at
+        varchar location_source
+        timestamptz location_recorded_at
+        numeric location_accuracy_m
         timestamptz created_at
         timestamptz updated_at
     }
@@ -77,3 +121,12 @@ DATABASE_URL='<owner PostgreSQL URL>' .venv/bin/alembic upgrade head
 Jalankan migrasi dengan role pemilik terpisah dari runtime. Jangan mengekspos `app_private` melalui Supabase Data API. File `docs/schema.sql` adalah ekspor schema hasil migrasi untuk dibaca; sumber perubahan tetap Alembic. Downgrade menghapus tabel/enum dan hanya boleh dijalankan dengan persetujuan eksplisit pada lingkungan yang sesuai.
 
 Backup: `pg_dump --format=custom` dengan kredensial dari secret manager; simpan terenkripsi di luar repo. Restore ke database staging kosong, bandingkan count dan constraints, periksa signed URL/storage objects. Backup/restore remote belum diuji; dump schema lokal bukan backup data pengguna.
+
+
+## Invariant workflow otomatis
+
+Draft: unique(user_id,request_id), unique(user_id,finalization_key), expiry index. CHECK menjaga pasangan koordinat, sumber kamera dengan captured_at, serta prediction SQL NULL hanya untuk analysis_failed. Laporan baru harus classified/needs_review/reviewed dengan AI dan sumber foto/lokasi lengkap; data lama diberi legacy/legacy_unknown. Source draft unik dan FK ON DELETE SET NULL; aplikasi tidak menghapus draft yang masih menjadi provenance laporan aktif. result_report_id sengaja bukan FK agar jejak idempotensi dapat merujuk hasil yang telah dihapus; retry kemudian404.
+
+Revision>=1. Mutasi mengunci row dan memeriksa revision. Event report FK cascade, actor FK set null. Index event(report_id,created_at), draft(expires_at). Event/history dan mutasi dicommit bersama. Request idempotensi memakai advisory transaction lock scoped akun/key; fingerprint payload berbeda409. Worker expiry memakai SKIP LOCKED dan memeriksa referensi aktif sebelum menghapus.
+
+Migrasi telah diterapkan di Supabase setelah backup privat app_private, restore lokal dan dry-run pada salinan data. Dump/schema tanpa data berada di schema.sql; cadangan data tidak masuk Git. Uji restore seluruh platform remote termasuk Auth/Storage belum dilakukan. Lihat WORKFLOW_IMPLEMENTATION.md.

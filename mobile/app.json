@@ -25,6 +25,7 @@
     },
     "plugins": [
       "expo-router",
+      ["expo-camera", { "cameraPermission": "Ambil foto sampah untuk klasifikasi dan laporan WasteWise.", "recordAudioAndroid": false }],
       "expo-secure-store",
       [
         "expo-image-picker",

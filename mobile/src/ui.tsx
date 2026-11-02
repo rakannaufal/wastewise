@@ -29,7 +29,7 @@ export const colors = {
 };
 export const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: 22, gap: 18, paddingBottom: 42 },
+  content: { padding: 20, gap: 18, paddingBottom: 42, width: "100%", maxWidth: 760, alignSelf: "center" },
   title: {
     fontSize: 29,
     lineHeight: 37,
@@ -95,6 +95,7 @@ export function Screen({ children }: { children: ReactNode }) {
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.content}
+        keyboardDismissMode="on-drag"
       >
         {children}
       </ScrollView>
@@ -133,6 +134,7 @@ export function Button({
           color: secondary ? colors.accent : "#FFF",
           fontWeight: "600",
           fontSize: 14,
+          textAlign: "center",
         }}
       >
         {title}

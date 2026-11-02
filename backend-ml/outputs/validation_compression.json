@@ -1,0 +1,736 @@
+{
+  "checked_at": "2026-11-02T08:25:13.721058+00:00",
+  "split": "validation subset, 10 per class",
+  "count": 120,
+  "checkpoint_sha256": "dbc357905538c29e82f40119b58d73c4e69405a07a10840543ebda1aee09a88d",
+  "agreement": 0.975,
+  "original_accuracy_on_subset": 0.9166666666666666,
+  "compressed_accuracy_on_subset": 0.9166666666666666,
+  "upload_median_bytes": 9629.0,
+  "thumbnail_max_bytes": 22205,
+  "warm_prediction_p95_ms": 350.94691600534134,
+  "hardware": "local macOS arm64, CPU, torch threads=2, sequential",
+  "limitation": "Pillow approximation of client JPEG82, not native/browser encoder parity or field accuracy; no network/upload/GPS included in timing.",
+  "samples": [
+    {
+      "path": "battery/battery634.jpg",
+      "truth": "battery",
+      "server_original": "battery",
+      "compressed": "battery"
+    },
+    {
+      "path": "battery/battery174.jpg",
+      "truth": "battery",
+      "server_original": "battery",
+      "compressed": "battery"
+    },
+    {
+      "path": "battery/battery279.jpg",
+      "truth": "battery",
+      "server_original": "battery",
+      "compressed": "battery"
+    },
+    {
+      "path": "battery/battery201.jpg",
+      "truth": "battery",
+      "server_original": "battery",
+      "compressed": "battery"
+    },
+    {
+      "path": "battery/battery416.jpg",
+      "truth": "battery",
+      "server_original": "battery",
+      "compressed": "battery"
+    },
+    {
+      "path": "battery/battery361.jpg",
+      "truth": "battery",
+      "server_original": "battery",
+      "compressed": "battery"
+    },
+    {
+      "path": "battery/battery342.jpg",
+      "truth": "battery",
+      "server_original": "battery",
+      "compressed": "battery"
+    },
+    {
+      "path": "battery/battery817.jpg",
+      "truth": "battery",
+      "server_original": "battery",
+      "compressed": "battery"
+    },
+    {
+      "path": "battery/battery581.jpg",
+      "truth": "battery",
+      "server_original": "battery",
+      "compressed": "battery"
+    },
+    {
+      "path": "battery/battery297.jpg",
+      "truth": "battery",
+      "server_original": "battery",
+      "compressed": "battery"
+    },
+    {
+      "path": "biological/biological809.jpg",
+      "truth": "biological",
+      "server_original": "biological",
+      "compressed": "biological"
+    },
+    {
+      "path": "biological/biological861.jpg",
+      "truth": "biological",
+      "server_original": "biological",
+      "compressed": "biological"
+    },
+    {
+      "path": "biological/biological924.jpg",
+      "truth": "biological",
+      "server_original": "biological",
+      "compressed": "biological"
+    },
+    {
+      "path": "biological/biological364.jpg",
+      "truth": "biological",
+      "server_original": "biological",
+      "compressed": "biological"
+    },
+    {
+      "path": "biological/biological18.jpg",
+      "truth": "biological",
+      "server_original": "biological",
+      "compressed": "biological"
+    },
+    {
+      "path": "biological/biological884.jpg",
+      "truth": "biological",
+      "server_original": "biological",
+      "compressed": "biological"
+    },
+    {
+      "path": "biological/biological735.jpg",
+      "truth": "biological",
+      "server_original": "biological",
+      "compressed": "biological"
+    },
+    {
+      "path": "biological/biological551.jpg",
+      "truth": "biological",
+      "server_original": "biological",
+      "compressed": "biological"
+    },
+    {
+      "path": "biological/biological611.jpg",
+      "truth": "biological",
+      "server_original": "biological",
+      "compressed": "biological"
+    },
+    {
+      "path": "biological/biological190.jpg",
+      "truth": "biological",
+      "server_original": "biological",
+      "compressed": "biological"
+    },
+    {
+      "path": "brown-glass/brown-glass470.jpg",
+      "truth": "brown-glass",
+      "server_original": "trash",
+      "compressed": "trash"
+    },
+    {
+      "path": "brown-glass/brown-glass602.jpg",
+      "truth": "brown-glass",
+      "server_original": "brown-glass",
+      "compressed": "brown-glass"
+    },
+    {
+      "path": "brown-glass/brown-glass78.jpg",
+      "truth": "brown-glass",
+      "server_original": "brown-glass",
+      "compressed": "brown-glass"
+    },
+    {
+      "path": "brown-glass/brown-glass571.jpg",
+      "truth": "brown-glass",
+      "server_original": "brown-glass",
+      "compressed": "brown-glass"
+    },
+    {
+      "path": "brown-glass/brown-glass516.jpg",
+      "truth": "brown-glass",
+      "server_original": "brown-glass",
+      "compressed": "brown-glass"
+    },
+    {
+      "path": "brown-glass/brown-glass425.jpg",
+      "truth": "brown-glass",
+      "server_original": "brown-glass",
+      "compressed": "brown-glass"
+    },
+    {
+      "path": "brown-glass/brown-glass218.jpg",
+      "truth": "brown-glass",
+      "server_original": "brown-glass",
+      "compressed": "brown-glass"
+    },
+    {
+      "path": "brown-glass/brown-glass102.jpg",
+      "truth": "brown-glass",
+      "server_original": "brown-glass",
+      "compressed": "brown-glass"
+    },
+    {
+      "path": "brown-glass/brown-glass528.jpg",
+      "truth": "brown-glass",
+      "server_original": "brown-glass",
+      "compressed": "brown-glass"
+    },
+    {
+      "path": "brown-glass/brown-glass490.jpg",
+      "truth": "brown-glass",
+      "server_original": "brown-glass",
+      "compressed": "brown-glass"
+    },
+    {
+      "path": "cardboard/cardboard545.jpg",
+      "truth": "cardboard",
+      "server_original": "cardboard",
+      "compressed": "cardboard"
+    },
+    {
+      "path": "cardboard/cardboard436.jpg",
+      "truth": "cardboard",
+      "server_original": "cardboard",
+      "compressed": "cardboard"
+    },
+    {
+      "path": "cardboard/cardboard656.jpg",
+      "truth": "cardboard",
+      "server_original": "cardboard",
+      "compressed": "cardboard"
+    },
+    {
+      "path": "cardboard/cardboard266.jpg",
+      "truth": "cardboard",
+      "server_original": "cardboard",
+      "compressed": "cardboard"
+    },
+    {
+      "path": "cardboard/cardboard391.jpg",
+      "truth": "cardboard",
+      "server_original": "cardboard",
+      "compressed": "cardboard"
+    },
+    {
+      "path": "cardboard/cardboard312.jpg",
+      "truth": "cardboard",
+      "server_original": "cardboard",
+      "compressed": "cardboard"
+    },
+    {
+      "path": "cardboard/cardboard817.jpg",
+      "truth": "cardboard",
+      "server_original": "cardboard",
+      "compressed": "cardboard"
+    },
+    {
+      "path": "cardboard/cardboard800.jpg",
+      "truth": "cardboard",
+      "server_original": "paper",
+      "compressed": "cardboard"
+    },
+    {
+      "path": "cardboard/cardboard223.jpg",
+      "truth": "cardboard",
+      "server_original": "cardboard",
+      "compressed": "cardboard"
+    },
+    {
+      "path": "cardboard/cardboard788.jpg",
+      "truth": "cardboard",
+      "server_original": "cardboard",
+      "compressed": "cardboard"
+    },
+    {
+      "path": "clothes/clothes3488.jpg",
+      "truth": "clothes",
+      "server_original": "clothes",
+      "compressed": "clothes"
+    },
+    {
+      "path": "clothes/clothes3465.jpg",
+      "truth": "clothes",
+      "server_original": "clothes",
+      "compressed": "clothes"
+    },
+    {
+      "path": "clothes/clothes3738.jpg",
+      "truth": "clothes",
+      "server_original": "clothes",
+      "compressed": "clothes"
+    },
+    {
+      "path": "clothes/clothes2250.jpg",
+      "truth": "clothes",
+      "server_original": "clothes",
+      "compressed": "clothes"
+    },
+    {
+      "path": "clothes/clothes3326.jpg",
+      "truth": "clothes",
+      "server_original": "clothes",
+      "compressed": "clothes"
+    },
+    {
+      "path": "clothes/clothes4367.jpg",
+      "truth": "clothes",
+      "server_original": "clothes",
+      "compressed": "clothes"
+    },
+    {
+      "path": "clothes/clothes4731.jpg",
+      "truth": "clothes",
+      "server_original": "clothes",
+      "compressed": "clothes"
+    },
+    {
+      "path": "clothes/clothes760.jpg",
+      "truth": "clothes",
+      "server_original": "clothes",
+      "compressed": "clothes"
+    },
+    {
+      "path": "clothes/clothes3595.jpg",
+      "truth": "clothes",
+      "server_original": "clothes",
+      "compressed": "clothes"
+    },
+    {
+      "path": "clothes/clothes1529.jpg",
+      "truth": "clothes",
+      "server_original": "clothes",
+      "compressed": "clothes"
+    },
+    {
+      "path": "green-glass/green-glass400.jpg",
+      "truth": "green-glass",
+      "server_original": "green-glass",
+      "compressed": "green-glass"
+    },
+    {
+      "path": "green-glass/green-glass547.jpg",
+      "truth": "green-glass",
+      "server_original": "green-glass",
+      "compressed": "green-glass"
+    },
+    {
+      "path": "green-glass/green-glass146.jpg",
+      "truth": "green-glass",
+      "server_original": "green-glass",
+      "compressed": "green-glass"
+    },
+    {
+      "path": "green-glass/green-glass147.jpg",
+      "truth": "green-glass",
+      "server_original": "green-glass",
+      "compressed": "green-glass"
+    },
+    {
+      "path": "green-glass/green-glass546.jpg",
+      "truth": "green-glass",
+      "server_original": "green-glass",
+      "compressed": "green-glass"
+    },
+    {
+      "path": "green-glass/green-glass202.jpg",
+      "truth": "green-glass",
+      "server_original": "green-glass",
+      "compressed": "green-glass"
+    },
+    {
+      "path": "green-glass/green-glass216.jpg",
+      "truth": "green-glass",
+      "server_original": "green-glass",
+      "compressed": "green-glass"
+    },
+    {
+      "path": "green-glass/green-glass30.jpg",
+      "truth": "green-glass",
+      "server_original": "green-glass",
+      "compressed": "brown-glass"
+    },
+    {
+      "path": "green-glass/green-glass550.jpg",
+      "truth": "green-glass",
+      "server_original": "green-glass",
+      "compressed": "green-glass"
+    },
+    {
+      "path": "green-glass/green-glass268.jpg",
+      "truth": "green-glass",
+      "server_original": "green-glass",
+      "compressed": "green-glass"
+    },
+    {
+      "path": "metal/metal30.jpg",
+      "truth": "metal",
+      "server_original": "biological",
+      "compressed": "biological"
+    },
+    {
+      "path": "metal/metal168.jpg",
+      "truth": "metal",
+      "server_original": "white-glass",
+      "compressed": "white-glass"
+    },
+    {
+      "path": "metal/metal350.jpg",
+      "truth": "metal",
+      "server_original": "metal",
+      "compressed": "metal"
+    },
+    {
+      "path": "metal/metal309.jpg",
+      "truth": "metal",
+      "server_original": "metal",
+      "compressed": "metal"
+    },
+    {
+      "path": "metal/metal437.jpg",
+      "truth": "metal",
+      "server_original": "metal",
+      "compressed": "metal"
+    },
+    {
+      "path": "metal/metal207.jpg",
+      "truth": "metal",
+      "server_original": "metal",
+      "compressed": "metal"
+    },
+    {
+      "path": "metal/metal498.jpg",
+      "truth": "metal",
+      "server_original": "metal",
+      "compressed": "metal"
+    },
+    {
+      "path": "metal/metal406.jpg",
+      "truth": "metal",
+      "server_original": "metal",
+      "compressed": "metal"
+    },
+    {
+      "path": "metal/metal622.jpg",
+      "truth": "metal",
+      "server_original": "metal",
+      "compressed": "metal"
+    },
+    {
+      "path": "metal/metal138.jpg",
+      "truth": "metal",
+      "server_original": "metal",
+      "compressed": "metal"
+    },
+    {
+      "path": "paper/paper203.jpg",
+      "truth": "paper",
+      "server_original": "paper",
+      "compressed": "paper"
+    },
+    {
+      "path": "paper/paper637.jpg",
+      "truth": "paper",
+      "server_original": "paper",
+      "compressed": "paper"
+    },
+    {
+      "path": "paper/paper574.jpg",
+      "truth": "paper",
+      "server_original": "paper",
+      "compressed": "paper"
+    },
+    {
+      "path": "paper/paper513.jpg",
+      "truth": "paper",
+      "server_original": "paper",
+      "compressed": "paper"
+    },
+    {
+      "path": "paper/paper224.jpg",
+      "truth": "paper",
+      "server_original": "paper",
+      "compressed": "paper"
+    },
+    {
+      "path": "paper/paper978.jpg",
+      "truth": "paper",
+      "server_original": "paper",
+      "compressed": "paper"
+    },
+    {
+      "path": "paper/paper221.jpg",
+      "truth": "paper",
+      "server_original": "paper",
+      "compressed": "paper"
+    },
+    {
+      "path": "paper/paper578.jpg",
+      "truth": "paper",
+      "server_original": "metal",
+      "compressed": "metal"
+    },
+    {
+      "path": "paper/paper699.jpg",
+      "truth": "paper",
+      "server_original": "cardboard",
+      "compressed": "cardboard"
+    },
+    {
+      "path": "paper/paper624.jpg",
+      "truth": "paper",
+      "server_original": "paper",
+      "compressed": "paper"
+    },
+    {
+      "path": "plastic/plastic399.jpg",
+      "truth": "plastic",
+      "server_original": "plastic",
+      "compressed": "plastic"
+    },
+    {
+      "path": "plastic/plastic285.jpg",
+      "truth": "plastic",
+      "server_original": "plastic",
+      "compressed": "plastic"
+    },
+    {
+      "path": "plastic/plastic817.jpg",
+      "truth": "plastic",
+      "server_original": "plastic",
+      "compressed": "plastic"
+    },
+    {
+      "path": "plastic/plastic318.jpg",
+      "truth": "plastic",
+      "server_original": "plastic",
+      "compressed": "plastic"
+    },
+    {
+      "path": "plastic/plastic528.jpg",
+      "truth": "plastic",
+      "server_original": "plastic",
+      "compressed": "plastic"
+    },
+    {
+      "path": "plastic/plastic820.jpg",
+      "truth": "plastic",
+      "server_original": "white-glass",
+      "compressed": "white-glass"
+    },
+    {
+      "path": "plastic/plastic377.jpg",
+      "truth": "plastic",
+      "server_original": "plastic",
+      "compressed": "plastic"
+    },
+    {
+      "path": "plastic/plastic351.jpg",
+      "truth": "plastic",
+      "server_original": "metal",
+      "compressed": "metal"
+    },
+    {
+      "path": "plastic/plastic672.jpg",
+      "truth": "plastic",
+      "server_original": "plastic",
+      "compressed": "plastic"
+    },
+    {
+      "path": "plastic/plastic699.jpg",
+      "truth": "plastic",
+      "server_original": "plastic",
+      "compressed": "plastic"
+    },
+    {
+      "path": "shoes/shoes215.jpg",
+      "truth": "shoes",
+      "server_original": "shoes",
+      "compressed": "shoes"
+    },
+    {
+      "path": "shoes/shoes651.jpg",
+      "truth": "shoes",
+      "server_original": "shoes",
+      "compressed": "shoes"
+    },
+    {
+      "path": "shoes/shoes696.jpg",
+      "truth": "shoes",
+      "server_original": "shoes",
+      "compressed": "shoes"
+    },
+    {
+      "path": "shoes/shoes1580.jpg",
+      "truth": "shoes",
+      "server_original": "shoes",
+      "compressed": "shoes"
+    },
+    {
+      "path": "shoes/shoes1671.jpg",
+      "truth": "shoes",
+      "server_original": "shoes",
+      "compressed": "shoes"
+    },
+    {
+      "path": "shoes/shoes119.jpg",
+      "truth": "shoes",
+      "server_original": "shoes",
+      "compressed": "shoes"
+    },
+    {
+      "path": "shoes/shoes1845.jpg",
+      "truth": "shoes",
+      "server_original": "shoes",
+      "compressed": "shoes"
+    },
+    {
+      "path": "shoes/shoes1531.jpg",
+      "truth": "shoes",
+      "server_original": "shoes",
+      "compressed": "shoes"
+    },
+    {
+      "path": "shoes/shoes1242.jpg",
+      "truth": "shoes",
+      "server_original": "shoes",
+      "compressed": "shoes"
+    },
+    {
+      "path": "shoes/shoes1885.jpg",
+      "truth": "shoes",
+      "server_original": "shoes",
+      "compressed": "shoes"
+    },
+    {
+      "path": "trash/trash410.jpg",
+      "truth": "trash",
+      "server_original": "trash",
+      "compressed": "trash"
+    },
+    {
+      "path": "trash/trash118.jpg",
+      "truth": "trash",
+      "server_original": "trash",
+      "compressed": "trash"
+    },
+    {
+      "path": "trash/trash612.jpg",
+      "truth": "trash",
+      "server_original": "trash",
+      "compressed": "trash"
+    },
+    {
+      "path": "trash/trash283.jpg",
+      "truth": "trash",
+      "server_original": "trash",
+      "compressed": "trash"
+    },
+    {
+      "path": "trash/trash249.jpg",
+      "truth": "trash",
+      "server_original": "trash",
+      "compressed": "trash"
+    },
+    {
+      "path": "trash/trash597.jpg",
+      "truth": "trash",
+      "server_original": "trash",
+      "compressed": "trash"
+    },
+    {
+      "path": "trash/trash216.jpg",
+      "truth": "trash",
+      "server_original": "trash",
+      "compressed": "trash"
+    },
+    {
+      "path": "trash/trash15.jpg",
+      "truth": "trash",
+      "server_original": "trash",
+      "compressed": "trash"
+    },
+    {
+      "path": "trash/trash561.jpg",
+      "truth": "trash",
+      "server_original": "white-glass",
+      "compressed": "white-glass"
+    },
+    {
+      "path": "trash/trash256.jpg",
+      "truth": "trash",
+      "server_original": "trash",
+      "compressed": "trash"
+    },
+    {
+      "path": "white-glass/white-glass221.jpg",
+      "truth": "white-glass",
+      "server_original": "white-glass",
+      "compressed": "white-glass"
+    },
+    {
+      "path": "white-glass/white-glass177.jpg",
+      "truth": "white-glass",
+      "server_original": "white-glass",
+      "compressed": "white-glass"
+    },
+    {
+      "path": "white-glass/white-glass334.jpg",
+      "truth": "white-glass",
+      "server_original": "white-glass",
+      "compressed": "white-glass"
+    },
+    {
+      "path": "white-glass/white-glass396.jpg",
+      "truth": "white-glass",
+      "server_original": "white-glass",
+      "compressed": "white-glass"
+    },
+    {
+      "path": "white-glass/white-glass319.jpg",
+      "truth": "white-glass",
+      "server_original": "white-glass",
+      "compressed": "white-glass"
+    },
+    {
+      "path": "white-glass/white-glass677.jpg",
+      "truth": "white-glass",
+      "server_original": "white-glass",
+      "compressed": "white-glass"
+    },
+    {
+      "path": "white-glass/white-glass624.jpg",
+      "truth": "white-glass",
+      "server_original": "white-glass",
+      "compressed": "white-glass"
+    },
+    {
+      "path": "white-glass/white-glass308.jpg",
+      "truth": "white-glass",
+      "server_original": "white-glass",
+      "compressed": "white-glass"
+    },
+    {
+      "path": "white-glass/white-glass168.jpg",
+      "truth": "white-glass",
+      "server_original": "biological",
+      "compressed": "green-glass"
+    },
+    {
+      "path": "white-glass/white-glass510.jpg",
+      "truth": "white-glass",
+      "server_original": "white-glass",
+      "compressed": "white-glass"
+    }
+  ]
+}

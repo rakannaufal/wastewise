@@ -1,0 +1,14 @@
+{
+  "model_version": "wastewise-mobilenetv2-v1",
+  "checkpoint_sha256": "dbc357905538c29e82f40119b58d73c4e69405a07a10840543ebda1aee09a88d",
+  "confidence": 50,
+  "margin": 30,
+  "source": "fresh validation inference",
+  "validation_sha256": "d5681ff950614b90ac0e05ee4cdeb1be933503a26b4869f78a5e7d47043801c4",
+  "validation_count": 2320,
+  "accepted_count": 2176,
+  "accepted_precision": 0.9802389740943909,
+  "coverage": 0.9379310344827586,
+  "created_at": "2026-11-02T07:45:52.404840+00:00",
+  "limitation": "In-distribution validation only; does not certify camera photos or reject all out-of-distribution images."
+}

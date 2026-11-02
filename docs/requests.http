@@ -49,7 +49,7 @@ PATCH {{base}}/api/v1/reports/{{reportId}}/status
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
-{"status":"Completed"}
+{"status":"In Progress","revision":1}
 
 ### Statistics scoped to current user (all reports for an administrator)
 GET {{base}}/api/v1/stats/summary
@@ -57,4 +57,48 @@ Authorization: Bearer {{token}}
 
 ### Delete report and enqueue private-image deletion
 DELETE {{base}}/api/v1/reports/{{reportId}}
+Authorization: Bearer {{token}}
+
+
+### Upload draft: generate a new UUID per selected photo; keep it on retry
+POST {{base}}/api/v1/report-drafts
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=WasteWiseDraft
+
+--WasteWiseDraft
+Content-Disposition: form-data; name="request_id"
+
+REPLACE_WITH_UPLOAD_UUID
+--WasteWiseDraft
+Content-Disposition: form-data; name="photo_source"
+
+gallery
+--WasteWiseDraft
+Content-Disposition: form-data; name="image"; filename="plastic.jpg"
+Content-Type: image/jpeg
+
+< ../web/public/materials/plastic.jpg
+--WasteWiseDraft--
+
+### Location: use actual foreground GPS evidence after explicit gallery confirmation
+PATCH {{base}}/api/v1/report-drafts/REPLACE_WITH_DRAFT_UUID
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"latitude":-6.2,"longitude":106.8,"location_source":"device_upload_confirmed","location_recorded_at":"REPLACE_WITH_CURRENT_GPS_ISO_TIMESTAMP","location_accuracy_m":10,"confirmed":true}
+
+### Finalize: reuse the UUID and exact body on retry
+POST {{base}}/api/v1/reports
+Authorization: Bearer {{token}}
+Idempotency-Key: REPLACE_WITH_FINALIZATION_UUID
+Content-Type: application/json
+
+{"draft_id":"REPLACE_WITH_DRAFT_UUID","description":"Sampah ditemukan di dekat taman."}
+
+### Admin dashboard
+GET {{base}}/api/v1/admin/dashboard?timezone=Asia%2FJakarta
+Authorization: Bearer {{token}}
+
+### History
+GET {{base}}/api/v1/reports/{{reportId}}/events
 Authorization: Bearer {{token}}

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { api } from "../../src/api";
@@ -11,15 +11,18 @@ export default function Home() {
     by_status: Record<string, number>;
   } | null>(null);
   const [error, setError] = useState("");
+  const controller = useRef<AbortController | null>(null);
   const load = useCallback(() => {
+    controller.current?.abort(); const abort = new AbortController(); controller.current = abort;
     setError("");
     api<{ total_reports: number; by_status: Record<string, number> }>(
       "/api/v1/stats/summary",
+      { signal: abort.signal },
     )
-      .then(setSummary)
-      .catch((e) => setError(e.message));
-  }, []);
-  useFocusEffect(load);
+      .then((value) => { if (!abort.signal.aborted) setSummary(value); })
+      .catch((e) => { if (!abort.signal.aborted) setError(e.message); });
+  }, [user?.id]);
+  useFocusEffect(useCallback(() => { setSummary(null); load(); return () => controller.current?.abort(); }, [load]));
   return (
     <Screen>
       <Text style={[styles.heading, { color: "#215B3C" }]}>WasteWise.</Text>

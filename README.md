@@ -83,16 +83,33 @@ Auth, database, dan Storage adalah tiga konfigurasi terpisah. Publishable key cu
 ## Penggunaan
 
 1. Masuk. Ringkasan memuat statistik milik sendiri; pengelola melihat semua laporan.
-2. Buka **Klasifikasi**, pilih JPEG/PNG/WebP maksimal 5 MiB, tekan **Kenali material**. Periksa kategori dan panduan. Confidence adalah estimasi model.
-3. **Lanjutkan menjadi laporan**, koreksi material bila perlu, isi deskripsi minimal 10 karakter dan koordinat. Lokasi dapat diisi manual jika izin ditolak.
-4. Simpan dan buka detail. Prediksi dihitung lagi di server dari foto tersanitasi yang disimpan; pilihan material pengguna tetap menjadi kategori final.
-5. Pengelola mengubah status dan mengelola pengguna. Penghapusan laporan menjadwalkan pembersihan foto oleh worker.
+2. Di HP pilih **Buat laporan**, lalu **Ambil foto sampah** atau **Pilih gambar dari galeri**. ML berjalan otomatis setelah foto dinormalisasi; kategori tidak dipilih pengguna. Web menyediakan alur galeri yang sama.
+3. Kamera memasangkan GPS dengan waktu pemotretan. Galeri memakai EXIF GPS jika tersedia. Jika tidak ada, tekan konfirmasi bahwa foto diambil di lokasi saat ini, lalu aplikasi mengambil GPS otomatis. Jika lokasi berbeda, ambil foto ulang di tempat tersebut. Izin ditolak atau akurasi belum cukup: klasifikasi tetap tersedia, pengiriman menunggu lokasi; tidak ada input koordinat manual.
+4. Isi deskripsi minimal 10 karakter, tekan **Kirim laporan**. Normalnya foto di-upload dan dianalisis sekali; finalisasi menggunakan draft. Draft sementara bertahan hingga 24 jam, retry pengiriman tidak menggandakan laporan. Tombol **Hapus draft foto** membatalkan draft. ML gagal: draft dipertahankan untuk retry, laporan belum dibuat.
+5. Laporan milik pengguna dapat diedit saat Pending, termasuk mengganti foto melalui analisis baru. Foto, kategori AI asli, sumber/waktu/akurasi lokasi dan riwayat tersedia di detail. Confidence bukan bukti ketepatan; prediksi kurang meyakinkan masuk review admin.
+6. Admin mendapat dashboard periode 30 hari, filter URL, tren, distribusi, antrean seluruh periode dan median waktu penanganan. Klik angka membuka daftar terkait. Admin mereview kategori dengan alasan tanpa menghapus prediksi AI asli.
+7. Workflow status: Pending → In Progress/Rejected; In Progress → Completed/Rejected; Completed/Rejected → Pending. Penolakan atau pembukaan ulang memerlukan alasan. Perubahan bersamaan dengan revisi lama ditolak; muat ulang detail. Delete menjadwalkan pembersihan foto/thumbnail oleh worker.
 
 Supabase Auth menyimpan sesi web di browser dan native di SecureStore; SDK memperbarui token otomatis. Keluar setelah memakai perangkat bersama. Mode lokal untuk pengujian tetap memakai JWT 60 menit tanpa refresh.
 
 ## Mobile
 
 Salin `mobile/.env.example` ke `mobile/.env`, isi `EXPO_PUBLIC_API_URL` dengan IP LAN komputer, bukan localhost untuk ponsel fisik. Jalankan API dengan `--host 0.0.0.0` hanya pada jaringan pengembangan tepercaya; sesuaikan `PUBLIC_API_URL` agar tautan foto dapat dijangkau ponsel. Untuk web Expo, tambahkan origin yang digunakan ke `CORS_ORIGINS`.
+
+Pada macOS dengan Wi-Fi di interface en0, periksa IP memakai `ipconfig getifaddr en0`. Ganti nilai contoh pada `mobile/.env` dengan IP aktual; jangan menyalin teks `IP_KOMPUTER` secara literal:
+
+```dotenv
+EXPO_PUBLIC_API_URL=http://IP_KOMPUTER:8000
+```
+
+Hentikan API lama sebelum menjalankan ulang pada port yang sama. Dari root proyek, jalankan API untuk jaringan lokal, kemudian Expo di terminal terpisah:
+
+```bash
+(cd backend-ml && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-access-log)
+npm --prefix mobile start -- --port 8082 --lan
+```
+
+HP dan komputer harus berada pada Wi-Fi yang saling dapat mengakses. Buka `http://IP_KOMPUTER:8000/health/ready` di Safari HP untuk menguji koneksi sebelum login. Setelah mengubah `.env`, muat ulang aplikasi; restart Expo bila bundle masih memakai alamat lama. Jika IP komputer berubah, perbarui `.env`. Pada iPhone, izin Local Network untuk Expo Go harus diaktifkan. Pesan `Tidak terhubung. Periksa jaringan dan alamat server.` menunjukkan kegagalan akses API, bukan bukti password salah.
 
 ```bash
 npm run dev:mobile
@@ -111,7 +128,7 @@ cd backend-ml
 .venv/bin/python -m ml.evaluate
 ```
 
-Jangan melatih ulang untuk mengoptimalkan test yang sudah dibuka. Checkpoint dipilih dari validation macro F1; test hanya untuk evaluasi final. Model yang hilang mengakibatkan `/predict` 503; laporan manual tetap tersedia.
+Jangan melatih ulang untuk mengoptimalkan test yang sudah dibuka. Checkpoint dipilih dari validation macro F1; test hanya untuk evaluasi final. Model yang hilang mengakibatkan `/predict` 503. Foto disimpan sebagai draft untuk retry; finalisasi laporan memerlukan prediksi dan lokasi otomatis yang valid. Kebijakan review dikalibrasi dari validation, bukan test: `python -m ml.calibrate_review`. Baca [aturan review](docs/EVALUATION.md).
 
 ## Verifikasi dan paket
 
@@ -121,17 +138,16 @@ npm run build
 npm --prefix mobile run export
 (cd backend-ml && .venv/bin/python scripts/test_local.py -q)
 (cd backend-ml && .venv/bin/ruff check app ml tests scripts migrations && .venv/bin/mypy app)
-npm --prefix web run e2e
+(cd backend-ml && .venv/bin/python scripts/test_browser.py)
+node --experimental-strip-types --test shared/photo-location.test.ts
 python3 scripts/package_release.py
 ```
 
-E2E memerlukan API port 8000, Vite port 5173, ekspor Expo web port 8081, Google Chrome, serta dataset lokal. Sebelum E2E, ekspor mobile lalu layani hasilnya pada terminal terpisah:
+Runner `scripts/test_browser.py` memakai database lokal `wastewise_browser`, API8001, Vite5180 dan Expo web8083 secara terisolasi. Google Chrome dan PostgreSQL lokal diperlukan; runtime Node/npm harus berada di PATH. Runner mengekspor Expo ke `.local/mobile-browser`, memulai layanan sementara dan menghentikannya setelah tes; sesi pengembangan pengguna tidak dipakai. Geolocation browser ditiru agar deterministik, bukan pembuktian GPS hardware. Tes kontrak Auth terpisah: `npm --prefix web run e2e:auth`.
 
-```bash
-python3 -m http.server 8081 --bind 127.0.0.1 --directory mobile/dist
-```
+Smoke Supabase development dengan identitas QA sementara: `(cd backend-ml && .venv/bin/python -m scripts.supabase_smoke --run --browser)`. Memerlukan API8000, web5173, Expo web8081, server key privat, koneksi DB, dan izin membuat/menghapus identitas QA. Jangan jalankan terhadap produksi. Hanya UUID QA yang dibersihkan. Konfirmasi email QA berasal dari admin; email delivery tidak diuji.
 
-Untuk Expo web pada origin tersebut, set `CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:8081,http://127.0.0.1:8081` pada environment backend sebelum menjalankan API. Tes membuat akun QA sementara; jangan jalankan terhadap produksi. `release/manifest.json` mencatat checksum arsip source/model/docs dan dataset. Dataset dan arsip ZIP diabaikan Git; checkpoint resmi disertakan. Jalankan tes browser terpisah khusus kontrak Supabase (provider tiruan) dengan `npm --prefix web run e2e:auth`. Tes backend dan E2E lokal memerlukan `AUTH_PROVIDER=local`; jangan arahkan fixture QA ke database produksi.
+`release/manifest.json` mencatat snapshot paket, bukan jaminan selalu sesuai working tree. Jalankan packaging ulang setelah verifikasi perubahan terbaru. Dataset dan ZIP diabaikan Git; checkpoint resmi disertakan.
 
 ## Batas verifikasi
 
