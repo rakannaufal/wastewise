@@ -29,8 +29,16 @@ export const colors = {
 };
 export const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: 20, gap: 18, paddingBottom: 42, width: "100%", maxWidth: 760, alignSelf: "center" },
+  content: {
+    padding: 20,
+    gap: 18,
+    paddingBottom: 42,
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+  },
   title: {
+    fontFamily: "Manrope_700",
     fontSize: 29,
     lineHeight: 37,
     fontWeight: "700",
@@ -38,13 +46,24 @@ export const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   heading: {
+    fontFamily: "Manrope_600",
     fontSize: 19,
     lineHeight: 27,
     fontWeight: "600",
     color: colors.ink,
   },
-  text: { fontSize: 14, lineHeight: 23, color: colors.muted },
-  label: { fontSize: 12, fontWeight: "600", color: colors.muted },
+  text: {
+    fontFamily: "Manrope_400",
+    fontSize: 14,
+    lineHeight: 23,
+    color: colors.muted,
+  },
+  label: {
+    fontFamily: "Manrope_600",
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.muted,
+  },
   panel: {
     padding: 20,
     backgroundColor: "#FFF",
@@ -62,6 +81,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 12,
     color: colors.ink,
     backgroundColor: "#FFF",
+    fontFamily: "Manrope_400",
     fontSize: 15,
   },
   photo: {
@@ -132,6 +152,7 @@ export function Button({
       <Text
         style={{
           color: secondary ? colors.accent : "#FFF",
+          fontFamily: "Manrope_600",
           fontWeight: "600",
           fontSize: 14,
           textAlign: "center",

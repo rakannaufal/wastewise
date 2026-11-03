@@ -1,0 +1,55 @@
+
+> wastewise@1.0.0 build
+> npm --prefix web run build
+
+
+> wastewise-web@1.0.0 build
+> tsc -b && vite build
+
+vite v8.3.5 building client environment for production...
+transforming...
+✓ 2280 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                          0.73 kB │ gzip:   0.44 kB
+dist/assets/manrope-latin-500-normal-BYYD-dBL.woff2     14.04 kB
+dist/assets/manrope-latin-400-normal-PaqtzbVb.woff2     14.10 kB
+dist/assets/manrope-latin-600-normal-4f0koTD-.woff2     14.17 kB
+dist/assets/manrope-latin-700-normal-BZp_XxE4.woff2     14.21 kB
+dist/assets/manrope-latin-500-normal-DMZssgOp.woff      18.24 kB
+dist/assets/manrope-latin-400-normal-8tf8FM3T.woff      18.29 kB
+dist/assets/manrope-latin-600-normal-BqgrALkZ.woff      18.38 kB
+dist/assets/manrope-latin-700-normal-DGRFkw-m.woff      18.41 kB
+dist/assets/caveat-latin-400-normal-D6LQsQ_v.woff2      48.83 kB
+dist/assets/caveat-latin-700-normal-D8_1Nw6V.woff2      51.02 kB
+dist/assets/caveat-latin-400-normal-BzhAQZkN.woff       60.10 kB
+dist/assets/caveat-latin-700-normal-cPyBTTZN.woff       62.18 kB
+dist/assets/index-Sbg6Hl4u.css                          39.61 kB │ gzip:   9.32 kB
+dist/assets/Map-qvkd0SPb.css                            71.33 kB │ gzip:  10.25 kB
+dist/assets/NewReport-Cy6HZjP4.js                        0.15 kB │ gzip:   0.14 kB
+dist/assets/Classify-BdR78JCJ.js                         0.17 kB │ gzip:   0.16 kB
+dist/assets/search-D7FqDorS.js                           0.20 kB │ gzip:   0.18 kB
+dist/assets/contracts-BjLqRd-8.js                        0.33 kB │ gzip:   0.23 kB
+dist/assets/Moderation-C9n7EtFl.js                       1.08 kB │ gzip:   0.57 kB
+dist/assets/Guide-DLWownMP.js                            1.74 kB │ gzip:   0.79 kB
+dist/assets/ReportTable-DnGk_l_o.js                      2.26 kB │ gzip:   0.96 kB
+dist/assets/useMutation-BgaEUmcb.js                      2.31 kB │ gzip:   0.96 kB
+dist/assets/RegionFilters-BFN5dRnF.js                    2.50 kB │ gzip:   1.14 kB
+dist/assets/Users-CyU_0-j6.js                            3.11 kB │ gzip:   1.18 kB
+dist/assets/Reports-CSKUa37A.js                          4.13 kB │ gzip:   1.63 kB
+dist/assets/useQuery-BG8QT2GO.js                         7.94 kB │ gzip:   2.92 kB
+dist/assets/ReportDetail-BjmWoAuD.js                     8.91 kB │ gzip:   3.23 kB
+dist/assets/Community-DhbUlvAK.js                       10.73 kB │ gzip:   3.69 kB
+dist/assets/ReportComposer-DU9XwQif.js                  11.25 kB │ gzip:   4.52 kB
+dist/assets/Dashboard-BxggkZwA.js                       12.27 kB │ gzip:   3.98 kB
+dist/assets/ui-Dg4VjDBs.js                              17.37 kB │ gzip:   6.78 kB
+dist/assets/dist-CTOaXH3b.js                           214.40 kB │ gzip:  55.16 kB
+dist/assets/index-DKmZo7I1.js                          422.69 kB │ gzip: 132.49 kB
+dist/assets/Map-DQcoaFF5.js                          1,079.31 kB │ gzip: 293.53 kB
+
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 643ms

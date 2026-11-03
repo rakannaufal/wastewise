@@ -14,7 +14,7 @@ test("photo automatically becomes an owned report; edit, resume, search, delete"
     longitude: 106.8,
     accuracy: 10,
   });
-  await page.goto("/");
+  await page.goto("/login");
   await page.getByRole("button", { name: "Daftar sekarang" }).click();
   await page.getByLabel("Nama lengkap").fill("Penguji WasteWise");
   await page.getByLabel("Email", { exact: true }).fill(email);
@@ -22,6 +22,8 @@ test("photo automatically becomes an owned report; edit, resume, search, delete"
     .getByLabel("Kata sandi", { exact: true })
     .fill("WasteWise1!temporary");
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
+  await page.waitForURL("**/app");
+  await page.getByRole("link",{name:"Ringkasan",exact:true}).click();
   await expect(
     page.getByRole("heading", { name: "Langkah baik, Penguji." }),
   ).toBeVisible();

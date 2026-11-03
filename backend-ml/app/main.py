@@ -12,12 +12,14 @@ from sqlalchemy import text
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.auth import router as auth_router
+from app.community import router as community_router
 from app.config import settings
 from app.dashboard import router as dashboard_router
 from app.db import engine
 from app.drafts import router as drafts_router
 from app.http_pool import close_http_pool
 from app.inference import predictor
+from app.regions import router as regions_router
 from app.reports import ok
 from app.reports import router as reports_router
 from app.responses import Envelope, ErrorEnvelope, LiveRead, ReadyRead
@@ -51,7 +53,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins.split(","),
     allow_credentials=False,
-    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "Idempotency-Key"],
     expose_headers=["X-Request-ID"],
 )
@@ -199,3 +201,5 @@ app.include_router(auth_router)
 app.include_router(reports_router)
 app.include_router(drafts_router)
 app.include_router(dashboard_router)
+app.include_router(community_router)
+app.include_router(regions_router)

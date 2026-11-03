@@ -1,6 +1,6 @@
 # Database schema dan ERD
 
-Schema PostgreSQL: `app_private`. Migrasi executable: `backend-ml/migrations/versions/`; revisi akhir `8a4d7c209e51`. Upgrade diuji pada restore PostgreSQL17 lokal lalu diterapkan dan diverifikasi pada Supabase. Runtime role memperoleh USAGE dan DML, bukan kepemilikan schema. `public.alembic_version` mencatat revisi. CHECK menolak koordinat parsial dan photo_source NULL pada laporan otomatis; data lama tetap legacy.
+Schema PostgreSQL: `app_private`. Migrasi executable: `backend-ml/migrations/versions/`; revisi akhir `c42d19b50ea7`. Upgrade diuji pada restore PostgreSQL17 lokal lalu diterapkan dan diverifikasi pada Supabase. Runtime role memperoleh USAGE dan DML, bukan kepemilikan schema. `public.alembic_version` mencatat revisi. CHECK menolak koordinat parsial dan photo_source NULL pada laporan otomatis; data lama tetap legacy.
 
 ```mermaid
 erDiagram
@@ -130,3 +130,50 @@ Draft: unique(user_id,request_id), unique(user_id,finalization_key), expiry inde
 Revision>=1. Mutasi mengunci row dan memeriksa revision. Event report FK cascade, actor FK set null. Index event(report_id,created_at), draft(expires_at). Event/history dan mutasi dicommit bersama. Request idempotensi memakai advisory transaction lock scoped akun/key; fingerprint payload berbeda409. Worker expiry memakai SKIP LOCKED dan memeriksa referensi aktif sebelum menghapus.
 
 Migrasi telah diterapkan di Supabase setelah backup privat app_private, restore lokal dan dry-run pada salinan data. Dump/schema tanpa data berada di schema.sql; cadangan data tidak masuk Git. Uji restore seluruh platform remote termasuk Auth/Storage belum dilakukan. Lihat WORKFLOW_IMPLEMENTATION.md.
+
+## Community extension
+
+Revision `b31c80a21ef4` adds six tables; no legacy report is migrated into a community post. A restored application-schema backup was used to rehearse the migration before guarded Supabase execution. Runtime retains DML only.
+
+```mermaid
+erDiagram
+    users ||--o{ community_posts : publishes
+    waste_reports ||--o| community_posts : source
+    regions o|--o{ regions : parent
+    regions o|--o{ community_posts : resolves
+    community_posts ||--o{ post_likes : receives
+    users ||--o{ post_likes : likes
+    community_posts ||--o{ post_comments : contains
+    users ||--o{ post_comments : writes
+    community_posts ||--o{ content_flags : flagged
+    community_posts ||--o{ community_audits : moderated
+    community_posts {
+        uuid id PK
+        uuid report_id FK,UK
+        uuid user_id FK
+        text caption
+        varchar state
+        text source_image_path
+        text image_path
+        text thumbnail_path
+        varchar region_code FK
+        text location_label
+        varchar location_state
+        varchar privacy_version
+        integer revision
+        integer attempts
+        timestamptz next_attempt_at
+    }
+    regions {
+        varchar code PK
+        varchar parent_code FK
+        integer level
+        varchar name
+        text source
+        jsonb geometry
+    }
+```
+
+Likes use composite(post_id,user_id) PK. Comments use unique(user_id,request_id), state CHECK and1..1000 trimmed body length. Posts use unique report_id, state CHECK and10..5000 caption length. Cascades remove social associations when a report/account is deleted; derived images are queued first. Moderator actors/flagger identities become NULL on account deletion. Region parent/name, post state/created_at/id, post region, comment post/created_at/id indexes support the bounded query paths. JSON geometry stores explicitly documented lat/lon rings and bbox; no PostGIS extension is required. Region data is reference data, never a model feature.
+
+Revisi c42d19b50ea7 menambahkan indeks ekspresi bbox pada regions; resolver GPS tidak perlu membaca seluruh poligon saat mencari kandidat. Uji lokal5sampel:16,59ms cold lalu1,92–2,23ms warm untuk titik Gambir; bukan latency jaringan atau p95.

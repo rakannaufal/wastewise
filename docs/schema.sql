@@ -1,400 +1,323 @@
---
--- PostgreSQL database dump
---
+BEGIN;
 
-\restrict 4q8KFbDB4Y6r200MuBlcUH7TEkPvUjtzuYQW1qLKYWiIg41nqTggFbF4krBnTDX
+CREATE TABLE alembic_version (
+    version_num VARCHAR(32) NOT NULL,
+    CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num)
+);
 
--- Dumped from database version 17.11 (Homebrew)
--- Dumped by pg_dump version 17.11 (Homebrew)
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
---
--- Name: app_private; Type: SCHEMA; Schema: -; Owner: -
---
+-- Running upgrade  -> daee0603a16e
 
 CREATE SCHEMA app_private;
 
-
---
--- Name: report_status; Type: TYPE; Schema: app_private; Owner: -
---
-
-CREATE TYPE app_private.report_status AS ENUM (
-    'Pending',
-    'In Progress',
-    'Completed',
-    'Rejected'
-);
-
-
---
--- Name: user_role; Type: TYPE; Schema: app_private; Owner: -
---
-
-CREATE TYPE app_private.user_role AS ENUM (
-    'admin',
-    'user'
-);
-
-
---
--- Name: waste_category; Type: TYPE; Schema: app_private; Owner: -
---
-
-CREATE TYPE app_private.waste_category AS ENUM (
-    'battery',
-    'biological',
-    'brown-glass',
-    'cardboard',
-    'clothes',
-    'green-glass',
-    'metal',
-    'paper',
-    'plastic',
-    'shoes',
-    'trash',
-    'white-glass'
-);
-
-
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
-
---
--- Name: blocked_identities; Type: TABLE; Schema: app_private; Owner: -
---
-
-CREATE TABLE app_private.blocked_identities (
-    id uuid NOT NULL,
-    created_at timestamp with time zone NOT NULL
-);
-
-
---
--- Name: report_drafts; Type: TABLE; Schema: app_private; Owner: -
---
-
-CREATE TABLE app_private.report_drafts (
-    id uuid NOT NULL,
-    user_id uuid NOT NULL,
-    request_id uuid NOT NULL,
-    image_path text NOT NULL,
-    thumbnail_path text NOT NULL,
-    image_hash character varying(64) NOT NULL,
-    latitude numeric(10,8),
-    longitude numeric(11,8),
-    prediction jsonb,
-    classification_state character varying(24) NOT NULL,
-    expires_at timestamp with time zone NOT NULL,
-    consumed_at timestamp with time zone,
-    result_report_id uuid,
-    finalization_key uuid,
-    finalization_hash character varying(64),
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
-    photo_source character varying(16),
-    captured_at timestamp with time zone,
-    location_source character varying(32) DEFAULT 'legacy_unknown'::character varying NOT NULL,
-    location_recorded_at timestamp with time zone,
-    location_accuracy_m numeric(10,2),
-    CONSTRAINT ck_report_drafts_draft_coordinates CHECK ((((latitude IS NULL) AND (longitude IS NULL)) OR ((latitude IS NOT NULL) AND (longitude IS NOT NULL) AND ((latitude >= ('-90'::integer)::numeric) AND (latitude <= (90)::numeric)) AND ((longitude >= ('-180'::integer)::numeric) AND (longitude <= (180)::numeric))))),
-    CONSTRAINT ck_report_drafts_draft_photo_source CHECK (((photo_source IS NOT NULL) AND ((photo_source)::text = ANY ((ARRAY['camera'::character varying, 'gallery'::character varying])::text[])) AND (((photo_source)::text <> 'camera'::text) OR (captured_at IS NOT NULL)))),
-    CONSTRAINT ck_report_drafts_draft_prediction CHECK (((((classification_state)::text = 'analysis_failed'::text) AND (prediction IS NULL)) OR (((classification_state)::text = ANY ((ARRAY['classified'::character varying, 'needs_review'::character varying])::text[])) AND (prediction IS NOT NULL))))
-);
-
-
---
--- Name: report_events; Type: TABLE; Schema: app_private; Owner: -
---
-
-CREATE TABLE app_private.report_events (
-    id uuid NOT NULL,
-    report_id uuid NOT NULL,
-    actor_id uuid,
-    kind character varying(32) NOT NULL,
-    details jsonb NOT NULL,
-    reason text,
-    created_at timestamp with time zone NOT NULL
-);
-
-
---
--- Name: storage_cleanup_jobs; Type: TABLE; Schema: app_private; Owner: -
---
+REVOKE ALL ON SCHEMA app_private FROM PUBLIC;
 
 CREATE TABLE app_private.storage_cleanup_jobs (
-    id uuid NOT NULL,
-    bucket text NOT NULL,
-    object_path text NOT NULL,
-    status character varying(20) NOT NULL,
-    attempts integer NOT NULL,
-    next_attempt_at timestamp with time zone NOT NULL,
-    locked_until timestamp with time zone,
-    last_error_code character varying(100),
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
-    CONSTRAINT ck_storage_cleanup_jobs_attempts_nonnegative CHECK ((attempts >= 0)),
-    CONSTRAINT ck_storage_cleanup_jobs_valid_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('processing'::character varying)::text, ('completed'::character varying)::text])))
+    id UUID NOT NULL,
+    bucket TEXT NOT NULL,
+    object_path TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    attempts INTEGER NOT NULL,
+    next_attempt_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    locked_until TIMESTAMP WITH TIME ZONE,
+    last_error_code VARCHAR(100),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT pk_storage_cleanup_jobs PRIMARY KEY (id),
+    CONSTRAINT ck_storage_cleanup_jobs_valid_status CHECK (status IN ('pending','processing','completed')),
+    CONSTRAINT ck_storage_cleanup_jobs_attempts_nonnegative CHECK (attempts >= 0),
+    CONSTRAINT uq_storage_cleanup_jobs_bucket UNIQUE (bucket, object_path)
 );
 
+CREATE INDEX ix_cleanup_due ON app_private.storage_cleanup_jobs (status, next_attempt_at);
 
---
--- Name: users; Type: TABLE; Schema: app_private; Owner: -
---
+CREATE TYPE app_private.user_role AS ENUM ('admin', 'user');
 
 CREATE TABLE app_private.users (
-    id uuid NOT NULL,
-    email character varying(255) NOT NULL,
-    password_hash character varying(255),
-    full_name character varying(255) NOT NULL,
-    role app_private.user_role DEFAULT 'user'::app_private.user_role NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
-    auth_provider character varying(16) DEFAULT 'local'::character varying NOT NULL,
-    CONSTRAINT ck_users_email_normalized CHECK (((email)::text = lower(btrim((email)::text)))),
-    CONSTRAINT ck_users_name_length CHECK (((char_length(btrim((full_name)::text)) >= 3) AND (char_length(btrim((full_name)::text)) <= 255))),
-    CONSTRAINT ck_users_provider_credentials CHECK (((((auth_provider)::text = 'local'::text) AND (password_hash IS NOT NULL)) OR (((auth_provider)::text = 'supabase'::text) AND (password_hash IS NULL))))
+    id UUID NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    role app_private.user_role DEFAULT 'user' NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT pk_users PRIMARY KEY (id),
+    CONSTRAINT ck_users_name_length CHECK (char_length(btrim(full_name)) BETWEEN 3 AND 255),
+    CONSTRAINT ck_users_email_normalized CHECK (email = lower(btrim(email))),
+    CONSTRAINT uq_users_email UNIQUE (email)
 );
 
+CREATE TYPE app_private.waste_category AS ENUM ('battery', 'biological', 'brown-glass', 'cardboard', 'clothes', 'green-glass', 'metal', 'paper', 'plastic', 'shoes', 'trash', 'white-glass');
 
---
--- Name: waste_reports; Type: TABLE; Schema: app_private; Owner: -
---
+CREATE TYPE app_private.report_status AS ENUM ('Pending', 'In Progress', 'Completed', 'Rejected');
 
 CREATE TABLE app_private.waste_reports (
-    id uuid NOT NULL,
-    user_id uuid NOT NULL,
+    id UUID NOT NULL,
+    user_id UUID NOT NULL,
     category app_private.waste_category NOT NULL,
-    description text NOT NULL,
-    image_path text NOT NULL,
-    latitude numeric(10,8) NOT NULL,
-    longitude numeric(11,8) NOT NULL,
-    status app_private.report_status DEFAULT 'Pending'::app_private.report_status NOT NULL,
+    description TEXT NOT NULL,
+    image_path TEXT NOT NULL,
+    latitude NUMERIC(10, 8) NOT NULL,
+    longitude NUMERIC(11, 8) NOT NULL,
+    status app_private.report_status DEFAULT 'Pending' NOT NULL,
     ai_predicted_category app_private.waste_category,
-    ai_confidence numeric(5,2),
-    ai_model_version text,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
-    photo_source character varying(16),
-    captured_at timestamp with time zone,
-    location_source character varying(32) DEFAULT 'legacy_unknown'::character varying NOT NULL,
-    location_recorded_at timestamp with time zone,
-    location_accuracy_m numeric(10,2),
-    source_draft_id uuid,
-    thumbnail_path text,
-    classification_state character varying(24) DEFAULT 'legacy'::character varying NOT NULL,
-    revision integer DEFAULT 1 NOT NULL,
-    CONSTRAINT ck_waste_reports_ai_complete CHECK ((((ai_predicted_category IS NULL) AND (ai_confidence IS NULL) AND (ai_model_version IS NULL)) OR ((ai_predicted_category IS NOT NULL) AND (ai_confidence IS NOT NULL) AND (ai_model_version IS NOT NULL)))),
-    CONSTRAINT ck_waste_reports_confidence_range CHECK (((ai_confidence IS NULL) OR ((ai_confidence >= (0)::numeric) AND (ai_confidence <= (100)::numeric)))),
-    CONSTRAINT ck_waste_reports_description_length CHECK (((char_length(btrim(description)) >= 10) AND (char_length(btrim(description)) <= 5000))),
-    CONSTRAINT ck_waste_reports_latitude_range CHECK (((latitude >= ('-90'::integer)::numeric) AND (latitude <= (90)::numeric))),
-    CONSTRAINT ck_waste_reports_longitude_range CHECK (((longitude >= ('-180'::integer)::numeric) AND (longitude <= (180)::numeric))),
-    CONSTRAINT ck_waste_reports_report_automatic CHECK ((((classification_state)::text = 'legacy'::text) OR (((classification_state)::text = ANY ((ARRAY['classified'::character varying, 'needs_review'::character varying, 'reviewed'::character varying])::text[])) AND (ai_predicted_category IS NOT NULL) AND (source_draft_id IS NOT NULL) AND (photo_source IS NOT NULL) AND ((photo_source)::text = ANY ((ARRAY['camera'::character varying, 'gallery'::character varying])::text[])) AND ((location_source)::text = ANY ((ARRAY['device_capture'::character varying, 'photo_exif'::character varying, 'device_upload_confirmed'::character varying])::text[]))))),
-    CONSTRAINT ck_waste_reports_report_revision CHECK ((revision >= 1))
+    ai_confidence NUMERIC(5, 2),
+    ai_model_version TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT pk_waste_reports PRIMARY KEY (id),
+    CONSTRAINT ck_waste_reports_ai_complete CHECK ((ai_predicted_category IS NULL AND ai_confidence IS NULL AND ai_model_version IS NULL) OR (ai_predicted_category IS NOT NULL AND ai_confidence IS NOT NULL AND ai_model_version IS NOT NULL)),
+    CONSTRAINT ck_waste_reports_confidence_range CHECK (ai_confidence IS NULL OR ai_confidence BETWEEN 0 AND 100),
+    CONSTRAINT ck_waste_reports_description_length CHECK (char_length(btrim(description)) BETWEEN 10 AND 5000),
+    CONSTRAINT ck_waste_reports_latitude_range CHECK (latitude BETWEEN -90 AND 90),
+    CONSTRAINT ck_waste_reports_longitude_range CHECK (longitude BETWEEN -180 AND 180),
+    CONSTRAINT fk_waste_reports_user_id FOREIGN KEY(user_id) REFERENCES app_private.users (id) ON DELETE CASCADE,
+    CONSTRAINT uq_waste_reports_image_path UNIQUE (image_path)
 );
 
+CREATE INDEX ix_reports_category_created ON app_private.waste_reports (category, created_at);
 
---
--- Name: blocked_identities pk_blocked_identities; Type: CONSTRAINT; Schema: app_private; Owner: -
---
+CREATE INDEX ix_reports_owner_created ON app_private.waste_reports (user_id, created_at, id);
 
-ALTER TABLE ONLY app_private.blocked_identities
-    ADD CONSTRAINT pk_blocked_identities PRIMARY KEY (id);
+CREATE INDEX ix_reports_status_created ON app_private.waste_reports (status, created_at);
 
+INSERT INTO alembic_version (version_num) VALUES ('daee0603a16e') RETURNING alembic_version.version_num;
 
---
--- Name: report_drafts pk_report_drafts; Type: CONSTRAINT; Schema: app_private; Owner: -
---
+-- Running upgrade daee0603a16e -> 7f22a1094b31
 
-ALTER TABLE ONLY app_private.report_drafts
-    ADD CONSTRAINT pk_report_drafts PRIMARY KEY (id);
+ALTER TABLE app_private.users ADD COLUMN auth_provider VARCHAR(16) DEFAULT 'local' NOT NULL;
 
+ALTER TABLE app_private.users ALTER COLUMN password_hash DROP NOT NULL;
 
---
--- Name: report_events pk_report_events; Type: CONSTRAINT; Schema: app_private; Owner: -
---
+ALTER TABLE app_private.users ADD CONSTRAINT ck_users_ck_users_provider_credentials CHECK ((auth_provider = 'local' AND password_hash IS NOT NULL) OR (auth_provider = 'supabase' AND password_hash IS NULL));
 
-ALTER TABLE ONLY app_private.report_events
-    ADD CONSTRAINT pk_report_events PRIMARY KEY (id);
+CREATE TABLE app_private.blocked_identities (
+    id UUID NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT pk_blocked_identities PRIMARY KEY (id)
+);
 
+UPDATE alembic_version SET version_num='7f22a1094b31' WHERE alembic_version.version_num = 'daee0603a16e';
 
---
--- Name: storage_cleanup_jobs pk_storage_cleanup_jobs; Type: CONSTRAINT; Schema: app_private; Owner: -
---
+-- Running upgrade 7f22a1094b31 -> 41ba8d170ab2
 
-ALTER TABLE ONLY app_private.storage_cleanup_jobs
-    ADD CONSTRAINT pk_storage_cleanup_jobs PRIMARY KEY (id);
+ALTER TABLE app_private.users RENAME CONSTRAINT ck_users_ck_users_provider_credentials TO ck_users_provider_credentials;
 
+UPDATE alembic_version SET version_num='41ba8d170ab2' WHERE alembic_version.version_num = '7f22a1094b31';
 
---
--- Name: users pk_users; Type: CONSTRAINT; Schema: app_private; Owner: -
---
+-- Running upgrade 41ba8d170ab2 -> 620f42d91e30
 
-ALTER TABLE ONLY app_private.users
-    ADD CONSTRAINT pk_users PRIMARY KEY (id);
+CREATE TABLE app_private.report_drafts (
+    id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    request_id UUID NOT NULL,
+    image_path TEXT NOT NULL,
+    thumbnail_path TEXT NOT NULL,
+    image_hash VARCHAR(64) NOT NULL,
+    latitude NUMERIC(10, 8),
+    longitude NUMERIC(11, 8),
+    prediction JSONB,
+    classification_state VARCHAR(24) NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    consumed_at TIMESTAMP WITH TIME ZONE,
+    result_report_id UUID,
+    finalization_key UUID,
+    finalization_hash VARCHAR(64),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    photo_source VARCHAR(16),
+    captured_at TIMESTAMP WITH TIME ZONE,
+    location_source VARCHAR(32) DEFAULT 'legacy_unknown' NOT NULL,
+    location_recorded_at TIMESTAMP WITH TIME ZONE,
+    location_accuracy_m NUMERIC(10, 2),
+    CONSTRAINT pk_report_drafts PRIMARY KEY (id),
+    CONSTRAINT uq_drafts_owner_request UNIQUE (user_id, request_id),
+    CONSTRAINT uq_drafts_owner_finalize UNIQUE (user_id, finalization_key),
+    CONSTRAINT fk_report_drafts_user_id FOREIGN KEY(user_id) REFERENCES app_private.users (id) ON DELETE CASCADE,
+    CONSTRAINT uq_report_drafts_image_path UNIQUE (image_path)
+);
 
+CREATE INDEX ix_drafts_expiry ON app_private.report_drafts (expires_at);
 
---
--- Name: waste_reports pk_waste_reports; Type: CONSTRAINT; Schema: app_private; Owner: -
---
+ALTER TABLE app_private.waste_reports ADD COLUMN photo_source VARCHAR(16);
 
-ALTER TABLE ONLY app_private.waste_reports
-    ADD CONSTRAINT pk_waste_reports PRIMARY KEY (id);
+ALTER TABLE app_private.waste_reports ADD COLUMN captured_at TIMESTAMP WITH TIME ZONE;
 
+ALTER TABLE app_private.waste_reports ADD COLUMN location_source VARCHAR(32) DEFAULT 'legacy_unknown' NOT NULL;
 
---
--- Name: report_drafts uq_drafts_owner_finalize; Type: CONSTRAINT; Schema: app_private; Owner: -
---
+ALTER TABLE app_private.waste_reports ADD COLUMN location_recorded_at TIMESTAMP WITH TIME ZONE;
 
-ALTER TABLE ONLY app_private.report_drafts
-    ADD CONSTRAINT uq_drafts_owner_finalize UNIQUE (user_id, finalization_key);
+ALTER TABLE app_private.waste_reports ADD COLUMN location_accuracy_m NUMERIC(10, 2);
 
+ALTER TABLE app_private.waste_reports ADD COLUMN source_draft_id UUID;
 
---
--- Name: report_drafts uq_drafts_owner_request; Type: CONSTRAINT; Schema: app_private; Owner: -
---
+ALTER TABLE app_private.waste_reports ADD COLUMN thumbnail_path TEXT;
 
-ALTER TABLE ONLY app_private.report_drafts
-    ADD CONSTRAINT uq_drafts_owner_request UNIQUE (user_id, request_id);
+ALTER TABLE app_private.waste_reports ADD COLUMN classification_state VARCHAR(24) DEFAULT 'legacy' NOT NULL;
 
+ALTER TABLE app_private.waste_reports ADD COLUMN revision INTEGER DEFAULT '1' NOT NULL;
 
---
--- Name: report_drafts uq_report_drafts_image_path; Type: CONSTRAINT; Schema: app_private; Owner: -
---
+ALTER TABLE app_private.waste_reports ADD CONSTRAINT fk_reports_source_draft FOREIGN KEY(source_draft_id) REFERENCES app_private.report_drafts (id) ON DELETE SET NULL;
 
-ALTER TABLE ONLY app_private.report_drafts
-    ADD CONSTRAINT uq_report_drafts_image_path UNIQUE (image_path);
+ALTER TABLE app_private.waste_reports ADD CONSTRAINT uq_reports_source_draft UNIQUE (source_draft_id);
 
+CREATE TABLE app_private.report_events (
+    id UUID NOT NULL,
+    report_id UUID NOT NULL,
+    actor_id UUID,
+    kind VARCHAR(32) NOT NULL,
+    details JSONB NOT NULL,
+    reason TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT pk_report_events PRIMARY KEY (id),
+    CONSTRAINT fk_report_events_report_id FOREIGN KEY(report_id) REFERENCES app_private.waste_reports (id) ON DELETE CASCADE,
+    CONSTRAINT fk_report_events_actor_id FOREIGN KEY(actor_id) REFERENCES app_private.users (id) ON DELETE SET NULL
+);
 
---
--- Name: waste_reports uq_reports_source_draft; Type: CONSTRAINT; Schema: app_private; Owner: -
---
+CREATE INDEX ix_events_report_created ON app_private.report_events (report_id, created_at);
 
-ALTER TABLE ONLY app_private.waste_reports
-    ADD CONSTRAINT uq_reports_source_draft UNIQUE (source_draft_id);
-
-
---
--- Name: storage_cleanup_jobs uq_storage_cleanup_jobs_bucket; Type: CONSTRAINT; Schema: app_private; Owner: -
---
-
-ALTER TABLE ONLY app_private.storage_cleanup_jobs
-    ADD CONSTRAINT uq_storage_cleanup_jobs_bucket UNIQUE (bucket, object_path);
-
-
---
--- Name: users uq_users_email; Type: CONSTRAINT; Schema: app_private; Owner: -
---
-
-ALTER TABLE ONLY app_private.users
-    ADD CONSTRAINT uq_users_email UNIQUE (email);
-
-
---
--- Name: waste_reports uq_waste_reports_image_path; Type: CONSTRAINT; Schema: app_private; Owner: -
---
-
-ALTER TABLE ONLY app_private.waste_reports
-    ADD CONSTRAINT uq_waste_reports_image_path UNIQUE (image_path);
-
-
---
--- Name: ix_cleanup_due; Type: INDEX; Schema: app_private; Owner: -
---
-
-CREATE INDEX ix_cleanup_due ON app_private.storage_cleanup_jobs USING btree (status, next_attempt_at);
-
-
---
--- Name: ix_drafts_expiry; Type: INDEX; Schema: app_private; Owner: -
---
-
-CREATE INDEX ix_drafts_expiry ON app_private.report_drafts USING btree (expires_at);
-
-
---
--- Name: ix_events_report_created; Type: INDEX; Schema: app_private; Owner: -
---
-
-CREATE INDEX ix_events_report_created ON app_private.report_events USING btree (report_id, created_at);
-
-
---
--- Name: ix_reports_category_created; Type: INDEX; Schema: app_private; Owner: -
---
-
-CREATE INDEX ix_reports_category_created ON app_private.waste_reports USING btree (category, created_at);
-
-
---
--- Name: ix_reports_owner_created; Type: INDEX; Schema: app_private; Owner: -
---
-
-CREATE INDEX ix_reports_owner_created ON app_private.waste_reports USING btree (user_id, created_at, id);
-
-
---
--- Name: ix_reports_status_created; Type: INDEX; Schema: app_private; Owner: -
---
-
-CREATE INDEX ix_reports_status_created ON app_private.waste_reports USING btree (status, created_at);
-
-
---
--- Name: report_drafts fk_report_drafts_user_id; Type: FK CONSTRAINT; Schema: app_private; Owner: -
---
-
-ALTER TABLE ONLY app_private.report_drafts
-    ADD CONSTRAINT fk_report_drafts_user_id FOREIGN KEY (user_id) REFERENCES app_private.users(id) ON DELETE CASCADE;
-
-
---
--- Name: report_events fk_report_events_actor_id; Type: FK CONSTRAINT; Schema: app_private; Owner: -
---
-
-ALTER TABLE ONLY app_private.report_events
-    ADD CONSTRAINT fk_report_events_actor_id FOREIGN KEY (actor_id) REFERENCES app_private.users(id) ON DELETE SET NULL;
-
-
---
--- Name: report_events fk_report_events_report_id; Type: FK CONSTRAINT; Schema: app_private; Owner: -
---
-
-ALTER TABLE ONLY app_private.report_events
-    ADD CONSTRAINT fk_report_events_report_id FOREIGN KEY (report_id) REFERENCES app_private.waste_reports(id) ON DELETE CASCADE;
-
-
---
--- Name: waste_reports fk_reports_source_draft; Type: FK CONSTRAINT; Schema: app_private; Owner: -
---
-
-ALTER TABLE ONLY app_private.waste_reports
-    ADD CONSTRAINT fk_reports_source_draft FOREIGN KEY (source_draft_id) REFERENCES app_private.report_drafts(id) ON DELETE SET NULL;
-
-
---
--- Name: waste_reports fk_waste_reports_user_id; Type: FK CONSTRAINT; Schema: app_private; Owner: -
---
-
-ALTER TABLE ONLY app_private.waste_reports
-    ADD CONSTRAINT fk_waste_reports_user_id FOREIGN KEY (user_id) REFERENCES app_private.users(id) ON DELETE CASCADE;
-
-
---
--- PostgreSQL database dump complete
---
-
-\unrestrict 4q8KFbDB4Y6r200MuBlcUH7TEkPvUjtzuYQW1qLKYWiIg41nqTggFbF4krBnTDX
+UPDATE alembic_version SET version_num='620f42d91e30' WHERE alembic_version.version_num = '41ba8d170ab2';
+
+-- Running upgrade 620f42d91e30 -> 7f36d20c41ab
+
+ALTER TABLE app_private.report_drafts ADD CONSTRAINT ck_report_drafts_draft_coordinates CHECK ((latitude IS NULL AND longitude IS NULL) OR (latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180));
+
+ALTER TABLE app_private.report_drafts ADD CONSTRAINT ck_report_drafts_draft_prediction CHECK ((classification_state = 'analysis_failed' AND prediction IS NULL) OR (classification_state IN ('classified', 'needs_review') AND prediction IS NOT NULL));
+
+ALTER TABLE app_private.report_drafts ADD CONSTRAINT ck_report_drafts_draft_photo_source CHECK (photo_source IN ('camera', 'gallery') AND (photo_source <> 'camera' OR captured_at IS NOT NULL));
+
+ALTER TABLE app_private.waste_reports ADD CONSTRAINT ck_waste_reports_report_revision CHECK (revision >= 1);
+
+ALTER TABLE app_private.waste_reports ADD CONSTRAINT ck_waste_reports_report_automatic CHECK (classification_state = 'legacy' OR (classification_state IN ('classified', 'needs_review', 'reviewed') AND ai_predicted_category IS NOT NULL AND source_draft_id IS NOT NULL AND photo_source IN ('camera', 'gallery') AND location_source IN ('device_capture', 'photo_exif', 'device_upload_confirmed')));
+
+UPDATE alembic_version SET version_num='7f36d20c41ab' WHERE alembic_version.version_num = '620f42d91e30';
+
+-- Running upgrade 7f36d20c41ab -> 8a4d7c209e51
+
+ALTER TABLE app_private.report_drafts DROP CONSTRAINT ck_report_drafts_draft_coordinates;
+
+ALTER TABLE app_private.report_drafts ADD CONSTRAINT ck_report_drafts_draft_coordinates CHECK ((latitude IS NULL AND longitude IS NULL) OR (latitude IS NOT NULL AND longitude IS NOT NULL AND latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180));
+
+ALTER TABLE app_private.report_drafts DROP CONSTRAINT ck_report_drafts_draft_photo_source;
+
+ALTER TABLE app_private.report_drafts ADD CONSTRAINT ck_report_drafts_draft_photo_source CHECK (photo_source IS NOT NULL AND photo_source IN ('camera', 'gallery') AND (photo_source <> 'camera' OR captured_at IS NOT NULL));
+
+ALTER TABLE app_private.waste_reports DROP CONSTRAINT ck_waste_reports_report_automatic;
+
+ALTER TABLE app_private.waste_reports ADD CONSTRAINT ck_waste_reports_report_automatic CHECK (classification_state = 'legacy' OR (classification_state IN ('classified', 'needs_review', 'reviewed') AND ai_predicted_category IS NOT NULL AND source_draft_id IS NOT NULL AND photo_source IS NOT NULL AND photo_source IN ('camera', 'gallery') AND location_source IN ('device_capture', 'photo_exif', 'device_upload_confirmed')));
+
+UPDATE alembic_version SET version_num='8a4d7c209e51' WHERE alembic_version.version_num = '7f36d20c41ab';
+
+-- Running upgrade 8a4d7c209e51 -> b31c80a21ef4
+
+CREATE TABLE app_private.regions (
+    code VARCHAR(16) NOT NULL,
+    parent_code VARCHAR(16),
+    level INTEGER NOT NULL,
+    name VARCHAR(180) NOT NULL,
+    source TEXT NOT NULL,
+    geometry JSONB,
+    CONSTRAINT pk_regions PRIMARY KEY (code),
+    CONSTRAINT fk_regions_parent_code FOREIGN KEY(parent_code) REFERENCES app_private.regions (code)
+);
+
+CREATE INDEX ix_regions_parent_name ON app_private.regions (parent_code, name);
+
+CREATE TABLE app_private.community_posts (
+    id UUID NOT NULL,
+    report_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    caption TEXT NOT NULL,
+    state VARCHAR(16) NOT NULL,
+    source_image_path TEXT NOT NULL,
+    image_path TEXT,
+    thumbnail_path TEXT,
+    region_code VARCHAR(16),
+    location_label TEXT,
+    location_state VARCHAR(20) NOT NULL,
+    privacy_version VARCHAR(24) NOT NULL,
+    revision INTEGER NOT NULL,
+    attempts INTEGER NOT NULL,
+    next_attempt_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT pk_community_posts PRIMARY KEY (id),
+    CONSTRAINT ck_community_posts_post_state CHECK (state IN ('processing','published','hidden','withdrawn')),
+    CONSTRAINT ck_community_posts_post_caption CHECK (char_length(btrim(caption)) BETWEEN 10 AND 5000),
+    CONSTRAINT uq_community_posts_report_id UNIQUE (report_id),
+    CONSTRAINT fk_community_posts_report_id FOREIGN KEY(report_id) REFERENCES app_private.waste_reports (id) ON DELETE CASCADE,
+    CONSTRAINT fk_community_posts_user_id FOREIGN KEY(user_id) REFERENCES app_private.users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_community_posts_region_code FOREIGN KEY(region_code) REFERENCES app_private.regions (code)
+);
+
+CREATE INDEX ix_posts_state_created ON app_private.community_posts (state, created_at, id);
+
+CREATE INDEX ix_posts_region ON app_private.community_posts (region_code);
+
+CREATE TABLE app_private.post_likes (
+    post_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT pk_post_likes PRIMARY KEY (post_id, user_id),
+    CONSTRAINT fk_post_likes_post_id FOREIGN KEY(post_id) REFERENCES app_private.community_posts (id) ON DELETE CASCADE,
+    CONSTRAINT fk_post_likes_user_id FOREIGN KEY(user_id) REFERENCES app_private.users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE app_private.post_comments (
+    id UUID NOT NULL,
+    post_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    request_id UUID NOT NULL,
+    body TEXT NOT NULL,
+    state VARCHAR(16) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT pk_post_comments PRIMARY KEY (id),
+    CONSTRAINT uq_post_comments_user_id UNIQUE (user_id, request_id),
+    CONSTRAINT ck_post_comments_comment_length CHECK (char_length(btrim(body)) BETWEEN 1 AND 1000),
+    CONSTRAINT ck_post_comments_comment_state CHECK (state IN ('visible','hidden','deleted')),
+    CONSTRAINT fk_post_comments_post_id FOREIGN KEY(post_id) REFERENCES app_private.community_posts (id) ON DELETE CASCADE,
+    CONSTRAINT fk_post_comments_user_id FOREIGN KEY(user_id) REFERENCES app_private.users (id) ON DELETE CASCADE
+);
+
+CREATE INDEX ix_comments_post_created ON app_private.post_comments (post_id, created_at, id);
+
+CREATE TABLE app_private.content_flags (
+    id UUID NOT NULL,
+    post_id UUID NOT NULL,
+    user_id UUID,
+    reason TEXT NOT NULL,
+    state VARCHAR(16) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT pk_content_flags PRIMARY KEY (id),
+    CONSTRAINT uq_content_flags_post_id UNIQUE (post_id, user_id),
+    CONSTRAINT fk_content_flags_post_id FOREIGN KEY(post_id) REFERENCES app_private.community_posts (id) ON DELETE CASCADE,
+    CONSTRAINT fk_content_flags_user_id FOREIGN KEY(user_id) REFERENCES app_private.users (id) ON DELETE SET NULL
+);
+
+CREATE TABLE app_private.community_audits (
+    id UUID NOT NULL,
+    post_id UUID NOT NULL,
+    actor_id UUID,
+    action VARCHAR(32) NOT NULL,
+    reason TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT pk_community_audits PRIMARY KEY (id),
+    CONSTRAINT fk_community_audits_post_id FOREIGN KEY(post_id) REFERENCES app_private.community_posts (id) ON DELETE CASCADE,
+    CONSTRAINT fk_community_audits_actor_id FOREIGN KEY(actor_id) REFERENCES app_private.users (id) ON DELETE SET NULL
+);
+
+UPDATE alembic_version SET version_num='b31c80a21ef4' WHERE alembic_version.version_num = '8a4d7c209e51';
+
+-- Running upgrade b31c80a21ef4 -> c42d19b50ea7
+
+CREATE INDEX ix_regions_bounds ON app_private.regions
+    ((CAST((geometry['bbox'] ->> 0) AS FLOAT)),
+     (CAST((geometry['bbox'] ->> 2) AS FLOAT)),
+     (CAST((geometry['bbox'] ->> 1) AS FLOAT)),
+     (CAST((geometry['bbox'] ->> 3) AS FLOAT)));
+
+UPDATE alembic_version SET version_num='c42d19b50ea7' WHERE alembic_version.version_num = 'b31c80a21ef4';
+
+COMMIT;
 

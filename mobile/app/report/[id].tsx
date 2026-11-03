@@ -1,3 +1,4 @@
+import ShareReport from "../../src/ShareReport";
 import { useCallback, useRef, useState } from "react";
 import { Alert, Image, Linking, Platform, Text, View } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -297,6 +298,7 @@ export default function Detail() {
             disabled={busy}
             onPress={remove}
           />
+          {row.user_id === user?.id && <ShareReport report={row} />}
         </>
       )}
     </Screen>

@@ -45,6 +45,8 @@ async function fixtures(page: Page, tokenStatus = 200, logoutStatus = 204) {
         web_url: "http://127.0.0.1:5173",
       };
     else if (path.endsWith("/auth/me")) data = user;
+    else if(path.endsWith("/community/feed")) data={posts:[],next_cursor:null};
+    else if(path.endsWith("/regions"))data={regions:[],truncated:false};
     else if (path.endsWith("/stats/summary"))
       data = {
         total_reports: 0,
@@ -106,7 +108,7 @@ async function fixtures(page: Page, tokenStatus = 200, logoutStatus = 204) {
   );
 }
 async function login(page: Page) {
-  await page.goto("/");
+  await page.goto("/login");
   await page.getByLabel("Email", { exact: true }).fill(user.email);
   await page
     .getByLabel("Kata sandi", { exact: true })
@@ -119,11 +121,11 @@ test("confirmed login persists on reload; provider failure still clears logout l
   await fixtures(page, 200, 503);
   await login(page);
   await expect(
-    page.getByRole("heading", { name: "Langkah baik, Penguji." }),
+    page.getByRole("heading", { name: "Kabar dari sekitar." }),
   ).toBeVisible();
   await page.reload();
   await expect(
-    page.getByRole("heading", { name: "Langkah baik, Penguji." }),
+    page.getByRole("heading", { name: "Kabar dari sekitar." }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Keluar", exact: true }).click();
   await expect(
@@ -142,7 +144,7 @@ test("registration waits for confirmation; resend and password reset have explic
 }) => {
   await fixtures(page);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto("/login");
   await page.getByRole("button", { name: "Daftar sekarang" }).click();
   await page.getByLabel("Nama lengkap").fill(user.full_name);
   await page.getByLabel("Email", { exact: true }).fill(user.email);
@@ -152,7 +154,7 @@ test("registration waits for confirmation; resend and password reset have explic
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Periksa email");
   await expect(
-    page.getByRole("heading", { name: "Langkah baik, Penguji." }),
+    page.getByRole("heading", { name: "Kabar dari sekitar." }),
   ).toHaveCount(0);
   expect(
     (

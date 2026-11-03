@@ -28,3 +28,8 @@ auth-test-results/
 release/*.zip
 *.log
 *.tsbuildinfo
+
+# Administrative reference downloads are reproducible from pinned sources.json.
+backend-ml/dataset/regions/boundaries/
+backend-ml/dataset/regions/wilayah_level_1_2.sql
+backend-ml/dataset/regions/wilayah.sql

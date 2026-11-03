@@ -19,10 +19,12 @@ export default function Profile() {
         </Text>
       </View>
       <View style={styles.action}>
-        <Text style={styles.heading}>Laporanmu bersifat privat.</Text>
+        <Text style={styles.heading}>Kamu menentukan publikasinya.</Text>
         <Text style={styles.text}>
-          Laporan dan lokasinya dapat dilihat oleh pemilik akun dan pengelola.
-          Hapus laporan melalui halaman detail bila tidak diperlukan lagi.
+          Laporan privat terlihat oleh pemilik dan pengelola. Posting yang
+          dibagikan memperlihatkan foto dan GPS presisi kepada pengguna yang
+          masuk. Hapus laporan melalui halaman detail bila tidak diperlukan
+          lagi.
         </Text>
       </View>
       <Button
@@ -34,6 +36,11 @@ export default function Profile() {
         secondary
         title="Panduan memilah"
         onPress={() => router.push("/guide")}
+      />
+      <Button
+        secondary
+        title="Cara menggunakan WasteWise"
+        onPress={() => router.push("/onboarding")}
       />
       <Button
         title="Keluar dari akun"

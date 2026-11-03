@@ -200,6 +200,10 @@ def delete_user(user_id: UUID, user: User = Depends(admin), db: Session = Depend
         enqueue(db, thumb)
     if target.auth_provider == "supabase":
         db.add(BlockedIdentity(id=target.id))
+    from app.community import retire_media
+    from app.models import CommunityPost
+
+    retire_media(db, db.scalars(select(CommunityPost).where(CommunityPost.user_id == target.id)))
     db.delete(target)
     db.commit()
     return ok(message="Akun dihapus; pembersihan foto dijadwalkan")

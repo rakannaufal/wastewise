@@ -1,0 +1,5 @@
+backend-ml/.venv/bin/ruff check backend-ml/app backend-ml/ml backend-ml/tests backend-ml/scripts backend-ml/migrations
+All checks passed!
+
+.venv/bin/mypy app
+Success: no issues found in 26 source files

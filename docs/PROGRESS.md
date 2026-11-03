@@ -141,3 +141,27 @@ Web/mobile menyembunyikan foto/kategori/lokasi selama DELETE, menampilkan proses
 28tes backend lulus59,18detik;3E2E web/Expo lulus31,4detik, termasuk respons DELETE tertahan/gagal/retry nyata.22pemeriksaan Supabase nyata lulus dengan cleanup QA selesai. Check/typecheck/build/Ruff/mypy, ekspor iOS/Android/web,2regresi serializer dan2tes EXIF lulus; audit npm kedua client0kerentanan. Peringatan Starlette/httpx lama tetap ada.
 
 Median3sampel Supabase: kategori5429,6→3332,1ms (38,6%); hapus4266,4→2382,8ms (44,2%). Sampel memakai komputer lokal/gambar8042byte, bukan latency HP atau p95. Detail: [DRAFT_PERFORMANCE.md](DRAFT_PERFORMANCE.md). Kamera/GPS fisik dan produksi tetap gate terbuka. Tidak ada migrasi atau retraining.
+
+## Komunitas, peta, landing dan identitas bersama (3 November 2026)
+
+Diimplementasikan feed login-only, publikasi eksplisit foto/deskripsi/GPS presisi, suka idempoten, komentar UUID-retry, edit caption/pencabutan, flag konten dan moderasi ber-audit. DTO komunitas terpisah dari laporan privat; sumber foto diganti tidak mempublikasikan pengganti otomatis. Worker derivatif1080/320px terpisah dari ML; cleanup dicatat sebelum upload, lease/attempt fence mencegah worker lama menerbitkan kembali posting yang dicabut. Job cleanup yang pernah melindungi referensi dapat diaktifkan kembali ketika publikasi dihapus. Tes menemukan dan memperbaiki lock FOR UPDATE pada eager outer join serta CORS PUT untuk suka browser.
+
+Filter server provinsi/kota/kecamatan/kelurahan, kategori/status; map bbox/zoom dengan grid cluster maksimum500; pagination feed/comment cursor. Data MIT dipatok commit/checksum:38 provinsi,514 kabupaten/kota,7.285 kecamatan,83.762 desa/kelurahan.83.604 poligon cocok,0 kode asing,158 batas belum tersedia; tidak menebak wilayah dengan centroid. Import Supabase lengkap91.599nama/83.604poligon. Revisi b31c80a21ef4 dan c42d19b50ea7 diuji pada restore backup app_private kemudian diterapkan dengan guard revisi; dua laporan lama tetap privat dan0post komunitas tersisa setelah QA. Runtime DML terjaga. Titik Gambir31.71.01.1001 terverifikasi;5sampel resolver lokal16,59ms cold lalu1,92–2,23ms warm, bukan p95. Satu request Supabase termasuk jaringan1859,68ms, bukan benchmark perangkat.
+
+Web: landing publik, feed/app, peta, moderasi, onboarding, keluarga error4xx/5xx, fallback tanpa WebGL dan daftar lokasi yang dapat diakses. Manrope/Caveat self-hosted Latin; palette forest bersama, logo mark/outlined wordmark/icon asli. Native: FlatList, filter bertingkat, detail/suka/komentar/publikasi, peta native, lima tab dengan kamera68px; capture dari tab melanjutkan composer, galeri langsung dari kamera, cancel kembali. Expo web memakai daftar lokasi; React web memakai MapLibre lazy. Asset prompts seluruh halaman tersedia; slot ilustrasi terhubung tetapi raster ilustrasi khusus belum dihasilkan. Contoh dataset landing berlabel/beratribusi; bukan posting palsu atau data training baru.
+
+Verifikasi terukur tahap ini:
+
+- 35tes backend lulus75,00detik, Ruff seluruh app/ml/tests/scripts/migrations lulus; mypy26modul lulus. Peringatan Starlette/httpx deprecation tetap ada.
+- 5E2E lulus54,8detik: admin, komunitas lintas pengguna/peta/pencabutan, landing/onboarding/error responsif+axe, Expo galeri/ML/GPS mock, laporan web/edit/draft/delete.4tes Auth lulus23,5detik: sesi, logout failure, signup/resend/reset, PKCE. Bukan GPS hardware/email inbox.
+- 9pemeriksaan Supabase nyata lulus; QA dibersihkan. Auth/database/Storage privat, isolasi laporan, signed derivative, proyeksi aman, suka/komentar retry, map/38provinsi, withdrawal/delete.
+- Typecheck/lint dan build web lulus. Initial application422,69kB/gzip132,49kB; MapLibre1079,31kB/gzip293,53kB dimuat pada rute peta. Warning ukuran chunk peta dicatat, tidak disembunyikan.
+- Audit npm web/mobile0kerentanan, pip-audit0kerentanan dikenal. `npm ci` bersih dari manifest/lockfile diuji pada .local/community-clean. Ekspor iOS/Android/web tersedia; bukti final export dan paket ditambahkan setelah perintah selesai.
+
+Bukti: docs/evidence/community-*.txt/json/png. Kontrak API/OpenAPI/schema/ERD, README, DECISIONS, PRODUCT/DESIGN, REGIONS, COMMUNITY_IMPLEMENTATION, TESTING dan indeks deliverable diperbarui. Model95,86%, checkpoint/split/evaluasi tetap; tidak ada retraining.
+
+Terbuka: raster ilustrasi final sesuai prompt; kamera/GPS/peta pada iOS/Android fisik, Maps key Android standalone; penyedia ubin production sesuai kapasitas/kebijakan; deployment HTTPS, SMTP, monitoring/shared limiter dan holdout model lapangan. Halaman error SPA bukan bukti HTTP status server hosting. Pengukuran lokal/remote di atas bukan klaim rilis production.
+
+Final runtime: web5173/API8000 readiness loopback+LAN200/Metro8082 status200; konfigurasi API mobile cocok IP Wi-Fi192.168.100.168. Publisher dimuat ulang dengan source lease fence final; cleanup kontinu aktif sesuai izin sebelumnya. Ekspor final iOS/Android/web lulus; npm ci kedua client dari lockfile final lulus. Dua regresi multipart Expo lulus. Source/model/docs dan dataset lokal dikemas ulang lewat scripts/package_release.py; checksum ada di release/manifest.json, ZIP tetap lokal/diabaikan Git.
+
+Tambahan verifikasi final: dua tes EXIF lulus melalui `node --experimental-strip-types --test shared/photo-location.test.ts`; koordinat selatan/endian dan metadata rusak/tidak ada ditangani tanpa lokasi rekaan. Bukti final check/build/export/EXIF diperbarui dari log terakhir.

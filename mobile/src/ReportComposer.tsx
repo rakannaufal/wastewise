@@ -50,6 +50,7 @@ export function ReportComposer({
   const [stored] = useState(() => loadDraft(owner, editId));
   const [photo, setPhoto] = useState<Photo | null>(stored?.photo || null);
   const [draft, setDraft] = useState<PhotoDraft | null>(stored?.remote || null);
+  const [share, setShare] = useState(false);
   const [description, setDescription] = useState(stored?.description || "");
   const [original, setOriginal] = useState<Report | null>(null);
   const [busy, setBusy] = useState("");
@@ -217,6 +218,7 @@ export function ReportComposer({
           headers: { "Idempotency-Key": ids.current.finalKey },
           body: JSON.stringify({
             description,
+            ...(!editId ? { share_to_community: share } : {}),
             ...(draft ? { draft_id: draft.id } : {}),
             ...(editId ? { revision: original?.revision } : {}),
           }),
@@ -415,6 +417,25 @@ export function ReportComposer({
                 }}
               />
             ) : null}
+          </View>
+        )}
+        {!editId && (
+          <View style={styles.action}>
+            <Text style={styles.heading}>Bagikan ke komunitas?</Text>
+            <Text style={styles.text}>
+              Foto, deskripsi, dan GPS presisi akan terlihat oleh seluruh
+              pengguna yang masuk. Laporan tetap privat jika tidak dibagikan.
+            </Text>
+            <Button
+              secondary
+              title={
+                share
+                  ? "Dibagikan: ubah menjadi privat"
+                  : "Privat: setujui berbagi foto dan GPS"
+              }
+              disabled={!!busy}
+              onPress={() => setShare(!share)}
+            />
           </View>
         )}
         <Input

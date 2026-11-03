@@ -4,22 +4,36 @@ import argparse
 import time
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import or_, select
+from sqlalchemy import and_, or_, select
 
 from app.config import settings
 from app.db import SessionLocal
-from app.models import CleanupJob, Report, ReportDraft
+from app.models import CleanupJob, CommunityPost, Report, ReportDraft
 from app.storage import storage
 from app.workflow import enqueue
 
 
 def referenced(db, path):
-    return db.scalar(
-        select(Report.id).where(or_(Report.image_path == path, Report.thumbnail_path == path))
-    ) or db.scalar(
-        select(ReportDraft.id).where(
-            ReportDraft.consumed_at.is_(None),
-            or_(ReportDraft.image_path == path, ReportDraft.thumbnail_path == path),
+    return (
+        db.scalar(
+            select(CommunityPost.id).where(
+                or_(
+                    and_(
+                        CommunityPost.state == "processing", CommunityPost.source_image_path == path
+                    ),
+                    CommunityPost.image_path == path,
+                    CommunityPost.thumbnail_path == path,
+                )
+            )
+        )
+        or db.scalar(
+            select(Report.id).where(or_(Report.image_path == path, Report.thumbnail_path == path))
+        )
+        or db.scalar(
+            select(ReportDraft.id).where(
+                ReportDraft.consumed_at.is_(None),
+                or_(ReportDraft.image_path == path, ReportDraft.thumbnail_path == path),
+            )
         )
     )
 

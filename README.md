@@ -1,6 +1,6 @@
 # WasteWise
 
-Aplikasi pengenalan 12 kategori sampah dan pelaporan privat. React web, Expo mobile, FastAPI, PostgreSQL, MobileNetV2. Bahasa antarmuka Indonesia.
+Aplikasi pengenalan12 kategori sampah, pelaporan privat, komunitas foto dengan suka/komentar, serta peta lokasi. React web, Expo mobile, FastAPI, PostgreSQL, MobileNetV2. Bahasa antarmuka Indonesia.
 
 ## Enam hasil akhir
 
@@ -82,7 +82,7 @@ Auth, database, dan Storage adalah tiga konfigurasi terpisah. Publishable key cu
 
 ## Penggunaan
 
-1. Masuk. Ringkasan memuat statistik milik sendiri; pengelola melihat semua laporan.
+1. Buka landing page, pilih **Masuk**. **Beranda** memuat posting komunitas; **Ringkasan** memuat statistik milik sendiri atau seluruh laporan untuk pengelola. **Peta** memuat lokasi posting yang dibagikan.
 2. Di HP pilih **Buat laporan**, lalu **Ambil foto sampah** atau **Pilih gambar dari galeri**. ML berjalan otomatis setelah foto dinormalisasi; kategori tidak dipilih pengguna. Web menyediakan alur galeri yang sama.
 3. Kamera memasangkan GPS dengan waktu pemotretan. Galeri memakai EXIF GPS jika tersedia. Jika tidak ada, tekan konfirmasi bahwa foto diambil di lokasi saat ini, lalu aplikasi mengambil GPS otomatis. Jika lokasi berbeda, ambil foto ulang di tempat tersebut. Izin ditolak atau akurasi belum cukup: klasifikasi tetap tersedia, pengiriman menunggu lokasi; tidak ada input koordinat manual.
 4. Isi deskripsi minimal 10 karakter, tekan **Kirim laporan**. Normalnya foto di-upload dan dianalisis sekali; finalisasi menggunakan draft. Draft sementara bertahan hingga 24 jam, retry pengiriman tidak menggandakan laporan. Tombol **Hapus draft foto** membatalkan draft. ML gagal: draft dipertahankan untuk retry, laporan belum dibuat.
@@ -159,3 +159,22 @@ Implementasi dan bukti terbaru tercatat di [PROGRESS](docs/PROGRESS.md). Supabas
 ### Respons kategori dan hapus draft
 
 Setelah mengambil/memilih foto, kategori muncul otomatis; tidak perlu menekan Kirim laporan. Model dan unggah foto berjalan paralel. Saat **Hapus draft foto** ditekan, pratinjau disembunyikan selama server memproses; jika gagal, draft tampil kembali untuk dicoba ulang. Worker cleanup harus aktif untuk menghapus objek privat dari Storage. Pengukuran dan batas verifikasi: [docs/DRAFT_PERFORMANCE.md](docs/DRAFT_PERFORMANCE.md). Reload Expo Go setelah pembaruan aplikasi.
+
+
+## Feed, filter wilayah, dan peta
+
+Laporan baru tetap privat. Centang persetujuan publikasi saat membuat laporan, atau pilih **Bagikan laporan** pada detail. Foto, deskripsi, serta **GPS presisi** menjadi terlihat oleh seluruh pengguna yang masuk. Beri suka/komentar pada posting, gunakan filter provinsi sampai kelurahan, jelajahi titik peta. Pemilik dapat menarik posting tanpa menghapus laporan privat. Admin meninjau konten melalui **Moderasi**. Mengganti foto laporan tidak mempublikasikan foto pengganti otomatis.
+
+Untuk instalasi baru/upgrade, jalankan Alembic menggunakan kredensial migrator sesuai SETUP; runtime cukup DML. Kemudian dari root:
+
+```bash
+backend-ml/.venv/bin/python backend-ml/scripts/fetch_regions.py
+(cd backend-ml && .venv/bin/python -m app.import_regions)
+(cd backend-ml && .venv/bin/python -m app.community_worker)
+```
+
+Publisher berjalan bersama worker cleanup yang sudah ada. Referensi wilayah sekitar368MB; sumber MIT, versi/checksum,158 batas wilayah yang belum tersedia dijelaskan pada [REGIONS](docs/REGIONS.md). Lihat [implementasi komunitas](docs/COMMUNITY_IMPLEMENTATION.md), [prompt aset](docs/plans/ASSET_PROMPTS.md), dan [matriks layar](docs/plans/SCREEN_MATRIX.md).
+
+Native: lima tab **Beranda, Peta, Foto, Laporan, Profil**. Kamera tengah berukuran68px; onboarding/panduan ada di Profil. Peta native memerlukan build/perangkat yang mendukung react-native-maps; Google Maps key untuk Android standalone harus dikonfigurasi sebelum distribusi. Expo web memakai daftar lokasi; peta web lengkap tersedia di React website. Ubin OpenStreetMap development memerlukan internet; tetapkan penyedia ubin production sesuai kapasitas dan kebijakan penggunaan.
+
+Logo mark/wordmark/icon sudah tersedia. Ilustrasi raster khusus masih menunggu output aset yang disetujui; prompt seluruh halaman sudah disediakan. Tidak mengklaim ilustrasi tersebut sudah dibuat. Model, split dataset dan evaluasi95,86% tidak diubah atau dilatih ulang oleh fitur komunitas.

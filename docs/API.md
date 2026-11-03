@@ -217,3 +217,32 @@ Model wajib untuk finalisasi laporan baru. Inferensi gagal mempertahankan draft 
 ## Penghapusan draft
 
 `DELETE /api/v1/report-drafts/{id}` bersifat idempoten:200 bila draft belum dikonsumsi berhasil dihapus, sudah tidak ada, atau tidak dimiliki pemanggil. Respons untuk ID asing tidak membocorkan keberadaan draft dan tidak mengubah data pemilik lain. Draft kedaluwarsa tetap dapat dibuang. Draft milik sendiri yang sudah menjadi laporan tetap409. Hapus metadata dan enqueue foto/thumbnail berlangsung dalam satu transaksi; worker membersihkan objek privat sesudahnya. Client mempertahankan data lokal sampai200, menampilkan kembali pratinjau bila request gagal.
+
+## Community and geographic endpoints (b31c80a21ef4)
+
+All endpoints below require a verified session. Existing `/reports` remains owner/admin scoped; no report becomes public automatically. All responses retain `{success,message,data}`. IDs are UUIDs. Never pass raw report image paths to peers.
+
+| Method | Endpoint under `/api/v1` | Contract |
+| --- | --- | --- |
+| GET | `/community/feed` | `per_page=1..30`, opaque `cursor`, optional `region_code`, `category`, `status`; data `{posts,next_cursor}`. Descending `(created_at,id)` cursor. Published posts plus caller's processing posts. |
+| POST | `/community/posts` | `{report_id,caption:10..5000 chars,consent:true}`. Own report only. One post per report; hidden posts cannot be republished by owners. Returns 201 post. |
+| GET | `/community/posts/{id}` | Published post; processing/withdrawn/hidden restricted to owner/admin. Allowlisted DTO only. |
+| PATCH | `/community/posts/{id}` | Owner caption edit `{caption,revision}`. Stale revision 409. |
+| DELETE | `/community/posts/{id}` | Idempotent owner withdrawal, derivative cleanup queued. Private report retained. Previously issued image URLs can remain usable for up to 15 minutes; already downloaded copies cannot be recalled. |
+| PUT / DELETE | `/community/posts/{id}/like` | Idempotent caller like/unlike. Published posts only. |
+| GET | `/community/posts/{id}/comments` | Newest first, optional cursor, 30 comments; `{comments,next_cursor}`. Visible comments only. |
+| POST | `/community/posts/{id}/comments` | `{body:1..1000 chars,request_id:UUID}`. Retry same body/key returns same comment. Different body/key reuse 409. |
+| DELETE | `/community/comments/{id}` | Owner/admin soft deletion. Admin removal records a moderation audit. |
+| POST | `/community/flags` | `{post_id,reason:5..1000 chars}`. One flag per caller/post. |
+| GET | `/admin/community/flags` | Admin open moderation queue, bounded 100 rows. |
+| PATCH | `/admin/community/posts/{id}` | Admin `{state:"hidden"|"published",reason,revision}`. Reason/audit required. Owner withdrawal or absent derivatives prevents restore. |
+| GET | `/regions` | Optional `parent`, `search`, `level:1..4`; `{regions,truncated}`, bounded 200 names. No parent/search defaults to provinces. Use parent and search for large lists. |
+| GET | `/community/map` | `bbox=west,south,east,north`, `zoom:2..20`, same region/category/status filters; `{features,truncated}`. Published posts only. Server grid clusters bounded 500, each has count/longitude/latitude and post_id only for singleton. |
+
+`POST /reports` adds optional `share_to_community:false`. Setting true constitutes the explicit UI publication consent; the post is created atomically with the report. Report finalization idempotency includes this flag. Edit/replacement does not silently republish: replacing a source photo withdraws a published post; moderator-hidden posts remain hidden. Caption editing and report description editing are separate after publication.
+
+Post DTO: `id`, `author_name` (first name), `is_owner`, `caption`, `state`, `image_url`, `image_url_expires_at`, `category`, `classification_state`, `status`, `latitude`, `longitude`, `location_source`, `location_accuracy_m`, `location_label`, `location_state`, `region_code`, `like_count`, `comment_count`, `liked_by_me`, `revision`, `created_at`. No email, auth metadata, private object path, user_id or report_id. GPS precision is deliberately visible to authenticated peers only after consent. Labels can be unresolved/ambiguous; coordinates remain original report evidence.
+
+Publication media is produced by `python -m app.community_worker`: EXIF-free JPEG up to1080px plus320px thumbnail. No second ML inference. Upload paths are reserved in cleanup before remote writes, with a10minute grace period. Processing lease5minutes, attempts fence stale workers, retries exponential up to1hour. Unshare/delete and workers check current state; abandoned artifacts remain in the cleanup outbox. Re-enqueue rearms completed protected cleanup jobs for legitimate later removal. Run `python -m app.reconcile` for a read-only orphan audit.
+
+Rate limits: publication20/min, likes60/min, comments20/min, flags10/min per authenticated account on a single process. Existing auth/upload limits remain. Multi-process shared rate limiting is still a deployment dependency. CORS explicitly allows PUT for browser likes.

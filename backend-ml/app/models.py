@@ -5,6 +5,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     Enum,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -204,3 +205,107 @@ class CleanupJob(Timestamps, Base):
         CheckConstraint("status IN ('pending','processing','completed')", name="valid_status"),
         Index("ix_cleanup_due", "status", "next_attempt_at"),
     )
+
+
+class Region(Base):
+    __tablename__ = "regions"
+    code: Mapped[str] = mapped_column(String(16), primary_key=True)
+    parent_code: Mapped[str | None] = mapped_column(ForeignKey("app_private.regions.code"))
+    level: Mapped[int] = mapped_column(Integer)
+    name: Mapped[str] = mapped_column(String(180))
+    source: Mapped[str] = mapped_column(Text)
+    geometry: Mapped[dict | None] = mapped_column(JSONB)
+    __table_args__ = (Index("ix_regions_parent_name", "parent_code", "name"),)
+
+
+class CommunityPost(Timestamps, Base):
+    __tablename__ = "community_posts"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    report_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("app_private.waste_reports.id", ondelete="CASCADE"), unique=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("app_private.users.id", ondelete="CASCADE")
+    )
+    caption: Mapped[str] = mapped_column(Text)
+    state: Mapped[str] = mapped_column(String(16), default="processing")
+    source_image_path: Mapped[str] = mapped_column(Text)
+    image_path: Mapped[str | None] = mapped_column(Text)
+    thumbnail_path: Mapped[str | None] = mapped_column(Text)
+    region_code: Mapped[str | None] = mapped_column(ForeignKey("app_private.regions.code"))
+    location_label: Mapped[str | None] = mapped_column(Text)
+    location_state: Mapped[str] = mapped_column(String(20), default="pending")
+    privacy_version: Mapped[str] = mapped_column(String(24), default="gps-community-v1")
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    __table_args__ = (
+        CheckConstraint(
+            "state IN ('processing','published','hidden','withdrawn')", name="post_state"
+        ),
+        CheckConstraint("char_length(btrim(caption)) BETWEEN 10 AND 5000", name="post_caption"),
+        Index("ix_posts_state_created", "state", "created_at", "id"),
+        Index("ix_posts_region", "region_code"),
+    )
+
+
+class PostLike(Base):
+    __tablename__ = "post_likes"
+    post_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("app_private.community_posts.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("app_private.users.id", ondelete="CASCADE"), primary_key=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class PostComment(Timestamps, Base):
+    __tablename__ = "post_comments"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    post_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("app_private.community_posts.id", ondelete="CASCADE")
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("app_private.users.id", ondelete="CASCADE")
+    )
+    request_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    body: Mapped[str] = mapped_column(Text)
+    state: Mapped[str] = mapped_column(String(16), default="visible")
+    __table_args__ = (
+        UniqueConstraint("user_id", "request_id"),
+        CheckConstraint("char_length(btrim(body)) BETWEEN 1 AND 1000", name="comment_length"),
+        CheckConstraint("state IN ('visible','hidden','deleted')", name="comment_state"),
+        Index("ix_comments_post_created", "post_id", "created_at", "id"),
+    )
+
+
+class ContentFlag(Timestamps, Base):
+    __tablename__ = "content_flags"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    post_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("app_private.community_posts.id", ondelete="CASCADE")
+    )
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("app_private.users.id", ondelete="SET NULL")
+    )
+    reason: Mapped[str] = mapped_column(Text)
+    state: Mapped[str] = mapped_column(String(16), default="open")
+    __table_args__ = (UniqueConstraint("post_id", "user_id"),)
+
+
+class CommunityAudit(Base):
+    __tablename__ = "community_audits"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    post_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("app_private.community_posts.id", ondelete="CASCADE")
+    )
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("app_private.users.id", ondelete="SET NULL")
+    )
+    action: Mapped[str] = mapped_column(String(32))
+    reason: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+Index("ix_regions_bounds", *(Region.geometry["bbox"][i].astext.cast(Float) for i in (0, 2, 1, 3)))

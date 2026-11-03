@@ -82,7 +82,16 @@ def enqueue_many(db, paths):
         db.execute(
             insert(CleanupJob)
             .values([{"object_path": path, "bucket": settings.storage_bucket} for path in paths])
-            .on_conflict_do_nothing(index_elements=["bucket", "object_path"])
+            .on_conflict_do_update(
+                index_elements=["bucket", "object_path"],
+                set_={
+                    "status": "pending",
+                    "next_attempt_at": datetime.now(UTC),
+                    "locked_until": None,
+                    "last_error_code": None,
+                },
+                where=CleanupJob.status != "processing",
+            )
         )
 
 

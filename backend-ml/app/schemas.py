@@ -97,6 +97,7 @@ class LocationUpdate(StrictModel):
 
 
 class ReportCreate(StrictModel):
+    share_to_community: bool = False
     draft_id: UUID
     description: str = Field(min_length=10, max_length=5000)
 

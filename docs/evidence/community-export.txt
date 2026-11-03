@@ -1,0 +1,73 @@
+
+> wastewise-mobile@1.0.0 export
+> expo export --platform all --output-dir ../.local/community-export
+
+env: load .env
+env: export EXPO_PUBLIC_API_URL
+Starting Metro Bundler
+
+| (node:62705) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:62705) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+iOS Bundled 19175ms node_modules/expo-router/entry.js (1349 modules)
+Android Bundled 28082ms node_modules/expo-router/entry.js (1343 modules)
+Static rendering is enabled. Learn more: https://docs.expo.dev/router/web/static-rendering/
+λ Bundled 872ms node_modules/@expo/router-server/node/render.js (1015 modules)
+Web Bundled 1192ms node_modules/expo-router/entry.js (508 modules)
+
+› ios bundles (1):
+_expo/static/js/ios/entry-ac916b0fa3dd0ab08f516a7182532451.hbc (3.6MB)
+
+› android bundles (1):
+_expo/static/js/android/entry-5987a8ae220d067a96ee97ab5cf62e4e.hbc (3.6MB)
+
+› web bundles (21):
+_expo/static/js/web/__common-7a1b4c4d947c7aa0d6a990f05e0bd294.js (485KB)
+_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js (3.8KB)
+_expo/static/js/web/_layout-4c86969c8a9dc3bf798ac92977d97c8b.js (1.8KB)
+_expo/static/js/web/_layout-9e203a50d59514158f3799eb4d0a15c7.js (2.5KB)
+_expo/static/js/web/[id]-25dd9c7a0be1af762fa670d03a04ec62.js (4.3KB)
+_expo/static/js/web/[id]-823c76e53e310cee33799dc92d5c88b3.js (7.9KB)
+_expo/static/js/web/+not-found-e8a52c07b0c5f4a84c1b850178461ba0.js (729B)
+_expo/static/js/web/camera-c0a57a2e9d5a19346084ce128f96b9de.js (28KB)
+_expo/static/js/web/capture-7fea644015c265bf1e245e813ad716b3.js (627B)
+_expo/static/js/web/classify-1a142e591bed61a68f91367892b76ad2.js (270B)
+_expo/static/js/web/entry-7495ca6a7ed86d9a035ffeef88d8fdf1.js (1.1MB)
+_expo/static/js/web/error-3612e29c77813ee82b3fd3b7cf742ab2.js (1.5KB)
+_expo/static/js/web/guide-78f6f55ec42baf5670fe09190284b310.js (1.2KB)
+_expo/static/js/web/index-0493894bf33383965be0bb36378a2bc3.js (45KB)
+_expo/static/js/web/index-ee0f6b401b4bd2c7a16a4d9bda9c9a1e.js (2KB)
+_expo/static/js/web/login-f998b4b064aa16b08f35a15e26928dd6.js (3KB)
+_expo/static/js/web/map-2f203b593e9c869202230ac8fff83df0.js (2.2KB)
+_expo/static/js/web/new-report-d26bd79d5ef8c71f29cefb3a3d0fbf4a.js (10KB)
+_expo/static/js/web/onboarding-c797c0337792d7bff48aec4e4061bd11.js (1.5KB)
+_expo/static/js/web/profile-4f32b94f928307fc2f1c4c7964e74a26.js (1.7KB)
+_expo/static/js/web/reports-95fcea544e1ba6caaa5784b024420b83.js (3.8KB)
+
+› Static routes (23):
+/map (22KB)
+/error (22KB)
+/login (22KB)
+/guide (22KB)
+/ (index) (22KB)
+/camera (22KB)
+/capture (22KB)
+/profile (22KB)
+/reports (22KB)
+/_sitemap (19KB)
+/classify (22KB)
+/post/[id] (22KB)
+/+not-found (22KB)
+/new-report (22KB)
+/onboarding (22KB)
+/(tabs)/map (22KB)
+/report/[id] (22KB)
+/(tabs)/guide (22KB)
+/(tabs) (22KB)
+/(tabs)/capture (22KB)
+/(tabs)/profile (22KB)
+/(tabs)/reports (22KB)
+/(tabs)/classify (22KB)
+
+Exported: ../.local/community-export

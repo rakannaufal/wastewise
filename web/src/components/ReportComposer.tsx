@@ -17,6 +17,7 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [draft, setDraft] = useState<PhotoDraft | null>(null);
   const [original, setOriginal] = useState<Report | null>(null);
+  const [share, setShare] = useState(false);
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState<Error | null>(null);
@@ -177,6 +178,7 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
           headers: { "Idempotency-Key": attempt.current.final },
           body: JSON.stringify({
             description,
+            ...(!editId ? { share_to_community: share } : {}),
             ...(draft ? { draft_id: draft.id } : {}),
             ...(editId ? { revision: original?.revision } : {}),
           }),
@@ -358,6 +360,17 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
                 </p>
               )}
             </>
+          )}
+          {!editId && (
+            <label className="share-consent">
+              <input
+                type="checkbox"
+                checked={share}
+                onChange={(e) => setShare(e.target.checked)}
+              />
+              Bagikan foto, deskripsi, dan GPS presisi kepada seluruh pengguna
+              yang masuk. Laporan tetap privat jika tidak dicentang.
+            </label>
           )}
           <label htmlFor="report-description">Deskripsi</label>
           <textarea

@@ -1,0 +1,37 @@
+{
+  "brand": {
+    "mark": "brand/mark.svg",
+    "wordmark": "brand/wordmark.svg",
+    "status": "ready"
+  },
+  "illustrations": {
+    "status": "awaiting-approved-raster-assets",
+    "prompt_source": "docs/plans/ASSET_PROMPTS.md",
+    "web_directory": "web/public/illustrations/",
+    "native_directory": "mobile/assets/illustrations/",
+    "slots": [
+      "landing-hero",
+      "onboarding-camera",
+      "onboarding-classification",
+      "onboarding-location",
+      "onboarding-community",
+      "error-4xx",
+      "error-5xx",
+      "empty-feed",
+      "empty-map",
+      "offline"
+    ],
+    "files": {
+      "landing-hero": null,
+      "onboarding-camera": null,
+      "onboarding-classification": null,
+      "onboarding-location": null,
+      "onboarding-community": null,
+      "error-4xx": null,
+      "error-5xx": null,
+      "empty-feed": null,
+      "empty-map": null,
+      "offline": null
+    }
+  }
+}

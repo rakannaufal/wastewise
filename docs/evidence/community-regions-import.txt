@@ -1,0 +1,1 @@
+{"levels": {"4": 83762, "3": 7285, "2": 514, "1": 38}, "boundary_rows": 83604, "unknown_boundary_codes": 0, "method": "polygon-even-odd; ambiguous matches unresolved"}

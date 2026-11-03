@@ -16,3 +16,5 @@ Checkpoint model resmi masuk Git; dataset dan arsip ZIP tidak masuk Git. Keberad
 Lihat PROGRESS untuk batas verifikasi terakhir: Supabase remote telah diuji; email delivery, deployment publik dan instalasi perangkat masih terbuka.
 
 Perbaikan mobile-first: [WORKFLOW_IMPLEMENTATION.md](WORKFLOW_IMPLEMENTATION.md) memuat kamera/galeri, ML/GPS otomatis, draft/idempotensi, edit, review/status/history, dashboard operasional dan batas performa. Schema cloud8a4d7c209e51; kebijakan review validation dan smoke kompresi disertakan. Model test tetap95,86%; tidak ada retraining baru. Bukti terbaru: `docs/evidence/workflow-*` dan `supabase-smoke.json`.
+
+Ekstensi komunitas: COMMUNITY_IMPLEMENTATION.md, REGIONS.md, plans/ASSET_PROMPTS.md, shared/community.ts, migrasi b31c80a21ef4. Enam artefak ML/source/dataset/evaluasi tetap berlaku; data wilayah merupakan referensi tambahan.

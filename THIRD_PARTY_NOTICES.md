@@ -6,3 +6,10 @@
 - Lucide: ISC license. Expo vector icons/Ionicons and other libraries retain their upstream licenses. Exact package versions appear in lockfiles.
 
 No blanket license is assigned to user-supplied SPEC, dataset images, model pretraining material, or the entire repository. Select a code license before public distribution.
+
+## Community UI and geography
+
+- Manrope and Caveat: SIL Open Font License1.1. Web uses Fontsource packages; native static instances derive from Google Fonts variable TTFs. Original OFL texts: mobile/assets/fonts/manrope-OFL.txt and caveat-OFL.txt. Logo wordmark outlines derive from Manrope700 under that license.
+- MapLibre GL JS: BSD-3-Clause; react-native-maps: MIT. Versions locked in each package-lock.json.
+- OpenStreetMap data: © OpenStreetMap contributors, ODbL; attribution remains visible on the web map. Public tile service has a separate [usage policy](https://operations.osmfoundation.org/policies/tiles/); production tile capacity must be planned separately.
+- cahyadsn/wilayah and cahyadsn/wilayah_boundaries: MIT, copyright notices retained in backend-ml/dataset/regions/*LICENSE. Pinned commits and per-file SHA256 in sources.json; source/header provenance limitations documented in docs/REGIONS.md.

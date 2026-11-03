@@ -7,7 +7,7 @@ from sqlalchemy import select
 from app.cleanup import run_once
 from app.config import settings
 from app.db import SessionLocal
-from app.models import Report, User
+from app.models import CommunityPost, Report, ReportDraft, User
 from app.reports import enqueue
 
 if settings.environment != "development" or settings.storage_backend != "local":
@@ -18,8 +18,10 @@ with SessionLocal.begin() as db:
     for user in candidates:
         if not re.fullmatch(r"qa-\d{13}@example\.com", user.email):
             continue
-        for path in db.scalars(select(Report.image_path).where(Report.user_id == user.id)):
-            enqueue(db, path)
+        for model in (Report, ReportDraft, CommunityPost):
+            for row in db.scalars(select(model).where(model.user_id == user.id)):
+                enqueue(db, row.image_path)
+                enqueue(db, row.thumbnail_path)
         db.delete(user)
         count += 1
 while run_once():

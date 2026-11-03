@@ -67,8 +67,10 @@ class Storage:
         response.raise_for_status()
         return response
 
-    def put(self, owner, content):
-        key = f"{owner}/{uuid.uuid4()}.jpg"
+    def put(self, owner, content, *, key=None):
+        key = key or f"{owner}/{uuid.uuid4()}.jpg"
+        if key.split("/")[0] != str(owner):
+            raise ValueError("Storage owner mismatch")
         if self.local:
             path = self.path(key)
             path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)

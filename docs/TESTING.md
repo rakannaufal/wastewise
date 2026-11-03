@@ -91,3 +91,11 @@ backend-ml/.venv/bin/python -m pip_audit --format json
 Bukti tersanitasi di `docs/evidence/`. Audit berlaku pada lock/tanggal pemeriksaan. Jangan menyimpan token, password, `.env`, atau trace browser berisi sesi ke Git/arsip distribusi.
 
 Pengukuran kategori/penghapusan Supabase dan cara mengulangnya: [DRAFT_PERFORMANCE.md](DRAFT_PERFORMANCE.md).
+
+## Community regression (3 November 2026)
+
+`backend-ml/tests/test_community.py` covers private-by-default reports, consent, peer DTO allowlist, idempotent likes/comments, invalid cursors/bounds/regions, moderation, worker partial upload/retry, withdrawal during upload, cleanup rearming, CORS PUT and whitespace rejection. Run with the existing isolated `scripts/test_local.py` runner.
+
+`web/e2e/community.spec.ts` exercises existing report→consent→published photo→second user like/comment→map→withdrawal; checks landing/onboarding/error pages at320/390/768/1440px and axe. The browser runner starts a local publisher alongside API/Vite/Expo static export. Auth fixtures explicitly use `/login`; local memory-only auth navigates to dashboard through SPA links, preserving its security contract. Real Supabase smoke evidence is `community-supabase.json`; two disposable QA identities were removed. No email delivery or device GPS claim.
+
+Remaining physical-device checks: iOS/Android camera center action opens and cancels correctly; camera/gallery permission denial; EXIF/HEIC; current-GPS confirmation; native map pan/pins/filter; keyboard/large text/safe area; background, return, process restart, expired URL/offline and retry. Android standalone additionally needs Maps SDK/key and a signed build. These remain unrun without the devices/build credentials.

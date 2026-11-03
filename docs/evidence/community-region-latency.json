@@ -1,0 +1,11 @@
+{
+  "samples_ms": [
+    16.59,
+    2.23,
+    2.04,
+    1.96,
+    1.92
+  ],
+  "resolved_code": "31.71.01.1001",
+  "scope": "local PostgreSQL; 91599 names, 83604 polygons; 5 sequential requests; not p95 or device latency"
+}

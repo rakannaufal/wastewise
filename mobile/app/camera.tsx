@@ -2,11 +2,13 @@ import { useCallback, useRef, useState } from "react";
 import { AppState, Linking, Text, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { pickPhoto } from "../src/photo";
 import { setCapture } from "../src/draft";
 import { Button, ErrorText, Screen, styles } from "../src/ui";
 
 export default function Camera() {
+  const { origin } = useLocalSearchParams<{ origin?: string }>();
   const camera = useRef<CameraView | null>(null);
   const fix = useRef<Location.LocationObject | null>(null);
   const [permission, requestPermission] = useCameraPermissions();
@@ -77,6 +79,22 @@ export default function Camera() {
       };
     }, []),
   );
+  async function gallery() {
+    setBusy(true);
+    setError("");
+    try {
+      const photo = await pickPhoto();
+      if (photo) {
+        setCapture(photo);
+        if (origin === "tab") router.replace("/new-report");
+        else router.back();
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
   async function take() {
     if (!camera.current || !ready) return;
     setBusy(true);
@@ -108,7 +126,8 @@ export default function Camera() {
             }
           : null,
       });
-      router.back();
+      if (origin === "tab") router.replace("/new-report");
+      else router.back();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -160,9 +179,11 @@ export default function Camera() {
       />
       <Button
         secondary
-        title="Batal / pilih dari galeri"
-        onPress={() => router.back()}
+        title="Pilih dari galeri"
+        disabled={busy}
+        onPress={() => void gallery()}
       />
+      <Button secondary title="Batal" onPress={() => router.back()} />
     </Screen>
   );
 }

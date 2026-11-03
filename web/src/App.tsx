@@ -1,7 +1,16 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import {
+  Link,
+  NavLink,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import {
   BookOpen,
+  House,
+  MapPin,
   ClipboardList,
   LayoutDashboard,
   LogOut,
@@ -13,6 +22,13 @@ import {
 import { useAuth } from "./Auth";
 import { Brand, Dialog, Loading } from "./ui";
 import Login from "./pages/Login";
+import { Landing, Onboarding, ErrorPage } from "./pages/Public";
+const Moderation = lazy(() => import("./pages/Moderation"));
+const Community = lazy(() => import("./pages/Community"));
+const PostDetail = lazy(() =>
+  import("./pages/Community").then((m) => ({ default: m.PostDetail })),
+);
+const WasteMap = lazy(() => import("./pages/Map"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Reports = lazy(() => import("./pages/Reports"));
 const NewReport = lazy(() => import("./pages/NewReport"));
@@ -21,7 +37,9 @@ const Classify = lazy(() => import("./pages/Classify"));
 const Guide = lazy(() => import("./pages/Guide"));
 const Users = lazy(() => import("./pages/Users"));
 const navigation = [
-  { path: "/", label: "Ringkasan", icon: LayoutDashboard },
+  { path: "/app", label: "Beranda", icon: House },
+  { path: "/map", label: "Peta", icon: MapPin },
+  { path: "/dashboard", label: "Ringkasan", icon: LayoutDashboard },
   { path: "/reports", label: "Laporan", icon: ClipboardList },
   { path: "/classify", label: "Klasifikasi", icon: ScanLine },
   { path: "/guide", label: "Panduan memilah", icon: BookOpen },
@@ -41,7 +59,18 @@ export default function App() {
     };
   }, []);
   if (loading) return <Loading />;
-  if (!user || recovery) return <Login />;
+  if (recovery || location.pathname === "/auth/reset-password")
+    return <Login />;
+  if (location.pathname === "/") return <Landing />;
+  if (location.pathname === "/onboarding") return <Onboarding />;
+  if (location.pathname.startsWith("/errors/"))
+    return (
+      <Routes>
+        <Route path="/errors/:code" element={<ErrorPage />} />
+      </Routes>
+    );
+  if (!user || location.pathname === "/login")
+    return user ? <PublicRedirect /> : <Login />;
   const nav = (
     <>
       <Brand />
@@ -50,7 +79,10 @@ export default function App() {
         {[
           ...navigation,
           ...(user.role === "admin"
-            ? [{ path: "/users", label: "Pengguna", icon: UsersIcon }]
+            ? [
+                { path: "/users", label: "Pengguna", icon: UsersIcon },
+                { path: "/moderation", label: "Moderasi", icon: ClipboardList },
+              ]
             : []),
         ].map(({ path, label, icon: Icon }) => (
           <NavLink
@@ -125,24 +157,18 @@ export default function App() {
         <main id="main" className="main-content">
           <Suspense fallback={<Loading />}>
             <Routes>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/app" element={<Community />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/map" element={<WasteMap />} />
+              <Route path="/community/:id" element={<PostDetail />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/reports/new" element={<NewReport />} />
               <Route path="/reports/:id" element={<ReportDetail />} />
               <Route path="/classify" element={<Classify />} />
               <Route path="/guide" element={<Guide />} />
               <Route path="/users" element={<Users />} />
-              <Route
-                path="*"
-                element={
-                  <div className="empty">
-                    <h1>Halaman tidak ditemukan</h1>
-                    <Link to="/" className="button primary">
-                      Kembali ke ringkasan
-                    </Link>
-                  </div>
-                }
-              />
+              <Route path="/moderation" element={<Moderation />} />
+              <Route path="*" element={<ErrorPage code="404" />} />
             </Routes>
           </Suspense>
           <footer className="workspace-footer">
@@ -152,5 +178,13 @@ export default function App() {
         </main>
       </div>
     </div>
+  );
+}
+
+function PublicRedirect() {
+  return (
+    <Routes>
+      <Route path="*" element={<Navigate to="/app" replace />} />
+    </Routes>
   );
 }

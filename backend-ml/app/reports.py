@@ -155,6 +155,10 @@ def create_report(
         idempotency_key,
         digest,
     )
+    if body.share_to_community:
+        from app.community import publish
+
+        publish(db, row, user, body.description)
     event(db, row, user, "created", {"to": "Pending"})
     db.commit()
     return ok(report_data(row), "Laporan tersimpan")
@@ -179,6 +183,16 @@ def edit(
     changed = row.description != body.description
     if body.draft_id:
         draft = get_draft(db, user, body.draft_id)
+        from app.community import retire_media
+        from app.models import CommunityPost
+
+        post = db.scalar(
+            select(CommunityPost).where(CommunityPost.report_id == row.id).with_for_update()
+        )
+        if post:
+            retire_media(db, [post])
+            post.state = "hidden" if post.state == "hidden" else "withdrawn"
+            post.revision += 1
         old_paths = (row.image_path, row.thumbnail_path)
         apply_draft(row, draft)
         draft.result_report_id = row.id
@@ -278,6 +292,10 @@ def delete_report(
     report_id: UUID, user: User = Depends(current_user), db: Session = Depends(get_db)
 ):
     row = owned(db, user, report_id, lock=True)
+    from app.community import retire_media
+    from app.models import CommunityPost
+
+    retire_media(db, db.scalars(select(CommunityPost).where(CommunityPost.report_id == row.id)))
     enqueue(db, row.image_path)
     enqueue(db, row.thumbnail_path)
     db.delete(row)

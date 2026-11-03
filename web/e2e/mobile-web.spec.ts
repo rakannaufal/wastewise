@@ -25,7 +25,7 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
     .getByLabel("Kata sandi", { exact: true })
     .fill("WasteWise1!temporary");
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
-  await expect(page.getByText("TOTAL LAPORAN", { exact: true })).toBeVisible();
+  await expect(page.getByText("Kabar dari sekitar.", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Buat laporan", exact: true }).click();
   const chooser = page.waitForEvent("filechooser");
   await page

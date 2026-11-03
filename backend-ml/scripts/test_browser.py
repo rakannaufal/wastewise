@@ -116,6 +116,7 @@ def main():
             root,
         ),
     ]
+    commands.append(([sys.executable, "-m", "app.community_worker"], root / "backend-ml"))
     processes = []
     logs = []
     try:

@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "real Supabase Auth/profile",
+    "private report remains isolated",
+    "explicit publication",
+    "private derived signed media",
+    "peer projection allowlist",
+    "idempotent likes",
+    "idempotent comments",
+    "authenticated map and 38 provinces",
+    "withdrawal revokes peer metadata; report deletion queued"
+  ],
+  "passed": 9,
+  "qa_cleanup": "completed",
+  "scope": "real Supabase auth/database/storage; localhost API; no device GPS/email delivery"
+}

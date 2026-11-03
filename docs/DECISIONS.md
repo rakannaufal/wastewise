@@ -54,3 +54,11 @@ Kamera menyimpan GPS ≤30 detik dari shutter dan akurasi ≤50 m. Galeri membac
 ## D-13: Operasi admin dan payload ringan
 
 Status/review terpisah, setiap mutasi ber-revision dan event transaksi. Admin dashboard membedakan cohort tanggal dan antrean seluruh periode; backlog hanya mengikuti filter kategori. Median dihitung dari event nyata, bukan updated_at legacy. Thumbnail320px dan batch signed URL mengurangi transfer serta round-trip Storage. Chart SVG/CSS tidak menambah library grafik. Draft native disimpan dalam direktori privat akun selama24jam; logout membersihkannya. Token tetap SecureStore. API publik HTTPS dan pengujian iOS/Android fisik merupakan gate rilis tersisa.
+
+## D-14: Komunitas dengan persetujuan GPS (2026-11-03)
+
+Instruksi pengguna menambahkan feed login-only, suka/komentar, filter sampai kelurahan dan peta. CommunityPost terpisah menjaga laporan lama/draft privat. Persetujuan eksplisit mengungkap GPS presisi; bukan lokasi centroid. Derivatif foto dibuat worker terpisah dari ML. Region dipasangkan dengan poligon MIT yang dipatok;158 batas hilang dan kecocokan ambigu tidak ditebak.
+
+## D-15: Permukaan publik dan identitas bersama
+
+Permintaan landing/onboarding menggantikan larangan hero pada D-07. Palet forest dipertahankan, font berubah ke Manrope/Caveat sesuai referensi. Operasi admin tetap tersendiri; komunitas menjadi beranda pengguna. MapLibre hanya dimuat di rute peta; react-native-maps versi Expo digunakan pada native. Raster ilustrasi menunggu aset yang disetujui; contoh dataset diberi label, logo asli berupa vector geometry.

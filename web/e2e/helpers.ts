@@ -12,12 +12,14 @@ export async function login(
   page: Page,
   credentials: { email: string; password: string },
 ) {
-  await page.goto("/");
+  await page.goto("/login");
   await page.getByLabel("Email", { exact: true }).fill(credentials.email);
   await page
     .getByLabel("Kata sandi", { exact: true })
     .fill(credentials.password);
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
+  await page.waitForURL("**/app");
+  await page.getByRole("link",{name:"Ringkasan",exact:true}).click();
 }
 export async function createReport(
   request: APIRequestContext,

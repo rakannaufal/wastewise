@@ -1,12 +1,12 @@
-import { Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Pressable, View } from "react-native";
 import type { ComponentProps } from "react";
 export default function Layout() {
   const icons: Record<string, ComponentProps<typeof Ionicons>["name"]> = {
-    index: "grid-outline",
+    index: "home-outline",
+    map: "map-outline",
     reports: "document-text-outline",
-    classify: "scan-outline",
-    guide: "leaf-outline",
     profile: "person-outline",
   };
   return (
@@ -15,7 +15,12 @@ export default function Layout() {
         headerShown: false,
         tabBarActiveTintColor: "#215B3C",
         tabBarInactiveTintColor: "#56665C",
-        tabBarStyle: { backgroundColor: "#FFF", borderTopColor: "#DCE4DC" },
+        tabBarStyle: {
+          backgroundColor: "#fff",
+          borderTopColor: "#DCE4DC",
+          minHeight: 72,
+        },
+        tabBarLabelStyle: { fontFamily: "Manrope_600", fontSize: 11 },
         tabBarIcon: ({ color, size }) => (
           <Ionicons
             name={icons[route.name] || "ellipse-outline"}
@@ -25,11 +30,48 @@ export default function Layout() {
         ),
       })}
     >
-      <Tabs.Screen name="index" options={{ title: "Ringkasan" }} />
+      <Tabs.Screen name="index" options={{ title: "Beranda" }} />
+      <Tabs.Screen name="map" options={{ title: "Peta" }} />
+      <Tabs.Screen
+        name="capture"
+        options={{
+          title: "Foto",
+          tabBarButton: () => (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Ambil foto sampah"
+              onPress={() =>
+                router.push({ pathname: "/camera", params: { origin: "tab" } })
+              }
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <View
+                style={{
+                  width: 68,
+                  height: 68,
+                  borderRadius: 34,
+                  backgroundColor: "#215B3C",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: -23,
+                  borderWidth: 5,
+                  borderColor: "#F5F7F4",
+                }}
+              >
+                <Ionicons name="camera" size={32} color="#fff" />
+              </View>
+            </Pressable>
+          ),
+        }}
+      />
       <Tabs.Screen name="reports" options={{ title: "Laporan" }} />
-      <Tabs.Screen name="classify" options={{ title: "Klasifikasi" }} />
-      <Tabs.Screen name="guide" options={{ title: "Panduan" }} />
       <Tabs.Screen name="profile" options={{ title: "Profil" }} />
+      <Tabs.Screen name="guide" options={{ href: null }} />
+      <Tabs.Screen name="classify" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -22,6 +22,7 @@ export const date = (value: string) =>
 export function Brand() {
   return (
     <span className="brand">
+      <img src="/wastewise-mark.svg" alt="" width="30" height="30" />
       WasteWise<span className="brand-period">.</span>
     </span>
   );
