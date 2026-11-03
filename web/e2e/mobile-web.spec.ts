@@ -173,6 +173,29 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
   await page
     .getByText("Komentar dari aplikasi WasteWise", { exact: true })
     .scrollIntoViewIfNeeded();
+  await page
+    .getByRole("button", { name: "Balas komentar", exact: false })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Komentar", exact: true })
+    .fill("Balasan dari aplikasi WasteWise");
+  await page
+    .getByRole("button", { name: "Kirim komentar", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Lihat 1 balasan", exact: true })
+    .click();
+  await expect(
+    page.getByText("Balasan dari aplikasi WasteWise", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Opsi posting", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Edit deskripsi", exact: true }),
+  ).toBeVisible();
+  await page.screenshot({ path: "../docs/evidence/card-menu-mobile.png" });
+  await page
+    .getByRole("button", { name: "Tutup opsi posting", exact: true })
+    .click();
 
   await page.screenshot({
     path: "../docs/evidence/professional-mobile-comments.png",

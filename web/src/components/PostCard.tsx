@@ -1,27 +1,90 @@
-import { useEffect, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { memo, useEffect, useState } from "react";
+import {
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, MapPin, Pencil, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, MapPin } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../Auth";
 import { categoryName, date, Failure } from "../ui";
-import type { Post } from "../../../shared/community";
-export default function PostCard({
-  post,
-  detail = false,
-}: {
-  post: Post;
-  detail?: boolean;
-}) {
+import PostMenu from "./PostMenu";
+import type { Feed, Post } from "../../../shared/community";
+function PostCard({ post, detail = false }: { post: Post; detail?: boolean }) {
   const client = useQueryClient();
   const navigate = useNavigate();
   const [error, setError] = useState<Error | null>(null);
   const [imageFailed, setImageFailed] = useState(false);
+  const [flagging, setFlagging] = useState(false);
+  const [liked, setLiked] = useState(post.liked_by_me);
+  const [likes, setLikes] = useState(post.like_count);
+  const [liking, setLiking] = useState(false);
+  const [pop, setPop] = useState(0);
   const [editing, setEditing] = useState(false);
   const [caption, setCaption] = useState(post.caption);
   const [reason, setReason] = useState("");
   const { user } = useAuth();
   useEffect(() => setImageFailed(false), [post.image_url]);
+  useEffect(() => {
+    setLiked(post.liked_by_me);
+    setLikes(post.like_count);
+  }, [post.liked_by_me, post.like_count]);
+  async function like() {
+    if (!user) {
+      navigate(
+        `/login?returnTo=${encodeURIComponent(`/community/${post.id}`)}`,
+      );
+      return;
+    }
+    if (liking) return;
+    const before = { liked, likes };
+    const next = !liked;
+    setLiked(next);
+    setLikes(Math.max(0, likes + (next ? 1 : -1)));
+    setLiking(true);
+    setError(null);
+    if (next) setPop((v) => v + 1);
+    try {
+      await api(`/api/v1/community/posts/${post.id}/like`, {
+        method: next ? "PUT" : "DELETE",
+      });
+      const patch = (p: Post) =>
+        p.id === post.id
+          ? {
+              ...p,
+              liked_by_me: next,
+              like_count: Math.max(0, before.likes + (next ? 1 : -1)),
+            }
+          : p;
+      client.setQueriesData<InfiniteData<Feed>>(
+        { queryKey: ["community", "feed"] },
+        (old) =>
+          old
+            ? {
+                ...old,
+                pages: old.pages.map((page) => ({
+                  ...page,
+                  posts: page.posts.map(patch),
+                })),
+              }
+            : old,
+      );
+      client.setQueriesData<Feed>(
+        { queryKey: ["community", "preview"] },
+        (old) => (old ? { ...old, posts: old.posts.map(patch) } : old),
+      );
+      client.setQueriesData<Post>({ queryKey: ["community", "post"] }, (old) =>
+        old ? patch(old) : old,
+      );
+    } catch (e) {
+      setLiked(before.liked);
+      setLikes(before.likes);
+      setError(e as Error);
+    } finally {
+      setLiking(false);
+    }
+  }
   const action = useMutation({
     mutationFn: async ({
       path,
@@ -40,6 +103,7 @@ export default function PostCard({
       setError(null);
       setEditing(false);
       setReason("");
+      setFlagging(false);
       void client.invalidateQueries({ queryKey: ["community"] });
     },
     onError: (e) => setError(e),
@@ -60,6 +124,33 @@ export default function PostCard({
           <strong>{post.author_name}</strong>
           <small>{date(post.created_at)}</small>
         </div>
+        <PostMenu
+          owner={post.is_owner}
+          disabled={action.isPending}
+          edit={() => {
+            setCaption(post.caption);
+            setEditing(!editing);
+            setFlagging(false);
+          }}
+          remove={() => {
+            if (
+              window.confirm(
+                "Tarik foto dan GPS dari komunitas? Laporan privat tetap tersimpan.",
+              )
+            )
+              mutate("", "DELETE");
+          }}
+          report={() => {
+            if (!user)
+              navigate(
+                `/login?returnTo=${encodeURIComponent(`/community/${post.id}`)}`,
+              );
+            else {
+              setFlagging(!flagging);
+              setEditing(false);
+            }
+          }}
+        />
       </header>
       {post.image_url && !imageFailed ? (
         <Link
@@ -126,127 +217,59 @@ export default function PostCard({
         </Link>
         <div className="post-actions">
           <button
-            disabled={action.isPending || post.state !== "published"}
-            aria-pressed={post.liked_by_me}
-            onClick={() =>
-              user
-                ? mutate("/like", post.liked_by_me ? "DELETE" : "PUT")
-                : navigate(
-                    `/login?returnTo=${encodeURIComponent(`/community/${post.id}`)}`,
-                  )
-            }
+            className={liked ? "like-action is-liked" : "like-action"}
+            disabled={liking || post.state !== "published"}
+            aria-pressed={liked}
+            onClick={() => void like()}
           >
             <Heart
-              size={21}
-              fill={post.liked_by_me ? "currentColor" : "none"}
+              key={pop}
+              className={liked && pop ? "heart-pop" : ""}
+              size={23}
+              fill={liked ? "currentColor" : "none"}
             />
-            {post.like_count} suka
+            {likes} suka
           </button>
           <Link to={`/community/${post.id}`}>
             <MessageCircle size={21} />
             {post.comment_count} komentar
           </Link>
         </div>
-        {detail && (
-          <>
-            {post.is_owner && (
-              <div className="post-owner">
-                <button
-                  className="icon-button"
-                  aria-label="Edit deskripsi"
-                  title="Edit deskripsi"
-                  onClick={() => setEditing(!editing)}
-                >
-                  <Pencil size={19} />
-                </button>
-                <button
-                  className="icon-button"
-                  aria-label="Batalkan publikasi"
-                  title="Batalkan publikasi"
-                  disabled={action.isPending}
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        "Tarik foto dan GPS dari komunitas? Laporan privat tetap tersimpan.",
-                      )
-                    )
-                      mutate("", "DELETE");
-                  }}
-                >
-                  <Trash2 size={19} />
-                </button>
-              </div>
-            )}
-            {editing && (
+        <>
+          {editing && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                mutate("", "PATCH", { caption, revision: post.revision });
+              }}
+            >
+              <label>
+                Deskripsi
+                <textarea
+                  value={caption}
+                  maxLength={5000}
+                  onChange={(e) => setCaption(e.target.value)}
+                />
+              </label>
+              <button className="button primary" disabled={action.isPending}>
+                Simpan deskripsi
+              </button>
+            </form>
+          )}
+          {user && flagging && (
+            <div className="post-inline-form">
               <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  mutate("", "PATCH", { caption, revision: post.revision });
-                }}
-              >
-                <label>
-                  Deskripsi
-                  <textarea
-                    value={caption}
-                    maxLength={5000}
-                    onChange={(e) => setCaption(e.target.value)}
-                  />
-                </label>
-                <button className="button primary" disabled={action.isPending}>
-                  Simpan deskripsi
-                </button>
-              </form>
-            )}
-            {user && (
-              <details>
-                <summary>Laporkan konten</summary>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    action.mutate({
-                      path: "community/flags",
-                      method: "POST",
-                      body: { post_id: post.id, reason },
-                    });
-                  }}
-                >
-                  <label>
-                    Alasan
-                    <input
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                      minLength={5}
-                      maxLength={1000}
-                      required
-                    />
-                  </label>
-                  <button
-                    className="button secondary"
-                    disabled={action.isPending}
-                  >
-                    Kirim ke moderator
-                  </button>
-                </form>
-              </details>
-            )}
-            {user?.role === "admin" && (
-              <form
-                className="moderation"
                 onSubmit={(e) => {
                   e.preventDefault();
                   action.mutate({
-                    path: `admin/community/posts/${post.id}`,
-                    method: "PATCH",
-                    body: {
-                      state: post.state === "hidden" ? "published" : "hidden",
-                      reason,
-                      revision: post.revision,
-                    },
+                    path: "community/flags",
+                    method: "POST",
+                    body: { post_id: post.id, reason },
                   });
                 }}
               >
                 <label>
-                  Alasan moderasi
+                  Alasan
                   <input
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
@@ -259,16 +282,49 @@ export default function PostCard({
                   className="button secondary"
                   disabled={action.isPending}
                 >
-                  {post.state === "hidden"
-                    ? "Pulihkan posting"
-                    : "Sembunyikan posting"}
+                  Kirim ke moderator
                 </button>
               </form>
-            )}
-          </>
-        )}
+            </div>
+          )}
+          {detail && user?.role === "admin" && (
+            <form
+              className="moderation"
+              onSubmit={(e) => {
+                e.preventDefault();
+                action.mutate({
+                  path: `admin/community/posts/${post.id}`,
+                  method: "PATCH",
+                  body: {
+                    state: post.state === "hidden" ? "published" : "hidden",
+                    reason,
+                    revision: post.revision,
+                  },
+                });
+              }}
+            >
+              <label>
+                Alasan moderasi
+                <input
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  minLength={5}
+                  maxLength={1000}
+                  required
+                />
+              </label>
+              <button className="button secondary" disabled={action.isPending}>
+                {post.state === "hidden"
+                  ? "Pulihkan posting"
+                  : "Sembunyikan posting"}
+              </button>
+            </form>
+          )}
+        </>
         {error && <Failure error={error} />}
       </div>
     </article>
   );
 }
+
+export default memo(PostCard);

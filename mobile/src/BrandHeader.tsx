@@ -1,5 +1,13 @@
 import type { ComponentProps, ReactNode } from "react";
-import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { colors, styles } from "./ui";
@@ -122,4 +130,18 @@ export function LaunchScreen() {
       />
     </View>
   );
+}
+
+export function confirmAction(
+  title: string,
+  message: string,
+  action: () => void,
+) {
+  if (Platform.OS === "web") {
+    if (window.confirm(message)) action();
+  } else
+    Alert.alert(title, message, [
+      { text: "Batal", style: "cancel" },
+      { text: "Lanjutkan", style: "destructive", onPress: action },
+    ]);
 }

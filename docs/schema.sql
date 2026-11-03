@@ -67,7 +67,7 @@ CREATE TABLE app_private.waste_reports (
     CONSTRAINT pk_waste_reports PRIMARY KEY (id),
     CONSTRAINT ck_waste_reports_ai_complete CHECK ((ai_predicted_category IS NULL AND ai_confidence IS NULL AND ai_model_version IS NULL) OR (ai_predicted_category IS NOT NULL AND ai_confidence IS NOT NULL AND ai_model_version IS NOT NULL)),
     CONSTRAINT ck_waste_reports_confidence_range CHECK (ai_confidence IS NULL OR ai_confidence BETWEEN 0 AND 100),
-    CONSTRAINT ck_waste_reports_description_length CHECK (char_length(btrim(description)) BETWEEN 0 AND 5000),
+    CONSTRAINT ck_waste_reports_description_length CHECK (char_length(btrim(description)) BETWEEN 10 AND 5000),
     CONSTRAINT ck_waste_reports_latitude_range CHECK (latitude BETWEEN -90 AND 90),
     CONSTRAINT ck_waste_reports_longitude_range CHECK (longitude BETWEEN -180 AND 180),
     CONSTRAINT fk_waste_reports_user_id FOREIGN KEY(user_id) REFERENCES app_private.users (id) ON DELETE CASCADE,
@@ -242,7 +242,7 @@ CREATE TABLE app_private.community_posts (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
     CONSTRAINT pk_community_posts PRIMARY KEY (id),
     CONSTRAINT ck_community_posts_post_state CHECK (state IN ('processing','published','hidden','withdrawn')),
-    CONSTRAINT ck_community_posts_post_caption CHECK (char_length(btrim(caption)) BETWEEN 0 AND 5000),
+    CONSTRAINT ck_community_posts_post_caption CHECK (char_length(btrim(caption)) BETWEEN 10 AND 5000),
     CONSTRAINT uq_community_posts_report_id UNIQUE (report_id),
     CONSTRAINT fk_community_posts_report_id FOREIGN KEY(report_id) REFERENCES app_private.waste_reports (id) ON DELETE CASCADE,
     CONSTRAINT fk_community_posts_user_id FOREIGN KEY(user_id) REFERENCES app_private.users (id) ON DELETE CASCADE,
@@ -318,6 +318,30 @@ CREATE INDEX ix_regions_bounds ON app_private.regions
      (CAST((geometry['bbox'] ->> 3) AS FLOAT)));
 
 UPDATE alembic_version SET version_num='c42d19b50ea7' WHERE alembic_version.version_num = 'b31c80a21ef4';
+
+-- Running upgrade c42d19b50ea7 -> d53e20c61fb8
+
+ALTER TABLE app_private.waste_reports DROP CONSTRAINT ck_waste_reports_description_length;
+
+ALTER TABLE app_private.waste_reports ADD CONSTRAINT ck_waste_reports_description_length CHECK (char_length(btrim(description)) BETWEEN 0 AND 5000);
+
+ALTER TABLE app_private.community_posts DROP CONSTRAINT ck_community_posts_post_caption;
+
+ALTER TABLE app_private.community_posts ADD CONSTRAINT ck_community_posts_post_caption CHECK (char_length(btrim(caption)) BETWEEN 0 AND 5000);
+
+UPDATE alembic_version SET version_num='d53e20c61fb8' WHERE alembic_version.version_num = 'c42d19b50ea7';
+
+-- Running upgrade d53e20c61fb8 -> e64f31d72ac9
+
+ALTER TABLE app_private.post_comments ADD COLUMN parent_id UUID;
+
+ALTER TABLE app_private.post_comments ADD CONSTRAINT fk_post_comments_parent_id FOREIGN KEY(parent_id) REFERENCES app_private.post_comments (id) ON DELETE CASCADE;
+
+ALTER TABLE app_private.post_comments ADD CONSTRAINT ck_post_comments_comment_parent_not_self CHECK (parent_id IS NULL OR parent_id <> id);
+
+CREATE INDEX ix_comments_thread_created ON app_private.post_comments (post_id, parent_id, created_at, id);
+
+UPDATE alembic_version SET version_num='e64f31d72ac9' WHERE alembic_version.version_num = 'd53e20c61fb8';
 
 COMMIT;
 

@@ -269,6 +269,9 @@ class PostComment(Timestamps, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("app_private.users.id", ondelete="CASCADE")
     )
+    parent_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("app_private.post_comments.id", ondelete="CASCADE"), nullable=True
+    )
     request_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
     body: Mapped[str] = mapped_column(Text)
     state: Mapped[str] = mapped_column(String(16), default="visible")
@@ -276,6 +279,8 @@ class PostComment(Timestamps, Base):
         UniqueConstraint("user_id", "request_id"),
         CheckConstraint("char_length(btrim(body)) BETWEEN 1 AND 1000", name="comment_length"),
         CheckConstraint("state IN ('visible','hidden','deleted')", name="comment_state"),
+        CheckConstraint("parent_id IS NULL OR parent_id <> id", name="comment_parent_not_self"),
+        Index("ix_comments_thread_created", "post_id", "parent_id", "created_at", "id"),
         Index("ix_comments_post_created", "post_id", "created_at", "id"),
     )
 

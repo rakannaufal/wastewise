@@ -194,3 +194,7 @@ Logo mark/wordmark/icon sudah tersedia. Ilustrasi raster khusus masih menunggu o
 `/` menampilkan maksimal tiga kartu terbaru dan tombol **Lihat semua laporan** ke `/app`. `/app`, `/map`, dan `/community/:id` dapat dibaca tanpa login. `/about`, `/faq`, `/privacy` menjelaskan aplikasi, batas AI, dan kebijakan publikasi. Navbar serta footer dipakai bersama. Pilihan lebih dari tiga memakai dropdown; wilayah web dapat dicari, mobile memakai panel pemilih tertutup. Model tetap menentukan kategori otomatis.
 
 Grafis SVG lokal: `web/public/illustrations/report-notes.svg`, `sort-materials.svg`. Font aktif seluruh web/mobile adalah Manrope, disimpan lokal beserta lisensinya. Aset Caveat dari revisi sebelumnya tidak dimuat lagi. Kredit footer **© 2026 Khay Brownies · Website by rakandev** mengikuti teks eksplisit pengguna, sementara identitas produk tetap WasteWise.
+
+### Interaksi komunitas
+
+Menu tiga titik di dalam kartu membuka Edit deskripsi, Batalkan publikasi (pemilik), dan Laporkan konten. Pembatalan publikasi menyimpan laporan operasional; penghapusan laporan tersedia di riwayat/detail. Ikon hati menjadi merah saat disukai, merespons langsung, kembali ke keadaan semula jika API gagal. Komentar pada detail posting memiliki tombol Balas; buka jumlah balasan untuk membaca percakapan. Balasan satu tingkat,30 per halaman; menghapus komentar utama juga menghapus balasannya. Pengguna harus login untuk menulis.

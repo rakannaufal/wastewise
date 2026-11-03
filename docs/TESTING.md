@@ -125,3 +125,10 @@ Supabase nyata: migrasi `d53e20c61fb8` direhearsal pada restore backup lokal seb
 ## Professional social UI (3 November 2026)
 
 `tests/test_public_policy.py` + `tests/test_community.py`:18tes lulus, termasuk newest/oldest keyset dengan timestamp sama dan UUID tie-breaker. Shared filter3tes lulus. Browser menguji Manrope, composer flex, tombol ikon berlabel, urutan posting di URL, komentar mobile, serta logo pada loading yang sengaja ditahan melalui mock config. Teks komentar harus hilang dari composer setelah respons, lalu muncul pada daftar; screenshot loading/input bukan bukti posting tersimpan. Ekspor native tidak membuktikan splash standalone; verifikasi melalui development build/perangkat masih diperlukan.
+
+
+## Card menus, likes and replies (3 November 2026)
+
+`python scripts/test_local.py`:50tests pass in91.05s, including same-post/root validation, nested reply rejection, idempotency,32reply pagination without duplicates, ownership, root/child soft deletion, counts and withdrawal guard. Initial test expected404 for owner withdrawal; corrected to existing409 contract. `python scripts/test_browser.py`:5E2E pass in1.0m; exports iOS/Android/web first. Browser assertions cover owner/peer menus, Escape, red heart, rollback on503, zero post/feed GETs after successful like, web and Expo-web reply submission/expansion, axe and narrow viewport overflow.
+
+`npm run check`, `npm run build`, Ruff and mypy27modules pass. Existing map chunk>500kB warning and Starlette/httpx deprecation remain. No new runtime dependency. Card screenshot evidence: `card-menu-web.png`, `card-menu-mobile.png`, `community-post-desktop.png`. Expo native bundling is verified; physical device animation smoothness, keyboard and assistive technologies remain untested.

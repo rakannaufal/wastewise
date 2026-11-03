@@ -1,6 +1,6 @@
 # Database schema dan ERD
 
-Schema PostgreSQL: `app_private`. Migrasi executable: `backend-ml/migrations/versions/`; revisi akhir `d53e20c61fb8`. Upgrade diuji pada restore PostgreSQL17 lokal lalu diterapkan dan diverifikasi pada Supabase. Runtime role memperoleh USAGE dan DML, bukan kepemilikan schema. `public.alembic_version` mencatat revisi. CHECK menolak koordinat parsial dan photo_source NULL pada laporan otomatis; data lama tetap legacy.
+Schema PostgreSQL: `app_private`. Migrasi executable: `backend-ml/migrations/versions/`; revisi akhir `e64f31d72ac9`. Upgrade diuji pada restore PostgreSQL17 lokal lalu diterapkan dan diverifikasi pada Supabase. Runtime role memperoleh USAGE dan DML, bukan kepemilikan schema. `public.alembic_version` mencatat revisi. CHECK menolak koordinat parsial dan photo_source NULL pada laporan otomatis; data lama tetap legacy.
 
 ```mermaid
 erDiagram
@@ -145,6 +145,17 @@ erDiagram
     users ||--o{ post_likes : likes
     community_posts ||--o{ post_comments : contains
     users ||--o{ post_comments : writes
+    post_comments o|--o{ post_comments : replies
+    post_comments {
+        uuid id PK
+        uuid post_id FK
+        uuid user_id FK
+        uuid parent_id FK "nullable root"
+        uuid request_id
+        text body
+        varchar state
+        timestamptz created_at
+    }
     community_posts ||--o{ content_flags : flagged
     community_posts ||--o{ community_audits : moderated
     community_posts {
@@ -179,3 +190,6 @@ Likes use composite(post_id,user_id) PK. Comments use unique(user_id,request_id)
 Revisi c42d19b50ea7 menambahkan indeks ekspresi bbox pada regions; resolver GPS tidak perlu membaca seluruh poligon saat mencari kandidat. Uji lokal5sampel:16,59ms cold lalu1,92–2,23ms warm untuk titik Gambir; bukan latency jaringan atau p95.
 
 Revisi d53e20c61fb8 hanya memperluas dua CHECK text menjadi0..5000, tidak mengubah data atau consent lama. `privacy_version=public-gps-v2` menandai publikasi baru; CommunityAudit merekam kebijakan/backfill. Dua laporan lama yang dipilih pengguna diterbitkan melalui `scripts.backfill_public`, dry-run default dan --apply eksplisit, validasi foto/koordinat, unique report_id, row locks serta audit. Perintah tidak boleh dipakai sebagai publikasi massal arsip. Downgrade menolak data pendek yang tidak memenuhi aturan lama; tidak mengarang deskripsi. Backup privat app_private dan uji restore dilakukan sebelum migrasi Supabase.
+
+
+Revisi e64f31d72ac9 menambah parent_id nullable, self-FK CASCADE, CHECK non-self dan indeks(post_id,parent_id,created_at,id). Komentar lama tetap root tanpa backfill. API membatasi satu tingkat balasan pada root visible dalam posting yang sama. Penghapusan root soft-delete seluruh balasan dalam transaksi yang sama; counts mengecualikan semua state selain visible. Downgrade menolak ketika masih ada balasan untuk menghindari kehilangan relasi.

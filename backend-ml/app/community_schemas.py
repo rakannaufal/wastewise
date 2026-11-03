@@ -27,6 +27,7 @@ class EditPost(CaptionBody):
 
 
 class CommentCreate(StrictModel):
+    parent_id: UUID | None = None
     body: str = Field(min_length=1, max_length=1000)
     request_id: UUID
 

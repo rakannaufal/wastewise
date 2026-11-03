@@ -31,6 +31,8 @@ export type Post = {
 };
 export type Feed = { posts: Post[]; next_cursor: string | null };
 export type Comment = {
+  parent_id: string | null;
+  reply_count: number;
   id: string;
   body: string;
   author_name: string;

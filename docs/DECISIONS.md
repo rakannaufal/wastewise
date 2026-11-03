@@ -86,3 +86,8 @@ User requests graphics instead of dataset photos in the material guide, and no s
 ## D-20: Professional typography, branded launch and compact social controls (2026-11-03)
 
 User replaces handwritten font direction with professional typography: all text uses existing Manrope assets. Mobile tab headers show WasteWise, preserving bottom navigation labels. Back uses chevron; edit/delete use labelled44px icons and keep confirmation/authorization. Comments use inline composer and compact avatar rows, moderation hidden until requested. Feed supports validated order=newest|oldest with timestamp/UUID keyset pagination; clients restart on order changes. No schema migration. Native expo-splash-screen uses the existing brand icon; Expo Go has its own native splash, then the app shows branded initialization without artificial delay.
+
+
+## D-21: Card actions and bounded comment threads (2026-11-03)
+
+Card menus own edit-caption, withdrawal and content-report controls; operational report deletion remains in report management. Like is optimistic with rollback, one in-flight request per card, red state and reduced-motion-aware scale animation. It does not refetch feed/images. Replies use one root plus one reply level; replying to a reply targets the root with a plain-text author prefix. Server checks parent visibility/post/root identity and idempotency includes parent. Roots and replies paginate independently at30 rows and clients expand threads lazily. Root deletion soft-deletes its replies in the same transaction, under report/post locks shared with comment creation. Migration e64f31d72ac9 adds nullable parent_id; existing comments remain roots.

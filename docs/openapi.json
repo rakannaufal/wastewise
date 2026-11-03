@@ -5352,6 +5352,23 @@
             }
           },
           {
+            "name": "parent_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Parent Id"
+            }
+          },
+          {
             "name": "cursor",
             "in": "query",
             "required": false,
@@ -7005,6 +7022,18 @@
       },
       "CommentCreate": {
         "properties": {
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
           "body": {
             "type": "string",
             "maxLength": 1000,

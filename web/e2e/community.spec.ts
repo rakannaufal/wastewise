@@ -68,6 +68,46 @@ test("report automatically becomes a public feed post; peers like, comment, map,
       "aria-pressed",
       "true",
     );
+    await expect(peer.getByRole("button", { name: "1 suka" })).toHaveCSS(
+      "color",
+      "rgb(198, 37, 70)",
+    );
+    await peer.locator(".post-menu > summary").click();
+    await expect(
+      peer.getByRole("button", { name: "Laporkan konten", exact: true }),
+    ).toBeVisible();
+    await expect(
+      peer.getByRole("button", { name: "Edit deskripsi", exact: true }),
+    ).toHaveCount(0);
+    await peer.keyboard.press("Escape");
+    await expect(peer.locator(".post-menu")).toHaveJSProperty("open", false);
+    await peer.route("**/api/v1/community/posts/*/like", (route) =>
+      route.fulfill({
+        status: 503,
+        json: { success: false, message: "Like failure fixture", data: null },
+      }),
+    );
+    await peer.getByRole("button", { name: "1 suka" }).click();
+    await expect(peer.getByRole("button", { name: "1 suka" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await peer.unroute("**/api/v1/community/posts/*/like");
+    await peer.getByRole("button", { name: "1 suka" }).click();
+    await expect(peer.getByRole("button", { name: "0 suka" })).toBeEnabled();
+    let postRefreshes = 0;
+    const countRefresh = (request: import("@playwright/test").Request) => {
+      if (
+        request.method() === "GET" &&
+        /\/community\/(feed|posts)/.test(request.url())
+      )
+        postRefreshes++;
+    };
+    peer.on("request", countRefresh);
+    await peer.getByRole("button", { name: "0 suka" }).click();
+    await expect(peer.getByRole("button", { name: "1 suka" })).toBeEnabled();
+    expect(postRefreshes).toBe(0);
+    peer.off("request", countRefresh);
     await peer
       .getByLabel("Komentar", { exact: true })
       .fill("Mari bantu memilah sampah ini.");
@@ -76,6 +116,19 @@ test("report automatically becomes a public feed post; peers like, comment, map,
       .click();
     await expect(
       peer.getByText("Mari bantu memilah sampah ini.", { exact: true }),
+    ).toBeVisible();
+    await peer.getByRole("button", { name: "Balas", exact: true }).click();
+    await peer
+      .getByLabel("Komentar", { exact: true })
+      .fill("Balasan untuk komentar komunitas.");
+    await peer
+      .getByRole("button", { name: "Kirim komentar", exact: true })
+      .click();
+    await peer
+      .getByRole("button", { name: "Lihat 1 balasan", exact: true })
+      .click();
+    await expect(
+      peer.getByText("Balasan untuk komentar komunitas.", { exact: true }),
     ).toBeVisible();
     expect(
       (
@@ -270,6 +323,12 @@ test("report automatically becomes a public feed post; peers like, comment, map,
       path: "../docs/evidence/public-policy-landing-mobile.png",
       fullPage: true,
     });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.locator(".post-menu > summary").click();
+    await page.screenshot({ path: "../docs/evidence/card-menu-web.png" });
+    await expect(
+      page.getByRole("button", { name: "Edit deskripsi", exact: true }),
+    ).toBeVisible();
     page.once("dialog", (d) => d.accept());
     await page
       .getByRole("button", { name: "Batalkan publikasi", exact: true })

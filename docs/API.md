@@ -230,9 +230,9 @@ All endpoints below require a verified session. Existing `/reports` remains owne
 | PATCH | `/community/posts/{id}` | Owner caption edit `{caption,revision}`. Stale revision 409. |
 | DELETE | `/community/posts/{id}` | Idempotent owner withdrawal, derivative cleanup queued. Private report retained. Previously issued image URLs can remain usable for up to 15 minutes; already downloaded copies cannot be recalled. |
 | PUT / DELETE | `/community/posts/{id}/like` | Idempotent caller like/unlike. Published posts only. |
-| GET | `/community/posts/{id}/comments` | Newest first, optional cursor, 30 comments; `{comments,next_cursor}`. Visible comments only. |
-| POST | `/community/posts/{id}/comments` | `{body:1..1000 chars,request_id:UUID}`. Retry same body/key returns same comment. Different body/key reuse 409. |
-| DELETE | `/community/comments/{id}` | Owner/admin soft deletion. Admin removal records a moderation audit. |
+| GET | `/community/posts/{id}/comments` | Newest first, optional `cursor`, optional `parent_id:UUID`; 30/page. Omit parent for roots; supply visible root in same post for replies. `{comments,next_cursor}`; each comment includes nullable `parent_id` and visible `reply_count`. Invalid root404. |
+| POST | `/community/posts/{id}/comments` | `{body:1..1000 chars,request_id:UUID,parent_id?:UUID|null}`. One reply level. Visible parent must be a root in the same post (404 otherwise; nested parent422). Retry same post/body/parent/key returns same comment; changed payload409. |
+| DELETE | `/community/comments/{id}` | Owner/admin soft deletion. Deleting a root soft-deletes its replies atomically; deleting a reply preserves its root. Admin removal records a moderation audit. |
 | POST | `/community/flags` | `{post_id,reason:5..1000 chars}`. One flag per caller/post. |
 | GET | `/admin/community/flags` | Admin open moderation queue, bounded 100 rows. |
 | PATCH | `/admin/community/posts/{id}` | Admin `{state:"hidden"|"published",reason,revision}`. Reason/audit required. Owner withdrawal or absent derivatives prevents restore. |

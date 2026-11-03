@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-03",
+  "backend": {
+    "passed": 50,
+    "seconds": 91.05,
+    "command": "(cd backend-ml && .venv/bin/python scripts/test_local.py)"
+  },
+  "browser": {
+    "passed": 5,
+    "duration": "1.0m",
+    "command": "(cd backend-ml && .venv/bin/python scripts/test_browser.py)",
+    "platform": "Chrome web and Expo web"
+  },
+  "checks": [
+    "npm run check",
+    "npm run build",
+    "Ruff app ml tests scripts migrations",
+    "mypy app: 27 modules",
+    "Expo export: iOS Android web"
+  ],
+  "cloud": {
+    "revision": "e64f31d72ac9",
+    "backup_mode": "0600",
+    "restore_rehearsal": true,
+    "reports_preserved": 3,
+    "existing_comments_preserved": true
+  },
+  "runtime": {
+    "api_ready": 200,
+    "feed": 200,
+    "comments": 200,
+    "web": 200,
+    "metro": 200
+  },
+  "limits": [
+    "Physical iOS/Android not exercised",
+    "Native frame latency not measured",
+    "Existing map chunk warning",
+    "Existing Starlette/httpx deprecation"
+  ]
+}

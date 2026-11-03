@@ -1,11 +1,21 @@
-import { useEffect, useState } from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { memo, useEffect, useRef, useState } from "react";
+import {
+  AccessibilityInfo,
+  Animated,
+  Image,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import type { Post } from "../../shared/community";
 import { api } from "./api";
-import { categoryName, styles, colors, ErrorText } from "./ui";
-export default function PostCard({
+import PostMenu from "./PostMenu";
+import { confirmAction } from "./BrandHeader";
+import { Button, Input, categoryName, styles, colors, ErrorText } from "./ui";
+function PostCard({
   post,
   reload,
   detail = false,
@@ -14,17 +24,87 @@ export default function PostCard({
   reload: () => void;
   detail?: boolean;
 }) {
+  const [liked, setLiked] = useState(post.liked_by_me);
+  const [likes, setLikes] = useState(post.like_count);
+  const [editing, setEditing] = useState(false);
+  const [flagging, setFlagging] = useState(false);
+  const [caption, setCaption] = useState(post.caption);
+  const [reason, setReason] = useState("");
+  const scale = useRef(new Animated.Value(1)).current;
+  const reduced = useRef(false);
+  useEffect(() => {
+    let mounted = true;
+    void AccessibilityInfo.isReduceMotionEnabled().then((v) => {
+      if (mounted) reduced.current = v;
+    });
+    const subscription = AccessibilityInfo.addEventListener(
+      "reduceMotionChanged",
+      (v) => {
+        reduced.current = v;
+      },
+    );
+    return () => {
+      mounted = false;
+      subscription.remove();
+      scale.stopAnimation();
+    };
+  }, [scale]);
+  useEffect(() => {
+    setLiked(post.liked_by_me);
+    setLikes(post.like_count);
+  }, [post.liked_by_me, post.like_count]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [post.image_url]);
   async function like() {
+    if (busy) return;
+    const before = { liked, likes };
+    const next = !liked;
+    setLiked(next);
+    setLikes(Math.max(0, likes + (next ? 1 : -1)));
+    setBusy(true);
+    setError("");
+    if (next && !reduced.current) {
+      scale.stopAnimation();
+      scale.setValue(1);
+      Animated.sequence([
+        Animated.timing(scale, {
+          toValue: 1.22,
+          duration: 100,
+          useNativeDriver: Platform.OS !== "web",
+        }),
+        Animated.spring(scale, {
+          toValue: 1,
+          speed: 20,
+          bounciness: 6,
+          useNativeDriver: Platform.OS !== "web",
+        }),
+      ]).start();
+    }
+    try {
+      await api(`/api/v1/community/posts/${post.id}/like`, {
+        method: next ? "PUT" : "DELETE",
+      });
+    } catch (e) {
+      setLiked(before.liked);
+      setLikes(before.likes);
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function action(path: string, method: string, body?: object) {
     setBusy(true);
     setError("");
     try {
-      await api(`/api/v1/community/posts/${post.id}/like`, {
-        method: post.liked_by_me ? "DELETE" : "PUT",
+      await api(`/api/v1/${path}`, {
+        method,
+        ...(body ? { body: JSON.stringify(body) } : {}),
       });
+      setEditing(false);
+      setFlagging(false);
+      setReason("");
       reload();
     } catch (e) {
       setError((e as Error).message);
@@ -44,7 +124,7 @@ export default function PostCard({
         marginBottom: 16,
       }}
     >
-      <View style={{ padding: 16, gap: 5 }}>
+      <View style={{ padding: 16, gap: 5, zIndex: 5 }}>
         <View
           style={{
             flexDirection: "row",
@@ -65,6 +145,26 @@ export default function PostCard({
           >
             {post.author_name}
           </Text>
+          <PostMenu
+            owner={post.is_owner}
+            disabled={busy}
+            edit={() => {
+              setCaption(post.caption);
+              setEditing(!editing);
+              setFlagging(false);
+            }}
+            remove={() =>
+              confirmAction(
+                "Tarik posting?",
+                "Foto dan GPS dihapus dari komunitas. Laporan privat tetap tersimpan.",
+                () => void action(`community/posts/${post.id}`, "DELETE"),
+              )
+            }
+            report={() => {
+              setFlagging(!flagging);
+              setEditing(false);
+            }}
+          />
         </View>
         <Text style={styles.label}>
           {new Date(post.created_at).toLocaleDateString("id-ID")}
@@ -168,10 +268,8 @@ export default function PostCard({
         >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={
-              post.liked_by_me ? "Batalkan suka" : "Sukai posting"
-            }
-            accessibilityState={{ selected: post.liked_by_me, disabled: busy }}
+            accessibilityLabel={liked ? "Batalkan suka" : "Sukai posting"}
+            accessibilityState={{ selected: liked, disabled: busy }}
             disabled={busy || post.state !== "published"}
             onPress={() => void like()}
             style={{
@@ -181,12 +279,16 @@ export default function PostCard({
               gap: 8,
             }}
           >
-            <Ionicons
-              name={post.liked_by_me ? "heart" : "heart-outline"}
-              color={colors.accent}
-              size={24}
-            />
-            <Text style={styles.text}>{post.like_count} suka</Text>
+            <Animated.View style={{ transform: [{ scale }] }}>
+              <Ionicons
+                name={liked ? "heart" : "heart-outline"}
+                color={liked ? "#C62546" : colors.muted}
+                size={25}
+              />
+            </Animated.View>
+            <Text style={[styles.text, liked && { color: "#C62546" }]}>
+              {likes} suka
+            </Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -206,6 +308,48 @@ export default function PostCard({
             <Text style={styles.text}>{post.comment_count} komentar</Text>
           </Pressable>
         </View>
+        {editing && (
+          <View style={{ gap: 10 }}>
+            <Input
+              label="Deskripsi posting"
+              value={caption}
+              multiline
+              maxLength={5000}
+              onChangeText={setCaption}
+            />
+            <Button
+              title="Simpan deskripsi"
+              disabled={busy}
+              onPress={() =>
+                void action(`community/posts/${post.id}`, "PATCH", {
+                  caption,
+                  revision: post.revision,
+                })
+              }
+            />
+          </View>
+        )}
+        {flagging && (
+          <View style={{ gap: 10 }}>
+            <Input
+              label="Alasan laporan konten"
+              value={reason}
+              maxLength={1000}
+              onChangeText={setReason}
+            />
+            <Button
+              secondary
+              title="Laporkan ke moderator"
+              disabled={busy || reason.trim().length < 5}
+              onPress={() =>
+                void action("community/flags", "POST", {
+                  post_id: post.id,
+                  reason,
+                })
+              }
+            />
+          </View>
+        )}
         <ErrorText message={error} />
       </View>
     </View>
@@ -234,3 +378,5 @@ export function PostSkeleton() {
     </View>
   );
 }
+
+export default memo(PostCard);

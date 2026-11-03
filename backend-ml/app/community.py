@@ -8,7 +8,7 @@ from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import and_, delete, false, func, or_, select
+from sqlalchemy import and_, delete, false, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -420,16 +420,30 @@ def unlike(post_id: UUID, user: User = Depends(current_user), db: Session = Depe
 def comments(
     post_id: UUID,
     request: Request,
+    parent_id: UUID | None = None,
     cursor: str | None = Query(None, max_length=256),
     user: User | None = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
     limit(request, "public-comments", 120)
     active_post(db, post_id, user, lock=False)
+    if parent_id is not None:
+        parent = db.get(PostComment, parent_id)
+        if (
+            parent is None
+            or parent.post_id != post_id
+            or parent.parent_id is not None
+            or parent.state != "visible"
+        ):
+            raise HTTPException(404, "Komentar utama tidak tersedia")
     q = (
         select(PostComment, User.full_name)
         .join(User, User.id == PostComment.user_id)
-        .where(PostComment.post_id == post_id, PostComment.state == "visible")
+        .where(
+            PostComment.post_id == post_id,
+            PostComment.state == "visible",
+            PostComment.parent_id == parent_id,
+        )
     )
     if cursor:
         stamp, identity = decode_cursor(cursor)
@@ -442,11 +456,27 @@ def comments(
     rows = db.execute(
         q.order_by(PostComment.created_at.desc(), PostComment.id.desc()).limit(31)
     ).all()
+    counts = (
+        dict(
+            db.execute(
+                select(PostComment.parent_id, func.count())
+                .where(
+                    PostComment.parent_id.in_([c.id for c, _ in rows[:30]]),
+                    PostComment.state == "visible",
+                )
+                .group_by(PostComment.parent_id)
+            ).all()
+        )
+        if parent_id is None and rows
+        else {}
+    )
     return ok(
         {
             "comments": [
                 dict(
                     id=c.id,
+                    parent_id=c.parent_id,
+                    reply_count=counts.get(c.id, 0),
                     body=c.body,
                     author_name=n.split()[0],
                     is_owner=user is not None and c.user_id == user.id,
@@ -469,17 +499,27 @@ def comment(
 ):
     limit(request, "comment", 20, str(user.id))
     active_post(db, post_id, user)
+    if body.parent_id is not None:
+        parent = db.get(PostComment, body.parent_id)
+        if parent is None or parent.post_id != post_id or parent.state != "visible":
+            raise HTTPException(404, "Komentar utama tidak tersedia")
+        if parent.parent_id is not None:
+            raise HTTPException(422, "Balas melalui komentar utama")
     lock_request(db, f"comment:{user.id}:{body.request_id}")
     row = db.scalar(
         select(PostComment).where(
             PostComment.user_id == user.id, PostComment.request_id == body.request_id
         )
     )
-    if row and (row.post_id != post_id or row.body != body.body):
+    if row and (row.post_id != post_id or row.body != body.body or row.parent_id != body.parent_id):
         raise HTTPException(409, "Kunci komentar sudah digunakan")
     if row is None:
         row = PostComment(
-            post_id=post_id, user_id=user.id, request_id=body.request_id, body=body.body
+            post_id=post_id,
+            user_id=user.id,
+            request_id=body.request_id,
+            body=body.body,
+            parent_id=body.parent_id,
         )
         db.add(row)
         db.commit()
@@ -490,11 +530,23 @@ def comment(
 def delete_comment(
     comment_id: UUID, user: User = Depends(current_user), db: Session = Depends(get_db)
 ):
-    row = db.scalar(select(PostComment).where(PostComment.id == comment_id).with_for_update())
+    row = db.get(PostComment, comment_id)
     if row:
+        db.scalar(
+            select(Report)
+            .join(CommunityPost)
+            .where(CommunityPost.id == row.post_id)
+            .with_for_update(of=Report)
+        )
+        db.scalar(select(CommunityPost).where(CommunityPost.id == row.post_id).with_for_update())
+        db.refresh(row, with_for_update=True)
         if row.user_id != user.id and user.role != "admin":
             raise HTTPException(403, "Komentar bukan milikmu")
         row.state = "deleted"
+        if row.parent_id is None:
+            db.execute(
+                update(PostComment).where(PostComment.parent_id == row.id).values(state="deleted")
+            )
         if user.role == "admin" and row.user_id != user.id:
             db.add(
                 CommunityAudit(

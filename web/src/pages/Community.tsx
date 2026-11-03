@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   useInfiniteQuery,
   useMutation,
@@ -6,13 +6,14 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { ChevronLeft, MapPin, Smile, Trash2 } from "lucide-react";
+import { ChevronLeft, MapPin, Smile, X } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../Auth";
-import { date, Failure, Loading } from "../ui";
+import { Failure, Loading } from "../ui";
 import RegionFilters, { communityParams } from "../components/RegionFilters";
 import PostCard from "../components/PostCard";
-import type { Feed, Post, Comments } from "../../../shared/community";
+import CommentThread from "../components/CommentThread";
+import type { Feed, Post, Comment, Comments } from "../../../shared/community";
 export default function Community() {
   const [params, setParams] = useSearchParams();
   const filter = communityParams(params).toString();
@@ -127,6 +128,10 @@ export function PostDetail() {
   const client = useQueryClient();
   const { user } = useAuth();
   const [body, setBody] = useState("");
+  const [target, setTarget] = useState<{ id: string; author: string } | null>(
+    null,
+  );
+  const input = useRef<HTMLTextAreaElement>(null);
   const [requestId, setRequestId] = useState(() => crypto.randomUUID());
   const post = useQuery({
     queryKey: ["community", "post", user?.id, id],
@@ -150,10 +155,15 @@ export function PostDetail() {
     mutationFn: () =>
       api(`/api/v1/community/posts/${id}/comments`, {
         method: "POST",
-        body: JSON.stringify({ body, request_id: requestId }),
+        body: JSON.stringify({
+          body,
+          request_id: requestId,
+          parent_id: target?.id ?? null,
+        }),
       }),
     onSuccess: () => {
       setBody("");
+      setTarget(null);
       setRequestId(crypto.randomUUID());
       void client.invalidateQueries({ queryKey: ["community"] });
     },
@@ -178,6 +188,22 @@ export function PostDetail() {
       {post.data?.state === "published" && (
         <section className="comments">
           <h2>Percakapan</h2>
+          {target && (
+            <div className="reply-target">
+              Membalas {target.author}
+              <button
+                className="icon-button"
+                aria-label="Batalkan balasan"
+                onClick={() => {
+                  setTarget(null);
+                  setBody("");
+                  setRequestId(crypto.randomUUID());
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+          )}
           {user ? (
             <form
               className="comment-composer"
@@ -191,6 +217,7 @@ export function PostDetail() {
                 Komentar
               </label>
               <textarea
+                ref={input}
                 id="comment-body"
                 placeholder="Tambahkan komentar…"
                 rows={1}
@@ -232,30 +259,34 @@ export function PostDetail() {
               {comments.data.pages
                 .flatMap((p) => p.comments)
                 .map((c) => (
-                  <article key={c.id} className="comment">
-                    <span className="avatar" aria-hidden="true">
-                      {c.author_name[0]}
-                    </span>
-                    <div className="comment-content">
-                      <strong>{c.author_name}</strong>
-                      <small>{date(c.created_at)}</small>
-                      <p>{c.body}</p>
-                    </div>
-                    {(c.is_owner || user?.role === "admin") && (
-                      <button
-                        className="icon-button"
-                        aria-label="Hapus komentar"
-                        title="Hapus komentar"
-                        disabled={remove.isPending}
-                        onClick={() => {
-                          if (window.confirm("Hapus komentar ini?"))
-                            remove.mutate(c.id);
-                        }}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    )}
-                  </article>
+                  <CommentThread
+                    key={c.id}
+                    comment={c}
+                    postId={id!}
+                    busy={remove.isPending}
+                    reply={(root: Comment, author: string) => {
+                      if (!user) {
+                        window.location.assign(
+                          `/login?returnTo=${encodeURIComponent(`/community/${id}`)}`,
+                        );
+                        return;
+                      }
+                      setTarget({ id: root.id, author });
+                      setBody(`@${author} `);
+                      setRequestId(crypto.randomUUID());
+                      input.current?.focus();
+                    }}
+                    remove={(item) => {
+                      if (
+                        window.confirm(
+                          item.parent_id === null && item.reply_count > 0
+                            ? "Hapus komentar beserta semua balasannya?"
+                            : "Hapus komentar ini?",
+                        )
+                      )
+                        remove.mutate(item.id);
+                    }}
+                  />
                 ))}
               {comments.hasNextPage && (
                 <button
