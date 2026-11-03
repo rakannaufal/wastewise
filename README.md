@@ -111,6 +111,14 @@ Hentikan API lama sebelum menjalankan ulang pada port yang sama. Dari root proye
 npm --prefix mobile start -- --port 8082 --lan
 ```
 
+Jika Expo Go menolak karena akun CLI berbeda, jalankan manifest anonim lokal (tanpa menggabungkan `--offline` dengan `--lan`):
+
+```bash
+npm --prefix mobile start -- --go --offline --port 8082
+```
+
+Mode ini menonaktifkan layanan jaringan CLI Expo; aplikasi tetap dapat mengakses API melalui LAN. Bila Metro menampilkan host yang salah, set `REACT_NATIVE_PACKAGER_HOSTNAME` ke IP Wi-Fi aktual sebelum menjalankan perintah. Buka URL `exp://IP_KOMPUTER:8082` terbaru, bukan entri proyek dengan IP lama.
+
 HP dan komputer harus berada pada Wi-Fi yang saling dapat mengakses. Buka `http://IP_KOMPUTER:8000/health/ready` di Safari HP untuk menguji koneksi sebelum login. Setelah mengubah `.env`, muat ulang aplikasi; restart Expo bila bundle masih memakai alamat lama. Jika IP komputer berubah, perbarui `.env`. Pada iPhone, izin Local Network untuk Expo Go harus diaktifkan. Pesan `Tidak terhubung. Periksa jaringan dan alamat server.` menunjukkan kegagalan akses API, bukan bukti password salah.
 
 ```bash
