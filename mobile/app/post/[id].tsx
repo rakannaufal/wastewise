@@ -121,7 +121,7 @@ export default function PostDetail() {
                   />
                   <Button
                     title="Simpan deskripsi"
-                    disabled={busy || caption.trim().length < 10}
+                    disabled={busy || caption.trim().length > 5000}
                     onPress={() =>
                       void mutate(`community/posts/${id}`, "PATCH", {
                         caption,

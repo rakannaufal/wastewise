@@ -51,7 +51,7 @@ export default function Home() {
               <Text style={styles.text}>
                 {filterCount(filters)
                   ? "Coba ubah atau hapus filter untuk melihat posting lainnya."
-                  : "Posting yang dibagikan muncul di sini untuk semua status. Laporan privat tetap di Laporan saya."}
+                  : "Laporan publik Menunggu, Diproses, dan Selesai muncul di sini. Laporan Ditolak tidak ditampilkan."}
               </Text>
               {filterCount(filters) > 0 && (
                 <Button

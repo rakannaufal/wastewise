@@ -1,6 +1,6 @@
 # Database schema dan ERD
 
-Schema PostgreSQL: `app_private`. Migrasi executable: `backend-ml/migrations/versions/`; revisi akhir `c42d19b50ea7`. Upgrade diuji pada restore PostgreSQL17 lokal lalu diterapkan dan diverifikasi pada Supabase. Runtime role memperoleh USAGE dan DML, bukan kepemilikan schema. `public.alembic_version` mencatat revisi. CHECK menolak koordinat parsial dan photo_source NULL pada laporan otomatis; data lama tetap legacy.
+Schema PostgreSQL: `app_private`. Migrasi executable: `backend-ml/migrations/versions/`; revisi akhir `d53e20c61fb8`. Upgrade diuji pada restore PostgreSQL17 lokal lalu diterapkan dan diverifikasi pada Supabase. Runtime role memperoleh USAGE dan DML, bukan kepemilikan schema. `public.alembic_version` mencatat revisi. CHECK menolak koordinat parsial dan photo_source NULL pada laporan otomatis; data lama tetap legacy.
 
 ```mermaid
 erDiagram
@@ -98,7 +98,7 @@ erDiagram
 - waste_category: battery, biological, brown-glass, cardboard, clothes, green-glass, metal, paper, plastic, shoes, trash, white-glass.
 - report_status: Pending, In Progress, Completed, Rejected.
 - Email unik dan lowercase/trim. Nama 3..255 karakter setelah trim. Mode lokal: password bcrypt cost12. Mode Supabase: password_hash wajib NULL, auth_provider=supabase; ID sama dengan subject provider. Constraint menjaga pasangan provider/credential. blocked_identities menyimpan ID yang dinonaktifkan tanpa FK ke profil yang sudah dihapus.
-- Report user_id FK dengan ON DELETE CASCADE. Deskripsi trim 10..5000, latitude -90..90, longitude -180..180. Numeric koordinat berpresisi 8 digit desimal.
+- Report user_id FK dengan ON DELETE CASCADE. Deskripsi trim 0..5000, NOT NULL (kosong disimpan sebagai string kosong), latitude -90..90, longitude -180..180. Numeric koordinat berpresisi 8 digit desimal.
 - AI category/confidence/version harus semuanya NULL atau semuanya terisi. Confidence 0..100.
 - image_path unik, tidak menyimpan permanent public URL.
 - Cleanup unik pada pasangan bucket/object_path; attempts >=0; status pending/processing/completed. Tidak ada FK ke laporan yang dihapus.
@@ -174,6 +174,8 @@ erDiagram
     }
 ```
 
-Likes use composite(post_id,user_id) PK. Comments use unique(user_id,request_id), state CHECK and1..1000 trimmed body length. Posts use unique report_id, state CHECK and10..5000 caption length. Cascades remove social associations when a report/account is deleted; derived images are queued first. Moderator actors/flagger identities become NULL on account deletion. Region parent/name, post state/created_at/id, post region, comment post/created_at/id indexes support the bounded query paths. JSON geometry stores explicitly documented lat/lon rings and bbox; no PostGIS extension is required. Region data is reference data, never a model feature.
+Likes use composite(post_id,user_id) PK. Comments use unique(user_id,request_id), state CHECK and1..1000 trimmed body length. Posts use unique report_id, state CHECK and0..5000 caption length. Cascades remove social associations when a report/account is deleted; derived images are queued first. Moderator actors/flagger identities become NULL on account deletion. Region parent/name, post state/created_at/id, post region, comment post/created_at/id indexes support the bounded query paths. JSON geometry stores explicitly documented lat/lon rings and bbox; no PostGIS extension is required. Region data is reference data, never a model feature.
 
 Revisi c42d19b50ea7 menambahkan indeks ekspresi bbox pada regions; resolver GPS tidak perlu membaca seluruh poligon saat mencari kandidat. Uji lokal5sampel:16,59ms cold lalu1,92–2,23ms warm untuk titik Gambir; bukan latency jaringan atau p95.
+
+Revisi d53e20c61fb8 hanya memperluas dua CHECK text menjadi0..5000, tidak mengubah data atau consent lama. `privacy_version=public-gps-v2` menandai publikasi baru; CommunityAudit merekam kebijakan/backfill. Dua laporan lama yang dipilih pengguna diterbitkan melalui `scripts.backfill_public`, dry-run default dan --apply eksplisit, validasi foto/koordinat, unique report_id, row locks serta audit. Perintah tidak boleh dipakai sebagai publikasi massal arsip. Downgrade menolak data pendek yang tidak memenuhi aturan lama; tidak mengarang deskripsi. Backup privat app_private dan uji restore dilakukan sebelum migrasi Supabase.

@@ -19,12 +19,11 @@ export default function Profile() {
         </Text>
       </View>
       <View style={styles.action}>
-        <Text style={styles.heading}>Kamu menentukan publikasinya.</Text>
+        <Text style={styles.heading}>Pahami publikasi laporan.</Text>
         <Text style={styles.text}>
-          Laporan privat terlihat oleh pemilik dan pengelola. Posting yang
-          dibagikan memperlihatkan foto dan GPS presisi kepada pengguna yang
-          masuk. Hapus laporan melalui halaman detail bila tidak diperlukan
-          lagi.
+          Laporan baru otomatis menampilkan foto dan GPS presisi kepada publik,
+          termasuk pengunjung tanpa akun. Laporan Ditolak tidak ditampilkan.
+          Hapus laporan melalui halaman detail bila tidak diperlukan lagi.
         </Text>
       </View>
       <Button

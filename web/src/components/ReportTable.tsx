@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { locationNames } from "../types";
 import type { Report } from "../types";
@@ -11,6 +12,19 @@ export function ReportTable({
   open: (id: string) => void;
   admin?: boolean;
 }) {
+  const container = useRef<HTMLDivElement>(null);
+  const [overflow, setOverflow] = useState(false);
+  useEffect(() => {
+    const node = container.current;
+    if (!node) return;
+    const measure = () => setOverflow(node.scrollWidth > node.clientWidth + 1);
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    if (node.querySelector("table"))
+      observer.observe(node.querySelector("table")!);
+    measure();
+    return () => observer.disconnect();
+  }, [reports.length, admin]);
   if (!reports.length)
     return (
       <Empty
@@ -33,12 +47,13 @@ export function ReportTable({
     );
   return (
     <div
+      ref={container}
       className="table-scroll"
       role="region"
       aria-label="Daftar laporan"
       tabIndex={0}
     >
-      {admin && (
+      {admin && overflow && (
         <p className="table-swipe-hint">
           Geser tabel untuk melihat pelapor, lokasi dan status.
         </p>

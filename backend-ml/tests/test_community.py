@@ -22,10 +22,15 @@ def prediction(monkeypatch):
 def test_private_then_publish_interact_withdraw(client, accounts, monkeypatch):
     prediction(monkeypatch)
     owner, other = accounts["owner"]["headers"], accounts["other"]["headers"]
-    report = create(client, accounts["owner"]).json()["data"]
-    assert client.get("/api/v1/community/feed").status_code == 401
+    report = create(client, accounts["owner"], legacy_private=True).json()["data"]
+    assert client.get("/api/v1/community/feed").status_code == 200
     assert client.get("/api/v1/community/feed", headers=other).json()["data"]["posts"] == []
-    body = {"report_id": report["id"], "caption": "Sampah dekat taman warga", "consent": True}
+    body = {
+        "report_id": report["id"],
+        "caption": "Sampah dekat taman warga",
+        "consent": True,
+        "publication_policy": "public-gps-v2",
+    }
     assert (
         client.post(
             "/api/v1/community/posts", json={**body, "consent": False}, headers=owner
@@ -135,7 +140,12 @@ def test_map_regions_cursor_and_moderation(client, accounts, monkeypatch):
         client.post(
             "/api/v1/community/posts",
             headers=owner,
-            json={"report_id": report["id"], "caption": "Coba publikasi kembali", "consent": True},
+            json={
+                "report_id": report["id"],
+                "caption": "Coba publikasi kembali",
+                "consent": True,
+                "publication_policy": "public-gps-v2",
+            },
         ).status_code
         == 409
     )
@@ -219,7 +229,7 @@ def test_cleanup_can_rearm_preserved_community_media(client, accounts, monkeypat
     assert cleanup()
 
 
-def test_like_cors_and_whitespace_rejected(client, accounts):
+def test_like_cors_and_missing_report(client, accounts):
     from app.config import settings
 
     response = client.options(
@@ -236,9 +246,14 @@ def test_like_cors_and_whitespace_rejected(client, accounts):
         client.post(
             "/api/v1/community/posts",
             headers=accounts["owner"]["headers"],
-            json={"report_id": str(uuid4()), "caption": " " * 20, "consent": True},
+            json={
+                "report_id": str(uuid4()),
+                "caption": " " * 20,
+                "consent": True,
+                "publication_policy": "public-gps-v2",
+            },
         ).status_code
-        == 422
+        == 404
     )
 
 
@@ -283,7 +298,7 @@ def test_withdrawal_during_derivative_upload_cannot_republish(client, accounts, 
     assert all(not storage.path(path).exists() for path in paths)
 
 
-def test_feed_includes_every_report_status_without_revealing_private_reports(
+def test_feed_includes_eligible_statuses_without_revealing_private_archives(
     client, accounts, monkeypatch
 ):
     from app.models import Report
@@ -298,8 +313,9 @@ def test_feed_includes_every_report_status_without_revealing_private_reports(
             row = db.get(Report, UUID(report["id"]))
             row.status = status
             post = db.scalar(select(CommunityPost).where(CommunityPost.report_id == row.id))
-            expected[str(post.id)] = status
-    private = create(client, accounts["owner"]).json()["data"]
+            if status != "Rejected":
+                expected[str(post.id)] = status
+    private = create(client, accounts["owner"], legacy_private=True).json()["data"]
     result = client.get("/api/v1/community/feed", headers=peer).json()["data"]
     assert {p["id"]: p["status"] for p in result["posts"]} == expected
     for status in expected.values():
@@ -319,6 +335,6 @@ def test_feed_includes_every_report_status_without_revealing_private_reports(
         result = client.get("/api/v1/community/feed", params=params, headers=peer).json()["data"]
         seen.extend(p["id"] for p in result["posts"])
         cursor = result["next_cursor"]
-    assert len(seen) == len(set(seen)) == 4 and not cursor
+    assert len(seen) == len(set(seen)) == 3 and not cursor
     assert client.get("/api/v1/reports/" + private["id"], headers=owner).status_code == 200
     assert client.get("/api/v1/reports/" + private["id"], headers=peer).status_code == 404

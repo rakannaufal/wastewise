@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { apiURL, createReport } from "./helpers";
-test("private report becomes an opt-in feed post; peers like, comment, map, withdraw", async ({
+test("report automatically becomes a public feed post; peers like, comment, map, withdraw", async ({
   page,
   request,
   browser,
@@ -34,26 +34,29 @@ test("private report becomes an opt-in feed post; peers like, comment, map, with
   const initial = await request.get(`${apiURL}/api/v1/community/feed`, {
     headers: accounts[1].headers,
   });
-  expect((await initial.json()).data.posts).toEqual([]);
+  expect(initial.status()).toBe(200);
   await page.goto(`/reports/${report.id}`);
   await page.getByLabel("Email", { exact: true }).fill(accounts[0].email);
   await page
     .getByLabel("Kata sandi", { exact: true })
     .fill(accounts[0].password);
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
-  await page.getByRole("checkbox", { name: /Saya setuju membagikan/ }).check();
-  await page
-    .getByRole("button", { name: "Bagikan laporan", exact: true })
-    .click();
   await page
     .getByRole("link", { name: "Lihat posting dan kelola publikasi" })
     .click();
   await expect(page.locator(".post-photo")).toBeVisible({ timeout: 30000 });
+  await page.locator(".account-menu > summary").click();
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".account-menu")).toHaveJSProperty("open", false);
   const postURL = page.url();
   const second = await browser.newContext();
   const peer = await second.newPage();
   try {
     await peer.goto(postURL);
+    await expect(peer.locator(".post-photo")).toBeVisible();
+    await expect(peer.getByText(/GPS -6.200/)).toBeVisible();
+    await peer.getByRole("button", { name: "0 suka" }).click();
+    await expect(peer).toHaveURL(/login.*returnTo=/);
     await peer.getByLabel("Email", { exact: true }).fill(accounts[1].email);
     await peer
       .getByLabel("Kata sandi", { exact: true })
@@ -94,11 +97,12 @@ test("private report becomes an opt-in feed post; peers like, comment, map, with
       fullPage: true,
     });
     await peer.setViewportSize({ width: 1440, height: 900 });
-    await peer.getByRole("link", { name: "Beranda", exact: true }).click();
+    await peer
+      .getByRole("navigation", { name: "Navigasi utama", exact: true })
+      .getByRole("link", { name: "Komunitas", exact: true })
+      .click();
     await expect(peer.locator(".post-card")).toHaveCount(1);
-    await expect(peer.getByLabel("Cari Provinsi", { exact: true })).toHaveCount(
-      0,
-    );
+    await expect(peer.getByRole("option")).toHaveCount(0);
     // Install before opening the panel so cached reference data uses this fixture.
     await peer.route("**/api/v1/regions?**", async (route) => {
       const level = new URL(route.request().url()).searchParams.get("level");
@@ -132,7 +136,7 @@ test("private report becomes an opt-in feed post; peers like, comment, map, with
     });
     await filterDialog
       .getByLabel("Status laporan", { exact: true })
-      .selectOption("Rejected");
+      .selectOption("Completed");
     await filterDialog
       .getByRole("button", { name: "Tutup", exact: true })
       .click();
@@ -143,9 +147,9 @@ test("private report becomes an opt-in feed post; peers like, comment, map, with
     await peer
       .getByRole("dialog")
       .getByLabel("Status laporan", { exact: true })
-      .selectOption("Rejected");
+      .selectOption("Completed");
     await peer.getByRole("button", { name: "Terapkan", exact: true }).click();
-    await expect(peer).toHaveURL(/status=Rejected/);
+    await expect(peer).toHaveURL(/status=Completed/);
     await expect(peer.locator(".post-card")).toHaveCount(0);
     await peer
       .getByRole("button", { name: "Hapus semua", exact: true })
@@ -155,19 +159,25 @@ test("private report becomes an opt-in feed post; peers like, comment, map, with
       .getByRole("button", { name: "Buka filter", exact: true })
       .click();
     await filterDialog
-      .getByRole("button", { name: "Wilayah QA", exact: true })
+      .getByRole("combobox", { name: "Provinsi", exact: true })
+      .click();
+    await filterDialog
+      .getByRole("option", { name: "Wilayah QA", exact: true })
       .click();
     await expect(
-      filterDialog.getByLabel("Cari Kabupaten / kota", { exact: true }),
-    ).toBeVisible();
+      filterDialog.getByLabel("Kabupaten / kota", { exact: true }),
+    ).toBeEnabled();
     await filterDialog
       .getByRole("button", { name: "Reset", exact: true })
       .click();
     await expect(
-      filterDialog.getByLabel("Cari Provinsi", { exact: true }),
+      filterDialog.getByLabel("Provinsi", { exact: true }),
     ).toBeVisible();
     await expect(
-      filterDialog.getByRole("button", { name: /Kabupaten \/ kota/ }),
+      filterDialog.getByRole("combobox", {
+        name: "Kabupaten / kota",
+        exact: true,
+      }),
     ).toBeDisabled();
     await filterDialog
       .getByRole("button", { name: "Terapkan", exact: true })
@@ -190,7 +200,7 @@ test("private report becomes an opt-in feed post; peers like, comment, map, with
         await peer
           .locator("h1")
           .evaluate((el) => getComputedStyle(el).fontFamily),
-      ).toContain("Manrope");
+      ).toContain("Caveat");
     }
     await peer.screenshot({
       path: "../docs/evidence/refinement-web-feed.png",
@@ -221,6 +231,23 @@ test("private report becomes an opt-in feed post; peers like, comment, map, with
       path: "../docs/evidence/community-map-desktop.png",
       fullPage: true,
     });
+    await peer.goto("/");
+    await expect(peer.locator(".post-card")).toHaveCount(1);
+    await expect(peer.getByRole("link", { name: /Lihat semua laporan/ })).toBeVisible();
+    for (const image of await peer.locator("img[loading=lazy]").all()) {
+      await image.scrollIntoViewIfNeeded();
+      await expect(image).toHaveJSProperty("complete", true);
+    }
+    await peer.evaluate(() => window.scrollTo(0, 0));
+    await peer.screenshot({
+      path: "../docs/evidence/public-policy-landing-desktop.png",
+      fullPage: true,
+    });
+    await peer.setViewportSize({ width: 390, height: 844 });
+    await peer.screenshot({
+      path: "../docs/evidence/public-policy-landing-mobile.png",
+      fullPage: true,
+    });
     page.once("dialog", (d) => d.accept());
     await page
       .getByRole("button", { name: "Batalkan publikasi", exact: true })
@@ -245,6 +272,9 @@ test("landing, onboarding and error pages remain readable across viewports", asy
   for (const route of [
     "/",
     "/onboarding",
+    "/about",
+    "/faq",
+    "/privacy",
     "/errors/403",
     "/errors/404",
     "/errors/429",
@@ -270,6 +300,34 @@ test("landing, onboarding and error pages remain readable across viewports", asy
     ).toEqual([]);
   }
   await page.goto("/");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page
+    .getByRole("button", { name: "Buka menu utama", exact: true })
+    .click();
+  const menu = page.getByRole("dialog", { name: "Menu utama", exact: true });
+  await expect(menu).toBeVisible();
+  await menu.getByRole("link", { name: "Peta", exact: true }).click();
+  await expect(page).toHaveURL(/\/map$/);
+  await page.goto("/faq");
+  await page
+    .getByText("Apakah deskripsi wajib diisi?", { exact: true })
+    .click();
+  await expect(page.getByText(/Tidak. Foto, hasil klasifikasi/)).toBeVisible();
+  await expect(page.locator(".site-footer-credit")).toHaveText(
+    "© 2026 Khay Brownies · Website by rakandev",
+  );
+  await expect(page.locator(".site-footer-credit a")).toHaveAttribute(
+    "href",
+    "https://www.instagram.com/rakandevv/",
+  );
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.evaluate(() => document.fonts.ready);
+  for (const image of await page.locator("img[loading=lazy]").all()) {
+    await image.scrollIntoViewIfNeeded();
+    await expect(image).toHaveJSProperty("complete", true);
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({
     path: "../docs/evidence/community-landing-desktop.png",
     fullPage: true,

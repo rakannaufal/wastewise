@@ -4061,7 +4061,8 @@
         "security": [
           {
             "HTTPBearer": []
-          }
+          },
+          {}
         ],
         "parameters": [
           {
@@ -4156,6 +4157,154 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Envelope_FeedRead_"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/{report_id}/publication": {
+      "get": {
+        "tags": [
+          "Community"
+        ],
+        "summary": "Publication",
+        "operationId": "publication_api_v1_reports__report_id__publication_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_Union_PostRead__NoneType__"
                 }
               }
             }
@@ -4429,7 +4578,8 @@
         "security": [
           {
             "HTTPBearer": []
-          }
+          },
+          {}
         ],
         "parameters": [
           {
@@ -5173,7 +5323,8 @@
         "security": [
           {
             "HTTPBearer": []
-          }
+          },
+          {}
         ],
         "parameters": [
           {
@@ -6074,7 +6225,8 @@
         "security": [
           {
             "HTTPBearer": []
-          }
+          },
+          {}
         ],
         "parameters": [
           {
@@ -6256,7 +6408,8 @@
         "security": [
           {
             "HTTPBearer": []
-          }
+          },
+          {}
         ],
         "parameters": [
           {
@@ -7006,7 +7159,6 @@
           "caption": {
             "type": "string",
             "maxLength": 5000,
-            "minLength": 10,
             "title": "Caption"
           },
           "revision": {
@@ -7331,6 +7483,35 @@
           "data"
         ],
         "title": "Envelope[TokenRead]"
+      },
+      "Envelope_Union_PostRead__NoneType__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PostRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "data"
+        ],
+        "title": "Envelope[Union[PostRead, NoneType]]"
       },
       "Envelope_UserRead_": {
         "properties": {
@@ -7914,21 +8095,26 @@
           "caption": {
             "type": "string",
             "maxLength": 5000,
-            "minLength": 10,
-            "title": "Caption"
+            "title": "Caption",
+            "default": ""
           },
           "consent": {
             "type": "boolean",
             "const": true,
             "title": "Consent"
+          },
+          "publication_policy": {
+            "type": "string",
+            "const": "public-gps-v2",
+            "title": "Publication Policy"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
           "report_id",
-          "caption",
-          "consent"
+          "consent",
+          "publication_policy"
         ],
         "title": "PublishPost"
       },
@@ -8043,10 +8229,10 @@
       },
       "ReportCreate": {
         "properties": {
-          "share_to_community": {
-            "type": "boolean",
-            "title": "Share To Community",
-            "default": false
+          "publication_policy": {
+            "type": "string",
+            "const": "public-gps-v2",
+            "title": "Publication Policy"
           },
           "draft_id": {
             "type": "string",
@@ -8056,15 +8242,15 @@
           "description": {
             "type": "string",
             "maxLength": 5000,
-            "minLength": 10,
-            "title": "Description"
+            "title": "Description",
+            "default": ""
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "draft_id",
-          "description"
+          "publication_policy",
+          "draft_id"
         ],
         "title": "ReportCreate"
       },
@@ -8261,8 +8447,8 @@
           "description": {
             "type": "string",
             "maxLength": 5000,
-            "minLength": 10,
-            "title": "Description"
+            "title": "Description",
+            "default": ""
           },
           "draft_id": {
             "anyOf": [
@@ -8280,8 +8466,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "revision",
-          "description"
+          "revision"
         ],
         "title": "ReportUpdate"
       },

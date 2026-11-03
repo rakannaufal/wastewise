@@ -39,7 +39,13 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
     path: "../docs/evidence/refinement-mobile-filter.png",
     animations: "disabled",
   });
-  await page.getByRole("radio", { name: "Ditolak", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Status laporan", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Ditolak", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Selesai", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Tutup filter", exact: true }),
   ).toBeInViewport();
@@ -54,7 +60,13 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
     page.getByRole("button", { name: "Buka filter", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Buka filter", exact: true }).click();
-  await page.getByRole("radio", { name: "Ditolak", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Status laporan", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Ditolak", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Selesai", exact: true }).click();
   await page.getByRole("button", { name: "Terapkan", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Tutup filter", exact: true }),
@@ -99,18 +111,16 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
   await expect(
     page.getByText("GPS saat unggah, dikonfirmasi pelapor", { exact: true }),
   ).toBeVisible();
+  await page.getByLabel("Deskripsi (opsional)").fill("");
   await page
-    .getByLabel("Deskripsi kondisi sampah")
-    .fill("Laporan dari Expo galeri dengan lokasi terkonfirmasi.");
-  await page
-    .getByRole("button", { name: "Kirim laporan", exact: true })
+    .getByRole("button", { name: "Kirim dan publikasikan", exact: true })
     .click();
   await expect(page).toHaveURL(/\/report\/[0-9a-f-]+$/);
   await page
     .getByRole("button", { name: "Edit deskripsi / ganti foto", exact: true })
     .click();
   await page
-    .getByLabel("Deskripsi kondisi sampah")
+    .getByLabel("Deskripsi (opsional)")
     .fill("Laporan Expo telah diperbaiki tanpa mengganti foto.");
   await page
     .getByRole("button", { name: "Simpan perubahan", exact: true })
@@ -125,18 +135,15 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await page
-    .getByRole("button", {
-      name: "Saya setuju membagikan foto dan GPS",
-      exact: true,
-    })
-    .click();
-  await page
-    .getByRole("button", { name: "Bagikan laporan", exact: true })
-    .click();
   await expect(
     page.getByRole("button", { name: "Lihat dan kelola posting", exact: true }),
   ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Lihat dan kelola posting", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/post\/[0-9a-f-]+$/);
+  const postId = new URL(page.url()).pathname.split("/").at(-1)!;
+  await page.goBack();
   await page
     .getByRole("button", { name: "Kembali ke laporan", exact: true })
     .click();
@@ -148,10 +155,13 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
     path: "../docs/evidence/refinement-mobile-feed.png",
   });
   await page
+    .getByTestId(`post-${postId}`)
     .getByRole("button", { name: "Sukai posting", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "Batalkan suka", exact: true }),
+    page
+      .getByTestId(`post-${postId}`)
+      .getByRole("button", { name: "Batalkan suka", exact: true }),
   ).toBeVisible();
   await page.getByRole("tab", { name: "Laporan", exact: true }).click();
   await page.getByRole("button", { name: /^Laporan / }).click();

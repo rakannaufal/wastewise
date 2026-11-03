@@ -11,7 +11,7 @@ cd backend-ml
 .venv/bin/mypy app
 ```
 
-Runner memakai PostgreSQL lokal port54339, database `wastewise_test` dan role tes terpisah; konfigurasi cloud tidak digunakan. Sebanyak28tes mencakup Auth/RBAC, ownership, input/upload invalid, UUID/hash/idempotensi, concurrent finalization, larangan kategori/lokasi manual, GPS kamera/galeri, SQL CHECK termasuk NULL, expiry, model failure/retry, edit/revision409, review yang menjaga AI asli, transisi/riwayat, agregasi/timezone, thumbnail/cleanup, rekonsiliasi, batas admin terakhir dan split leakage. Fixture membersihkan hanya akun/path buatannya.
+Runner memakai PostgreSQL lokal port54339, database `wastewise_test` dan role tes terpisah; konfigurasi cloud tidak digunakan. Suite awal28tes mencakup Auth/RBAC, ownership, input/upload invalid, UUID/hash/idempotensi, concurrent finalization, larangan kategori/lokasi manual, GPS kamera/galeri, SQL CHECK termasuk NULL, expiry, model failure/retry, edit/revision409, review yang menjaga AI asli, transisi/riwayat, agregasi/timezone, thumbnail/cleanup, rekonsiliasi, batas admin terakhir dan split leakage. Fixture membersihkan hanya akun/path buatannya.
 
 Sebagian prediksi dimock untuk menguji kontrak/failure path. Akurasi berasal dari evaluasi checkpoint, bukan mock. Browser memakai checkpoint nyata. Ada satu peringatan deprecation Starlette/httpx; tes tetap lulus. Migrasi8a4d7c209e51 diterapkan ke Supabase setelah rehearsal pada restore app_private; satu laporan legacy dipertahankan. Ini bukan restore seluruh Auth/Storage atau downgrade produksi.
 
@@ -30,7 +30,7 @@ npm --prefix web run e2e:auth
 
 Runner mengelola database `wastewise_browser`, API8001, Vite5180 dan Expo web8083; ekspor di `.local/mobile-browser`. Layanan sementara dihentikan setelah tes; API/Metro pengguna dipertahankan. Setup/teardown membersihkan identitas QA lokal saja. Jangan arahkan ke produksi. GPS browser ditiru secara eksplisit.
 
-Tiga skenario, termasuk DELETE tertahan/gagal, pemulihan draft dan retry sukses pada kedua client:
+Suite awal tiga skenario, termasuk DELETE tertahan/gagal, pemulihan draft dan retry sukses pada kedua client:
 
 1. Pengguna web: register, galeri, ML nyata tanpa input kategori/koordinat, konfirmasi GPS, reload/login dan resume draft/deskripsi, finalisasi, edit, axe/responsif, hapus.
 2. Admin: agregasi dashboard, filter tanggal/URL/pencarian, review, revision, status In Progress/Completed/reopen beralasan, riwayat, axe/enam viewport.
@@ -109,3 +109,14 @@ The browser suite now verifies user pages without a sidebar; role-specific admin
 MapLibre6 resolves its default worker relative to the main module. Vite's dependency relocation broke that URL; `Map.tsx` now imports the worker through Vite `?worker&url`. A separate static-server Chrome check also bootstrapped the generated production worker. This verifies worker delivery, not worldwide tile availability; OpenStreetMap still needs network access.
 
 Current measured results and logs: [PROGRESS](PROGRESS.md), `evidence/refinement-*.txt`. Auth tests use mocked provider responses, not email inbox delivery. Native export/typecheck do not prove physical-device camera, GPS, keyboard, screen-reader or Maps behavior. No database migration, publication of private legacy reports or ML retraining is part of this refinement.
+
+
+## Verifikasi publikasi dan Jakob’s Law, 3 November 2026
+
+Suite final backend: **47 tes lulus, 85,52 detik**. Mencakup deskripsi kosong/null/omitted, kontrak publikasi `public-gps-v2`, pembacaan anonim, penolakan token invalid, tiga status publik dan penyembunyian Rejected, metadata prediksi server, serta retry worker ketika koneksi database terputus. Ruff seluruh app/ml/tests/scripts/migrations dan mypy27 modul lulus.
+
+Browser: **5 skenario** mencakup navigasi bersama, menu HP, kartu komunitas, preview landing berisi laporan, peta, FAQ accordion, footer persis sesuai permintaan, halaman informasi, keyboard/filter, axe dan viewport320/390/768/1440 sesuai skenario. Auth: **4 tes lulus**, provider tiruan. Shared filter: **2 tes lulus**. Runner mengekspor iOS/Android/web23route; GPS ditiru pada browser, bukan pengukuran hardware.
+
+`npm run check`, `npm run build`, instalasi bersih terkunci web/mobile, build web bersih dan typecheck mobile bersih lulus. Audit npm kedua client:0kerentanan. Warning chunk MapLibre>500kB serta deprecation Starlette/httpx tetap ada.
+
+Supabase nyata: migrasi `d53e20c61fb8` direhearsal pada restore backup lokal sebelum diterapkan. Backfill hanya dua laporan yang disetujui, idempoten. Feed anonim200, dua posting Pending/Completed dengan foto siap, dua marker, detail/foto200: `evidence/public-policy-supabase.json`. Tidak ada uji inbox email, instalasi perangkat fisik, atau deployment production pada tahap ini.

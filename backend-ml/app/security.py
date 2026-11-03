@@ -100,6 +100,19 @@ def current_user(
         ) from exc
 
 
+def optional_user(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
+    db: Session = Depends(get_db),
+):
+    # A supplied malformed/expired credential must never downgrade to anonymous.
+    if credentials is None:
+        if request.headers.get("Authorization"):
+            raise HTTPException(401, "Sesi tidak valid")
+        return None
+    return current_user(credentials, db)
+
+
 def admin(user: User = Depends(current_user)):
     if user.role != "admin":
         raise HTTPException(403, "Akses pengelola diperlukan")

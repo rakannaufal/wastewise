@@ -33,5 +33,13 @@
       "empty-map": null,
       "offline": null
     }
+  },
+  "web_graphics": {
+    "status": "ready",
+    "style": "user-requested note and pencil / sorting illustration",
+    "files": {
+      "about-sorting": "/illustrations/sort-materials.svg",
+      "faq-notes": "/illustrations/report-notes.svg"
+    }
   }
 }

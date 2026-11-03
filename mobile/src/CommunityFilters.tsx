@@ -14,46 +14,7 @@ import { Button, styles, categories, statusName, colors } from "./ui";
 import { emptyFilters, filterCount } from "../../shared/filters";
 import type { Filters } from "./community";
 import RegionPicker from "./RegionPicker";
-function Choices({
-  title,
-  choices,
-  value,
-  onChange,
-}: {
-  title: string;
-  choices: { id: string; name: string }[];
-  value: string;
-  onChange: (id: string) => void;
-}) {
-  return (
-    <View style={{ gap: 10 }}>
-      <Text style={styles.label}>{title}</Text>
-      <View
-        style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}
-        accessibilityRole="radiogroup"
-        accessibilityLabel={title}
-      >
-        {choices.map((c) => (
-          <Pressable
-            key={c.id}
-            accessibilityRole="radio"
-            accessibilityState={{ checked: value === c.id }}
-            onPress={() => onChange(c.id)}
-            style={[
-              styles.chip,
-              value === c.id && {
-                backgroundColor: "#E4EFE5",
-                borderColor: colors.accent,
-              },
-            ]}
-          >
-            <Text style={styles.text}>{c.name}</Text>
-          </Pressable>
-        ))}
-      </View>
-    </View>
-  );
-}
+import SelectField from "./SelectField";
 export default function CommunityFilters({
   value,
   onChange,
@@ -65,6 +26,7 @@ export default function CommunityFilters({
   title?: string;
   statusOnly?: boolean;
 }) {
+  const [active, setActive] = useState("");
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Filters>(value);
   const [resetVersion, setResetVersion] = useState(0);
@@ -97,6 +59,7 @@ export default function CommunityFilters({
           accessibilityLabel={`Buka filter${count ? `, ${count} aktif` : ""}`}
           accessibilityState={{ expanded: open }}
           onPress={() => {
+            setActive("");
             setDraft(value);
             setResetVersion((v) => v + 1);
             setOpen(true);
@@ -182,10 +145,14 @@ export default function CommunityFilters({
                   <>
                     <RegionPicker
                       key={resetVersion}
+                      active={active}
+                      setActive={setActive}
                       value={draft}
                       onChange={setDraft}
                     />
-                    <Choices
+                    <SelectField
+                      open={active === "category"}
+                      onToggle={(open) => setActive(open ? "category" : "")}
                       title="Kategori sampah"
                       choices={[
                         { id: "", name: "Semua material" },
@@ -196,11 +163,15 @@ export default function CommunityFilters({
                     />
                   </>
                 )}
-                <Choices
+                <SelectField
+                  open={active === "status"}
+                  onToggle={(open) => setActive(open ? "status" : "")}
                   title="Status laporan"
                   choices={[
                     ["", "Semua status"],
-                    ...Object.entries(statusName),
+                    ...Object.entries(statusName).filter(
+                      ([id]) => statusOnly || id !== "Rejected",
+                    ),
                   ].map(([id, name]) => ({ id, name }))}
                   value={draft.status}
                   onChange={(status) => setDraft({ ...draft, status })}
@@ -221,6 +192,7 @@ export default function CommunityFilters({
                     secondary
                     title="Reset"
                     onPress={() => {
+                      setActive("");
                       setDraft(emptyFilters);
                       setResetVersion((v) => v + 1);
                     }}

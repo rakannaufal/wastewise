@@ -1,7 +1,6 @@
 """Durable, lease-based private object deletion worker."""
 
 import argparse
-import time
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import and_, or_, select
@@ -10,6 +9,7 @@ from app.config import settings
 from app.db import SessionLocal
 from app.models import CleanupJob, CommunityPost, Report, ReportDraft
 from app.storage import storage
+from app.worker_loop import run_worker
 from app.workflow import enqueue
 
 
@@ -103,10 +103,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
-    if args.once:
-        while run_once():
-            pass
-    else:
-        while True:
-            if not run_once():
-                time.sleep(5)
+    run_worker(run_once, once=args.once)

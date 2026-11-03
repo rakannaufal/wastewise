@@ -7,7 +7,7 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import and_, delete, func, or_, select
+from sqlalchemy import and_, delete, false, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -33,7 +33,7 @@ from app.models import (
 )
 from app.responses import Envelope
 from app.schemas import Category, Status
-from app.security import admin, current_user, limit
+from app.security import admin, current_user, limit, optional_user
 from app.storage import storage
 from app.workflow import check_revision, enqueue_many, lock_request
 
@@ -44,26 +44,56 @@ def ok(data=None, message="Berhasil"):
     return {"success": True, "message": message, "data": data}
 
 
+PUBLIC_STATUSES = ("Pending", "In Progress", "Completed")
+PUBLIC_POLICY = "public-gps-v2"
+
+
+def public_eligible():
+    return and_(
+        CommunityPost.state == "published",
+        CommunityPost.privacy_version == PUBLIC_POLICY,
+        Report.status.in_(PUBLIC_STATUSES),
+    )
+
+
 def post_for(db, post_id, user, lock=False):
+    # Report-first locks serialize interactions with report status transitions.
+    report = (
+        db.scalar(
+            select(Report)
+            .join(CommunityPost)
+            .where(CommunityPost.id == post_id)
+            .with_for_update(of=Report)
+        )
+        if lock
+        else None
+    )
     query = select(CommunityPost).where(CommunityPost.id == post_id)
-    if lock:
-        query = query.with_for_update()
-    row = db.scalar(query)
-    if row is None or (
-        row.state != "published" and row.user_id != user.id and user.role != "admin"
-    ):
+    row = db.scalar(query.with_for_update() if lock else query)
+    if row is None:
+        raise HTTPException(404, "Posting tidak tersedia")
+    report = report or db.get(Report, row.report_id)
+    eligible = (
+        row.state == "published"
+        and row.privacy_version == PUBLIC_POLICY
+        and report.status in PUBLIC_STATUSES
+    )
+    privileged = user is not None and (row.user_id == user.id or user.role == "admin")
+    if report.status == "Rejected" or not (eligible or privileged):
         raise HTTPException(404, "Posting tidak tersedia")
     return row
 
 
-def active_post(db, post_id, user):
-    row = post_for(db, post_id, user, lock=True)
-    if row.state != "published":
+def active_post(db, post_id, user, lock=True):
+    row = post_for(db, post_id, user, lock=lock)
+    if row.state != "published" or row.privacy_version != PUBLIC_POLICY:
         raise HTTPException(409, "Posting belum tersedia untuk interaksi")
     return row
 
 
 def publish(db, report, user, caption):
+    if report.status == "Rejected":
+        raise HTTPException(409, "Laporan ditolak tidak dapat dipublikasikan")
     if report.user_id != user.id:
         raise HTTPException(403, "Hanya pemilik dapat membagikan laporan")
     lock_request(db, f"share:{report.id}")
@@ -78,6 +108,7 @@ def publish(db, report, user, caption):
             user_id=user.id,
             caption=caption.strip(),
             source_image_path=report.image_path,
+            privacy_version=PUBLIC_POLICY,
         )
         db.add(row)
     elif row.state == "withdrawn":
@@ -90,6 +121,16 @@ def publish(db, report, user, caption):
         from app.models import now
 
         row.next_attempt_at = now()
+    row.privacy_version = PUBLIC_POLICY
+    db.flush()
+    db.add(
+        CommunityAudit(
+            post_id=row.id,
+            actor_id=user.id,
+            action="publication_policy",
+            reason="Public photo and precise GPS: " + PUBLIC_POLICY,
+        )
+    )
     return row
 
 
@@ -131,7 +172,7 @@ def project(db, rows, user):
                 )
             )
         )
-        if ids
+        if ids and user is not None
         else set()
     )
     reports = {
@@ -158,7 +199,7 @@ def project(db, rows, user):
             dict(
                 id=p.id,
                 author_name=names[p.user_id].split()[0],
-                is_owner=p.user_id == user.id,
+                is_owner=user is not None and p.user_id == user.id,
                 caption=p.caption,
                 state=p.state,
                 image_url=url,
@@ -219,23 +260,30 @@ def cursor_for(row):
     ).decode()
 
 
-@router.get("/community/feed", response_model=Envelope[FeedRead])
+@router.get("/community/feed", response_model=Envelope[FeedRead], openapi_extra={"security": [{}]})
 def feed(
+    request: Request,
     cursor: str | None = Query(None, max_length=256),
     region_code: str | None = Query(None, max_length=16),
     category: Category | None = None,
     status: Status | None = None,
     per_page: int = Query(15, ge=1, le=30),
-    user: User = Depends(current_user),
+    user: User | None = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
+    limit(request, "public-feed", 120)
     q = (
         select(CommunityPost)
         .join(Report, Report.id == CommunityPost.report_id)
         .where(
             or_(
-                CommunityPost.state == "published",
-                and_(CommunityPost.user_id == user.id, CommunityPost.state == "processing"),
+                public_eligible(),
+                and_(
+                    CommunityPost.user_id == user.id if user else false(),
+                    CommunityPost.state == "processing",
+                    CommunityPost.privacy_version == PUBLIC_POLICY,
+                    Report.status.in_(PUBLIC_STATUSES),
+                ),
             )
         )
     )
@@ -261,6 +309,15 @@ def feed(
     )
 
 
+@router.get("/reports/{report_id}/publication", response_model=Envelope[PostRead | None])
+def publication(report_id: UUID, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    report = db.get(Report, report_id)
+    if report is None or (report.user_id != user.id and user.role != "admin"):
+        raise HTTPException(404, "Laporan tidak tersedia")
+    row = db.scalar(select(CommunityPost).where(CommunityPost.report_id == report.id))
+    return ok(project(db, [row], user)[0] if row else None)
+
+
 @router.post("/community/posts", status_code=201, response_model=Envelope[PostRead])
 def share(
     body: PublishPost,
@@ -276,13 +333,25 @@ def share(
     )
     if report is None:
         raise HTTPException(404, "Laporan tidak tersedia")
-    row = publish(db, report, user, body.caption)
+    row = publish(
+        db, report, user, body.caption if "caption" in body.model_fields_set else report.description
+    )
     db.commit()
     return ok(project(db, [row], user)[0], "Posting disiapkan")
 
 
-@router.get("/community/posts/{post_id}", response_model=Envelope[PostRead])
-def detail(post_id: UUID, user: User = Depends(current_user), db: Session = Depends(get_db)):
+@router.get(
+    "/community/posts/{post_id}",
+    response_model=Envelope[PostRead],
+    openapi_extra={"security": [{}]},
+)
+def detail(
+    post_id: UUID,
+    request: Request,
+    user: User | None = Depends(optional_user),
+    db: Session = Depends(get_db),
+):
+    limit(request, "public-post", 120)
     return ok(project(db, [post_for(db, post_id, user)], user)[0])
 
 
@@ -337,14 +406,16 @@ def unlike(post_id: UUID, user: User = Depends(current_user), db: Session = Depe
     return ok()
 
 
-@router.get("/community/posts/{post_id}/comments")
+@router.get("/community/posts/{post_id}/comments", openapi_extra={"security": [{}]})
 def comments(
     post_id: UUID,
+    request: Request,
     cursor: str | None = Query(None, max_length=256),
-    user: User = Depends(current_user),
+    user: User | None = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
-    active_post(db, post_id, user)
+    limit(request, "public-comments", 120)
+    active_post(db, post_id, user, lock=False)
     q = (
         select(PostComment, User.full_name)
         .join(User, User.id == PostComment.user_id)
@@ -368,7 +439,7 @@ def comments(
                     id=c.id,
                     body=c.body,
                     author_name=n.split()[0],
-                    is_owner=c.user_id == user.id,
+                    is_owner=user is not None and c.user_id == user.id,
                     created_at=c.created_at,
                 )
                 for c, n in rows[:30]

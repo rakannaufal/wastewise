@@ -19,6 +19,7 @@ export async function login(
     .fill(credentials.password);
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
   await page.waitForURL("**/app");
+  await page.locator(".account-menu > summary").click();
   await page.getByRole("link", { name: "Profil", exact: true }).click();
   await page.getByRole("link", { name: /^(Ringkasan|Panel admin)$/ }).click();
 }
@@ -58,7 +59,11 @@ export async function createReport(
   ).toBe(200);
   const response = await request.post(`${apiURL}/api/v1/reports`, {
     headers: { ...headers, "Idempotency-Key": randomUUID() },
-    data: { draft_id: draft.id, description },
+    data: {
+      draft_id: draft.id,
+      description,
+      publication_policy: "public-gps-v2",
+    },
   });
   expect(response.status()).toBe(201);
   return (await response.json()).data as { id: string; category: string };

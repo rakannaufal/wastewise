@@ -11,17 +11,18 @@ class CaptionBody(StrictModel):
     @field_validator("caption", "reason", check_fields=False, mode="before")
     @classmethod
     def trimmed(cls, value):
-        return value.strip() if isinstance(value, str) else value
+        return "" if value is None else value.strip() if isinstance(value, str) else value
 
 
 class PublishPost(CaptionBody):
     report_id: UUID
-    caption: str = Field(min_length=10, max_length=5000)
+    caption: str = Field(default="", max_length=5000)
     consent: Literal[True]
+    publication_policy: Literal["public-gps-v2"]
 
 
 class EditPost(CaptionBody):
-    caption: str = Field(min_length=10, max_length=5000)
+    caption: str = Field(max_length=5000)
     revision: int = Field(ge=1)
 
 

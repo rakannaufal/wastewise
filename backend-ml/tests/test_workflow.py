@@ -79,7 +79,11 @@ def test_draft_provenance_ownership_and_idempotency(client, accounts, monkeypatc
         == 422
     )
     assert client.patch(url, headers=owner, json=evidence()).status_code == 200
-    payload = {"draft_id": row["id"], "description": "Sampah kertas dekat taman"}
+    payload = {
+        "publication_policy": "public-gps-v2",
+        "draft_id": row["id"],
+        "description": "Sampah kertas dekat taman",
+    }
     headers = {**owner, "Idempotency-Key": str(uuid4())}
     assert (
         client.post(
@@ -162,7 +166,11 @@ def test_failed_analysis_retries_existing_image(client, accounts, monkeypatch):
         client.post(
             "/api/v1/reports",
             headers=headers,
-            json={"draft_id": row["id"], "description": "Foto untuk mencoba kembali"},
+            json={
+                "publication_policy": "public-gps-v2",
+                "draft_id": row["id"],
+                "description": "Foto untuk mencoba kembali",
+            },
         ).status_code
         == 503
     )

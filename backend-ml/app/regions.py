@@ -2,27 +2,29 @@
 
 import math
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import String, func, select
 from sqlalchemy.orm import Session
 
-from app.community import filters, ok
+from app.community import filters, ok, public_eligible
 from app.db import get_db
 from app.models import CommunityPost, Region, Report, User
 from app.schemas import Category, Status
-from app.security import current_user
+from app.security import limit, optional_user
 
 router = APIRouter(prefix="/api/v1", tags=["Regions and maps"])
 
 
-@router.get("/regions")
+@router.get("/regions", openapi_extra={"security": [{}]})
 def regions(
+    request: Request,
     parent: str | None = Query(None, max_length=16),
     search: str = Query("", max_length=100),
     level: int | None = Query(None, ge=1, le=4),
-    user: User = Depends(current_user),
+    user: User | None = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
+    limit(request, "public-regions", 120)
     q = select(Region)
     if parent is not None:
         q = q.where(Region.parent_code == parent)
@@ -44,16 +46,18 @@ def regions(
     )
 
 
-@router.get("/community/map")
+@router.get("/community/map", openapi_extra={"security": [{}]})
 def map_points(
+    request: Request,
     bbox: str = Query("94,-12,142,7", max_length=120),
     zoom: int = Query(4, ge=2, le=20),
     region_code: str | None = Query(None, max_length=16),
     category: Category | None = None,
     status: Status | None = None,
-    user: User = Depends(current_user),
+    user: User | None = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
+    limit(request, "public-map", 120)
     try:
         west, south, east, north = [float(v) for v in bbox.split(",")]
         if not all(math.isfinite(x) for x in (west, south, east, north)) or not (
@@ -74,7 +78,7 @@ def map_points(
         .select_from(CommunityPost)
         .join(Report, Report.id == CommunityPost.report_id)
         .where(
-            CommunityPost.state == "published",
+            public_eligible(),
             Report.longitude >= west,
             Report.longitude <= east,
             Report.latitude >= south,

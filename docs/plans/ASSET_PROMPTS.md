@@ -297,3 +297,9 @@ Build menghasilkan `web/public/assets/wastewise/` dan `mobile/assets/wastewise/`
 6. Aset dekoratif web alt kosong/aria-hidden; ilustrasi bermakna mendapat alt singkat. Judul/error tetap tersedia saat gambar gagal, offline atau pembaca layar.
 7. Uji asset crop/safe area pada320px dan tablet, layar retina, font besar dan tema terang. Jangan menutupi pesan error/CTA dengan ilustrasi.
 8. Catat aset yang disetujui di manifest. Gambar belum dihasilkan pada tahap rencana ini; jangan menggunakan path di atas seolah sudah berisi file.
+
+## Implemented web graphics and heading refinement (3 November)
+
+User explicitly supplied a handwritten heading and note/pencil graphic reference. Heading h1–h5 uses Caveat Bold, paragraphs/controls/small copy Manrope. Local authored SVG assets are ready at web/public/illustrations/sort-materials.svg and report-notes.svg, used on landing/about/FAQ. Sage/cream section backgrounds and forest footer derive from the same palette. These vector assets are source files, not generated raster placeholders; the older raster slots remain unfilled and are not claimed complete. OFL files accompany both fonts.
+
+Optional future raster brief: WasteWise editorial illustration of a paper note and pencil, forest-green ink outlines, pale cream paper, muted yellow pencil, sage accents, simple hand-drawn character matching the user's reference, no words, no stock-photo background, no gradients; leave room around the object for responsive cropping. Alternate subject: three bins with leaf, paper and bottle, same palette and line character. Current implementation already uses the SVG versions.

@@ -17,7 +17,6 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [draft, setDraft] = useState<PhotoDraft | null>(null);
   const [original, setOriginal] = useState<Report | null>(null);
-  const [share, setShare] = useState(false);
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState<Error | null>(null);
@@ -178,7 +177,7 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
           headers: { "Idempotency-Key": attempt.current.final },
           body: JSON.stringify({
             description,
-            ...(!editId ? { share_to_community: share } : {}),
+            ...(!editId ? { publication_policy: "public-gps-v2" } : {}),
             ...(draft ? { draft_id: draft.id } : {}),
             ...(editId ? { revision: original?.revision } : {}),
           }),
@@ -216,7 +215,6 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
     }
   }
   const canSave =
-    description.trim().length >= 10 &&
     (!editId || original) &&
     (draft
       ? result &&
@@ -270,8 +268,8 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
             </button>
           )}
           <p className="caption">
-            Satu objek dominan, cahaya cukup. Foto privat; hindari wajah dan
-            data pribadi. Pengambilan foto langsung tersedia di aplikasi HP.
+            Satu objek dominan, cahaya cukup. Hindari wajah dan data pribadi.
+            Pengambilan foto langsung tersedia di aplikasi HP.
           </p>
         </section>
         <section className="panel padded" aria-live="polite">
@@ -362,23 +360,18 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
             </>
           )}
           {!editId && (
-            <label className="share-consent">
-              <input
-                type="checkbox"
-                checked={share}
-                onChange={(e) => setShare(e.target.checked)}
-              />
-              Bagikan foto, deskripsi, dan GPS presisi kepada seluruh pengguna
-              yang masuk. Laporan tetap privat jika tidak dicentang.
-            </label>
+            <p className="publication-notice">
+              Foto, lokasi GPS presisi, dan deskripsi yang kamu isi akan
+              terlihat oleh publik, termasuk pengunjung tanpa akun. Hindari
+              wajah dan data pribadi.
+            </p>
           )}
-          <label htmlFor="report-description">Deskripsi</label>
+          <label htmlFor="report-description">Deskripsi (opsional)</label>
           <textarea
             id="report-description"
             disabled={deleting || (!!editId && !original)}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            minLength={10}
             maxLength={5000}
             rows={4}
             placeholder="Jelaskan kondisi dan tempat sampah ditemukan."
@@ -401,7 +394,7 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
               ? "Memproses…"
               : editId
                 ? "Simpan perubahan"
-                : "Kirim laporan"}
+                : "Kirim dan publikasikan"}
           </button>
         </section>
       </div>

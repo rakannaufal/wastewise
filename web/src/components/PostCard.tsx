@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, MapPin } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../Auth";
@@ -14,6 +14,7 @@ export default function PostCard({
   detail?: boolean;
 }) {
   const client = useQueryClient();
+  const navigate = useNavigate();
   const [error, setError] = useState<Error | null>(null);
   const [imageFailed, setImageFailed] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -94,13 +95,15 @@ export default function PostCard({
             <small> · Menunggu review AI</small>
           )}
         </div>
-        <p
-          className={
-            detail ? "post-caption" : "post-caption post-caption-preview"
-          }
-        >
-          {post.caption}
-        </p>
+        {post.caption && (
+          <p
+            className={
+              detail ? "post-caption" : "post-caption post-caption-preview"
+            }
+          >
+            {post.caption}
+          </p>
+        )}
         {!detail && post.caption.length > 140 && (
           <Link className="text-button" to={`/community/${post.id}`}>
             Baca selengkapnya
@@ -111,7 +114,7 @@ export default function PostCard({
           {post.location_label || "Nama wilayah belum terverifikasi"}
         </p>
         <small>
-          GPS {post.latitude.toFixed(5)}, {post.longitude.toFixed(5)}
+          GPS {post.latitude.toFixed(6)}, {post.longitude.toFixed(6)}
           {post.location_accuracy_m !== null
             ? ` · ±${Math.round(post.location_accuracy_m)} m`
             : ""}
@@ -126,7 +129,13 @@ export default function PostCard({
           <button
             disabled={action.isPending || post.state !== "published"}
             aria-pressed={post.liked_by_me}
-            onClick={() => mutate("/like", post.liked_by_me ? "DELETE" : "PUT")}
+            onClick={() =>
+              user
+                ? mutate("/like", post.liked_by_me ? "DELETE" : "PUT")
+                : navigate(
+                    `/login?returnTo=${encodeURIComponent(`/community/${post.id}`)}`,
+                  )
+            }
           >
             <Heart
               size={21}
@@ -176,10 +185,8 @@ export default function PostCard({
                   Deskripsi
                   <textarea
                     value={caption}
-                    minLength={10}
                     maxLength={5000}
                     onChange={(e) => setCaption(e.target.value)}
-                    required
                   />
                 </label>
                 <button className="button primary" disabled={action.isPending}>
@@ -187,36 +194,38 @@ export default function PostCard({
                 </button>
               </form>
             )}
-            <details>
-              <summary>Laporkan konten</summary>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  action.mutate({
-                    path: "community/flags",
-                    method: "POST",
-                    body: { post_id: post.id, reason },
-                  });
-                }}
-              >
-                <label>
-                  Alasan
-                  <input
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    minLength={5}
-                    maxLength={1000}
-                    required
-                  />
-                </label>
-                <button
-                  className="button secondary"
-                  disabled={action.isPending}
+            {user && (
+              <details>
+                <summary>Laporkan konten</summary>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    action.mutate({
+                      path: "community/flags",
+                      method: "POST",
+                      body: { post_id: post.id, reason },
+                    });
+                  }}
                 >
-                  Kirim ke moderator
-                </button>
-              </form>
-            </details>
+                  <label>
+                    Alasan
+                    <input
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      minLength={5}
+                      maxLength={1000}
+                      required
+                    />
+                  </label>
+                  <button
+                    className="button secondary"
+                    disabled={action.isPending}
+                  >
+                    Kirim ke moderator
+                  </button>
+                </form>
+              </details>
+            )}
             {user?.role === "admin" && (
               <form
                 className="moderation"

@@ -1,27 +1,38 @@
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { api } from "./api";
-import { Button, colors, ErrorText, Input, styles } from "./ui";
+import { Button, ErrorText, styles } from "./ui";
 import { regionLevels } from "../../shared/community";
 import type { Region } from "../../shared/community";
 import { chooseRegion } from "../../shared/filters";
 import type { CommunityFilters } from "../../shared/filters";
+import SelectField from "./SelectField";
+
 export default function RegionPicker({
   value,
   onChange,
+  active,
+  setActive,
 }: {
   value: CommunityFilters;
   onChange: (v: CommunityFilters) => void;
+  active: string;
+  setActive: (key: string) => void;
 }) {
-  const [level, setLevel] = useState(0);
+  const level = active.startsWith("region-") ? Number(active.slice(7)) : -1;
   const [rows, setRows] = useState<Region[]>([]);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [truncated, setTruncated] = useState(false);
   const [retry, setRetry] = useState(0);
-  const parent = level > 0 ? value.codes[level - 1] : null;
+  const parent = level > 0 ? value.codes[level - 1] : "";
   useEffect(() => {
+    setSearch("");
+    setRows([]);
+  }, [active]);
+  useEffect(() => {
+    if (level < 0) return;
     const controller = new AbortController();
     setLoading(true);
     setRows([]);
@@ -52,44 +63,48 @@ export default function RegionPicker({
     };
   }, [level, parent, search, retry]);
   return (
-    <View style={{ gap: 12 }}>
-      <Text style={styles.label}>Lokasi</Text>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {regionLevels.map((label, i) => (
-          <Pressable
-            key={label}
-            accessibilityRole="button"
-            accessibilityState={{
-              selected: i === level,
-              disabled: i > 0 && !value.codes[i - 1],
-            }}
-            disabled={i > 0 && !value.codes[i - 1]}
-            onPress={() => {
-              setLevel(i);
-              setSearch("");
-            }}
-            style={[
-              styles.chip,
-              { width: "48%", opacity: i > 0 && !value.codes[i - 1] ? 0.5 : 1 },
-              i === level && {
-                borderColor: colors.accent,
-                backgroundColor: "#E4EFE5",
-              },
-            ]}
-          >
-            <Text style={styles.label}>{label}</Text>
-            <Text style={styles.text}>
-              {value.labels?.[i] || value.codes[i] || "Pilih wilayah"}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      <Input
-        label={`Cari ${regionLevels[level]}`}
-        value={search}
-        onChangeText={setSearch}
-        autoCorrect={false}
-      />
+    <View style={{ gap: 14 }}>
+      {regionLevels.map((label, i) => (
+        <SelectField
+          key={label}
+          title={label}
+          disabled={i > 0 && !value.codes[i - 1]}
+          value={value.codes[i] || ""}
+          open={level === i}
+          onToggle={(open) => setActive(open ? `region-${i}` : "")}
+          choices={[
+            { id: "", name: `Semua ${label.toLowerCase()}` },
+            ...(value.codes[i]
+              ? [
+                  {
+                    id: value.codes[i],
+                    name: value.labels?.[i] || value.codes[i],
+                  },
+                ]
+              : []),
+            ...(level === i
+              ? rows
+                  .filter((r) => r.code !== value.codes[i])
+                  .map((r) => ({ id: r.code, name: r.name }))
+              : []),
+          ]}
+          loading={loading}
+          search={search}
+          onSearch={setSearch}
+          onChange={(code) =>
+            onChange(
+              chooseRegion(
+                value,
+                i,
+                code,
+                rows.find((r) => r.code === code)?.name ||
+                  value.labels?.[i] ||
+                  "",
+              ),
+            )
+          }
+        />
+      ))}
       <ErrorText message={error} />
       {error && (
         <Button
@@ -98,49 +113,6 @@ export default function RegionPicker({
           onPress={() => setRetry((v) => v + 1)}
         />
       )}
-      <ScrollView
-        style={{
-          height: 180,
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: 10,
-        }}
-        nestedScrollEnabled
-        keyboardShouldPersistTaps="handled"
-      >
-        <Pressable
-          style={styles.chip}
-          accessibilityRole="button"
-          onPress={() => onChange(chooseRegion(value, level, "", ""))}
-        >
-          <Text style={styles.text}>
-            Semua {regionLevels[level].toLowerCase()}
-          </Text>
-        </Pressable>
-        {loading ? (
-          <Text style={[styles.text, { padding: 12 }]}>Memuat wilayah…</Text>
-        ) : (
-          rows.map((item) => (
-            <Pressable
-              key={item.code}
-              accessibilityRole="button"
-              style={styles.chip}
-              onPress={() => {
-                onChange(chooseRegion(value, level, item.code, item.name));
-                if (level < 3) setLevel(level + 1);
-                setSearch("");
-              }}
-            >
-              <Text style={styles.text}>{item.name}</Text>
-            </Pressable>
-          ))
-        )}
-        {!loading && !error && !rows.length && (
-          <Text style={[styles.text, { padding: 12 }]}>
-            Tidak ada wilayah yang cocok.
-          </Text>
-        )}
-      </ScrollView>
       {truncated && (
         <Text style={styles.label}>
           Gunakan pencarian untuk mempersempit pilihan.

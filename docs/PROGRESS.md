@@ -191,3 +191,26 @@ Hasil final pada macOS, Node24, Python3.12, PostgreSQL17 lokal:
 Bukti tersanitasi: `docs/evidence/refinement-*.txt`, screenshot feed web desktop/HP, Expo home kosong/berisi, panel filter; screenshot QA bukan aktivitas pelanggan. README, keputusanD-16, DESIGN, COMMUNITY_IMPLEMENTATION, TESTING, prompt aset/matriks layar dan gate DESIGN_QA diperbarui. Paket source/model/docs dan dataset lokal diperbarui melalui script packaging; ZIP tetap lokal, checksum pada release/manifest.json. Perubahan `mobile/tsconfig.json` yang sudah ada sebelum refinement dipertahankan dan dikecualikan dari commit.
 
 Terbuka: kamera/GPS/peta dan aksesibilitas pada iOS/Android fisik, font sistem besar/keyboard/safe area perangkat, Maps key Android standalone, raster ilustrasi final, penyedia ubin production, deployment HTTPS/SMTP/monitoring. Akurasi model95,86% berasal dari evaluasi sebelumnya; tidak berubah oleh perbaikan UI. Gate desain PASS hanya untuk cakupan web/Expo web yang diuji, bukan klaim rilis production.
+
+## Rencana dropdown, navigasi Apple dan visibilitas (3 November 2026)
+
+Dokumen baru: `docs/plans/APPLE_STYLE_UX_AND_VISIBILITY_PLAN.md`, belum diimplementasikan. Audit database read-only menemukan dua laporan sesuai screenshot: 86e8dc53 Completed dengan location_source legacy_unknown dan441edcc1 Pending dengan device_capture; keduanya memiliki koordinat tetapi belum memiliki CommunityPost. Tidak ada publikasi atau perubahan data. Kode masih mewajibkan deskripsi10..5000 pada client/API/dua constraint DB; rencana mengubahnya end-to-end, menerapkan dropdown>3, header bersama, preview landing dan tiga status komunitas tanpa Rejected. Pengguna kemudian mengonfirmasi foto/kartu dan GPS presisi boleh dibaca tanpa login serta laporan baru otomatis dibagikan. Rencana telah diperbarui: copy formulir menyebut publik termasuk anonim, akses tulis tetap login, proyeksi publik mengecualikan field akun privat, dan dua laporan lama masuk lingkup backfill terarah. Fitur yang berjalan tidak diubah oleh dokumen ini; tes implementasi baru belum dijalankan.
+
+
+## Implementasi publikasi, informasi dan Jakob’s Law (3 November 2026)
+
+Rencana `APPLE_STYLE_UX_AND_VISIBILITY_PLAN.md` telah diimplementasikan. Deskripsi opsional end-to-end; null/whitespace dinormalisasi kosong, PATCH omitted mempertahankan nilai. Laporan baru otomatis dipublikasikan atomik dengan persetujuan versi `public-gps-v2`; foto/GPS presisi dapat dibaca anonim. Feed/detail/map hanya Pending, In Progress, Completed; Rejected tidak tampil publik. Suka/komentar tetap terautentikasi, token invalid tidak dianggap anonim. Rate limit publik dan otorisasi server tetap aktif.
+
+Migrasi d53e20c61fb8 melonggarkan dua CHECK teks0..5000. Backup privat direstore ke database lokal dan migrasi direhearsal, lalu diterapkan pada Supabase. Backfill hanya dua ID yang disetujui (441edcc1 Pending, 86e8dc53 Completed), lokasi/status/source dipertahankan, repeat apply idempoten. Smoke nyata membuktikan dua foto siap, dua marker, feed/detail/foto anonim200. Bukti `docs/evidence/public-policy-supabase.json`; backup/skrip akses tetap privat di .local dan tidak masuk Git.
+
+Web/mobile menggunakan dropdown untuk pilihan>3, kategori AI read-only, filter lokasi bertingkat searchable. Header/footer bersama, preview landing maksimal3 kartu nyata, halaman About/FAQ/Privacy, menu akun/HP mengikuti pola familier Jakob’s Law. Caveat Bold untuk heading sesuai referensi; Manrope untuk body/controls. Dua SVG ilustrasi lokal, latar sage/cream/forest/putih memiliki peran per bagian. Footer persis `© 2026 Khay Brownies · Website by rakandev`, tautan Instagram sesuai permintaan. Evaluasi pengguna atas kemudahan belajar belum dilakukan.
+
+Ditemukan worker lama berhenti akibat SSL timeout Supabase. Loop publisher/cleanup kini retry koneksi dengan backoff5..60detik, mode --once tetap gagal eksplisit. Worker kontinu dijalankan ulang sesuai izin yang sudah diberikan; penghapusan melindungi referensi laporan aktif.
+
+Verifikasi pada macOS, Node24, Python3.12, PostgreSQL17:47backend lulus85,52detik, Ruff seluruh app/ml/tests/scripts/migrations lulus, mypy27modul lulus. Empat Auth lulus21,1detik dengan provider tiruan; dua shared-filter lulus. Typecheck/ESLint web dan mobile, build web, ekspor iOS/Android/web23route, instalasi bersih terkunci kedua client, build web bersih serta typecheck mobile bersih lulus. npm audit web/mobile0kerentanan. Warning Starlette/httpx dan ukuran chunk peta tetap dicatat. Bukti tersanitasi disalin ke `docs/evidence/public-policy-*.txt`.
+
+Model tidak dilatih ulang:95,86% tetap pengukuran evaluasi sebelumnya. Kamera/GPS/peta iOS/Android fisik, aksesibilitas manual perangkat, SMTP/inbox, deployment HTTPS/monitoring dan holdout lapangan belum diverifikasi. mobile/tsconfig.json milik pengguna dipertahankan dan dikecualikan dari commit.
+
+Verifikasi browser final setelah perbaikan bukti screenshot: **5 E2E lulus50,3detik**. Preview landing berisi kartu diuji sebelum withdrawal, screenshot desktop1440px dan HP390px terpisah. Menu hamburger, FAQ, footer, font heading dan overflow/axe diuji pada route yang tercakup.
+
+Runtime final: API8000 `/health/ready`, web5173 dan Metro8082 `/status` masing-masing200. API dimuat ulang dengan source final. Bukti screenshot desktop/mobile diperiksa visual; tidak ada overflow yang terlihat pada hasil yang diuji.

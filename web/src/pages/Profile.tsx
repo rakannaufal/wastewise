@@ -45,9 +45,9 @@ export default function Profile() {
         <Link to="/onboarding">Cara memakai WasteWise</Link>
       </nav>
       <p className="account-privacy">
-        Laporanmu tetap privat sampai kamu memilih membagikannya. Posting
-        komunitas memperlihatkan foto, deskripsi, dan GPS kepada pengguna yang
-        masuk.
+        Laporan baru otomatis menampilkan foto, deskripsi opsional, dan GPS
+        presisi kepada publik, termasuk pengunjung tanpa akun. Laporan Ditolak
+        tidak ditampilkan.
       </p>
       <button className="button secondary" onClick={() => void logout()}>
         <LogOut size={18} />

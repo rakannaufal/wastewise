@@ -23,6 +23,7 @@ test("photo automatically becomes an owned report; edit, resume, search, delete"
     .fill("WasteWise1!temporary");
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
   await page.waitForURL("**/app");
+  await page.locator(".account-menu > summary").click();
   await page.getByRole("link", { name: "Profil", exact: true }).click();
   await page.getByRole("link", { name: /^(Ringkasan|Panel admin)$/ }).click();
   await expect(
@@ -52,7 +53,7 @@ test("photo automatically becomes an owned report; edit, resume, search, delete"
     page.getByText(/GPS saat unggah, dikonfirmasi pelapor/),
   ).toBeVisible();
   await page
-    .getByLabel("Deskripsi", { exact: true })
+    .getByLabel("Deskripsi (opsional)", { exact: true })
     .fill("Laporan uji otomatis dari foto galeri di taman.");
   await page.reload();
   await page.getByLabel("Email", { exact: true }).fill(email);
@@ -60,18 +61,18 @@ test("photo automatically becomes an owned report; edit, resume, search, delete"
     .getByLabel("Kata sandi", { exact: true })
     .fill("WasteWise1!temporary");
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
-  await expect(page.getByLabel("Deskripsi", { exact: true })).toHaveValue(
-    "Laporan uji otomatis dari foto galeri di taman.",
-  );
+  await expect(
+    page.getByLabel("Deskripsi (opsional)", { exact: true }),
+  ).toHaveValue("Laporan uji otomatis dari foto galeri di taman.");
   await page
-    .getByRole("button", { name: "Kirim laporan", exact: true })
+    .getByRole("button", { name: "Kirim dan publikasikan", exact: true })
     .click();
   await expect(
     page.getByRole("heading", { name: "Catatan laporan" }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Edit deskripsi / ganti foto" }).click();
   await page
-    .getByLabel("Deskripsi", { exact: true })
+    .getByLabel("Deskripsi (opsional)", { exact: true })
     .fill("Deskripsi laporan telah diperbaiki oleh pemilik.");
   await page
     .getByRole("button", { name: "Simpan perubahan", exact: true })

@@ -5,25 +5,28 @@ import {
   MapPin,
   ScanLine,
   ArrowUpRight,
-  Leaf,
   MoveRight,
 } from "lucide-react";
-import { Brand } from "../ui";
+import { Brand, Failure } from "../ui";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "../api";
+import { useAuth } from "../Auth";
+import type { Feed } from "../../../shared/community";
+import SiteHeader from "../components/SiteHeader";
+import PostCard from "../components/PostCard";
+import SiteFooter from "../components/SiteFooter";
+import { AboutSection, FAQList } from "../components/PublicContent";
 export function Landing() {
+  const { user } = useAuth();
+  const preview = useQuery({
+    queryKey: ["community", "preview", user?.id],
+    queryFn: ({ signal }) =>
+      api<Feed>("/api/v1/community/feed?per_page=3", { signal }),
+    refetchInterval: 60000,
+  });
   return (
     <div className="landing">
-      <header className="landing-nav">
-        <Link to="/" aria-label="WasteWise beranda">
-          <Brand />
-        </Link>
-        <nav aria-label="Navigasi publik">
-          <a href="#cara-kerja">Cara kerja</a>
-          <a href="#komunitas">Komunitas</a>
-          <Link to="/login" className="button primary">
-            Masuk <ArrowUpRight size={16} />
-          </Link>
-        </nav>
-      </header>
+      <SiteHeader />
       <main>
         <Illustration
           slot="landing-hero"
@@ -43,7 +46,10 @@ export function Landing() {
               mengambil langkah berikutnya bersama WasteWise.
             </p>
             <div className="landing-actions">
-              <Link to="/login" className="button primary">
+              <Link
+                to={user ? "/reports/new" : "/login?returnTo=%2Freports%2Fnew"}
+                className="button primary"
+              >
                 Mulai dari satu foto <Camera size={19} />
               </Link>
               <a href="#cara-kerja">
@@ -69,6 +75,42 @@ export function Landing() {
             </figcaption>
           </figure>
         </section>
+        <section id="komunitas" className="landing-preview">
+          <div className="section-heading">
+            <div>
+              <h2>Laporan di sekitar.</h2>
+              <p>Foto, lokasi, dan perkembangan terbaru dari komunitas.</p>
+            </div>
+            <Link className="button secondary" to="/app">
+              Lihat semua laporan <ArrowUpRight size={18} />
+            </Link>
+          </div>
+          {preview.isPending ? (
+            <p role="status">Memuat laporan…</p>
+          ) : preview.error ? (
+            <Failure
+              error={preview.error}
+              retry={() => void preview.refetch()}
+            />
+          ) : preview.data.posts.length ? (
+            <div className="preview-grid">
+              {preview.data.posts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+          ) : (
+            <div className="community-empty">
+              <h3>Belum ada laporan publik.</h3>
+              <p>Mulai dengan memfoto sampah di sekitarmu.</p>
+              <Link
+                className="button primary"
+                to={user ? "/reports/new" : "/login?returnTo=%2Freports%2Fnew"}
+              >
+                Buat laporan pertama
+              </Link>
+            </div>
+          )}
+        </section>
         <section id="cara-kerja" className="landing-process">
           <h2>
             Satu foto.
@@ -90,7 +132,7 @@ export function Landing() {
               {
                 Icon: MapPin,
                 title: "Ikuti perkembangannya",
-                copy: "Kirim laporan, lihat statusnya. Pilih sendiri apakah foto dan GPS ikut dibagikan ke komunitas.",
+                copy: "Kirim laporan, lihat statusnya. Foto dan GPS presisi otomatis dipublikasikan.",
               },
             ].map(({ Icon, title, copy }) => (
               <article key={title}>
@@ -101,78 +143,83 @@ export function Landing() {
             ))}
           </div>
         </section>
-        <section id="komunitas" className="landing-community">
-          <Leaf size={42} />
+        <AboutSection />
+        <section className="landing-faq" id="faq">
           <div>
             <h2>
-              Kabar baik perlu
+              Ada yang ingin
               <br />
-              <em>tempat bertumbuh.</em>
+              kamu ketahui?
             </h2>
-            <p>
-              Lihat foto laporan di sekitarmu, beri dukungan, tinggalkan
-              komentar. Jelajahi peta dari kota hingga kelurahan. Komunitas
-              tersedia setelah masuk.
-            </p>
-            <Link className="button primary" to="/login">
-              Buka komunitas <ArrowUpRight size={18} />
+            <p>Mulai dengan informasi yang jelas.</p>
+            <img
+              src="/illustrations/report-notes.svg"
+              width="480"
+              height="400"
+              loading="lazy"
+              alt="Ilustrasi catatan dan pensil"
+            />
+          </div>
+          <div>
+            <FAQList compact />
+            <Link className="text-button" to="/faq">
+              Lihat semua pertanyaan
             </Link>
           </div>
         </section>
       </main>
-      <footer>
-        <Brand />
-        <p>Kenali material. Pedulikan sekitar.</p>
-        <Link to="/onboarding">Panduan penggunaan</Link>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
 export function Onboarding() {
   return (
-    <main className="onboarding">
-      <Link to="/">
-        <Brand />
-      </Link>
-      <h1>
-        Halo, tetangga.
-        <br />
-        <em>Mulai dari yang dekat.</em>
-      </h1>
-      <Illustration
-        slot="onboarding-community"
-        alt="Komunitas merawat lingkungan"
-      />
-      <ol>
-        {[
-          {
-            title: "Izinkan saat dibutuhkan",
-            copy: "Kamera dan lokasi diminta saat membuat laporan. Galeri tanpa GPS memerlukan konfirmasi bahwa foto berasal dari lokasi saat ini.",
-          },
-          {
-            title: "Periksa hasil AI",
-            copy: "Kategori muncul otomatis. Tambahkan deskripsi yang jelas, tanpa nomor telepon atau informasi pribadi.",
-          },
-          {
-            title: "Tentukan siapa yang melihat",
-            copy: "Laporan tetap privat secara bawaan. Bagikan ke komunitas hanya jika kamu bersedia foto dan koordinat presisi terlihat oleh seluruh pengguna yang masuk.",
-          },
-          {
-            title: "Pantau, dukung, tindak lanjuti",
-            copy: "Lihat riwayat status, jelajahi peta, beri suka dan komentar yang membantu. Pengelola mereview laporan dan konten bermasalah.",
-          },
-        ].map((s) => (
-          <li key={s.title}>
-            <h2>{s.title}</h2>
-            <p>{s.copy}</p>
-          </li>
-        ))}
-      </ol>
-      <Link className="button primary" to="/app">
-        Mulai menggunakan WasteWise
-      </Link>
-      <Link to="/">Kembali</Link>
-    </main>
+    <>
+      <SiteHeader compact />
+      <main className="onboarding">
+        <Link to="/">
+          <Brand />
+        </Link>
+        <h1>
+          Halo, tetangga.
+          <br />
+          <em>Mulai dari yang dekat.</em>
+        </h1>
+        <Illustration
+          slot="onboarding-community"
+          alt="Komunitas merawat lingkungan"
+        />
+        <ol>
+          {[
+            {
+              title: "Izinkan saat dibutuhkan",
+              copy: "Kamera dan lokasi diminta saat membuat laporan. Galeri tanpa GPS memerlukan konfirmasi bahwa foto berasal dari lokasi saat ini.",
+            },
+            {
+              title: "Periksa hasil AI",
+              copy: "Kategori muncul otomatis. Deskripsi opsional; hindari nomor telepon atau informasi pribadi.",
+            },
+            {
+              title: "Pahami publikasi laporan",
+              copy: "Laporan baru otomatis dibagikan. Foto dan GPS presisi terlihat oleh publik, termasuk pengunjung tanpa akun. Laporan Ditolak tidak ditampilkan.",
+            },
+            {
+              title: "Pantau, dukung, tindak lanjuti",
+              copy: "Lihat riwayat status, jelajahi peta, beri suka dan komentar yang membantu. Pengelola mereview laporan dan konten bermasalah.",
+            },
+          ].map((s) => (
+            <li key={s.title}>
+              <h2>{s.title}</h2>
+              <p>{s.copy}</p>
+            </li>
+          ))}
+        </ol>
+        <Link className="button primary" to="/app">
+          Mulai menggunakan WasteWise
+        </Link>
+        <Link to="/">Kembali</Link>
+      </main>
+    </>
   );
 }
 const errors: Record<string, [string, string]> = {
@@ -220,31 +267,34 @@ export function ErrorPage({ code: provided }: { code?: string }) {
   const [title, copy] =
     errors[value] || errors[value.startsWith("5") ? "500" : "400"];
   return (
-    <main className="error-page">
-      <Link to="/">
-        <Brand />
-      </Link>
-      <Illustration
-        slot={value.startsWith("5") ? "error-5xx" : "error-4xx"}
-        alt=""
-      />
-      <p className="error-code">{value}</p>
-      <h1>{title}</h1>
-      <p>{copy}</p>
-      <div>
-        <Link
-          className="button primary"
-          to={value === "401" ? "/login" : "/app"}
-        >
-          {value === "401" ? "Masuk kembali" : "Kembali ke beranda"}
+    <>
+      <SiteHeader compact />
+      <main className="error-page">
+        <Link to="/">
+          <Brand />
         </Link>
-        <button
-          className="button secondary"
-          onClick={() => window.location.reload()}
-        >
-          Coba lagi
-        </button>
-      </div>
-    </main>
+        <Illustration
+          slot={value.startsWith("5") ? "error-5xx" : "error-4xx"}
+          alt=""
+        />
+        <p className="error-code">{value}</p>
+        <h1>{title}</h1>
+        <p>{copy}</p>
+        <div>
+          <Link
+            className="button primary"
+            to={value === "401" ? "/login" : "/app"}
+          >
+            {value === "401" ? "Masuk kembali" : "Kembali ke beranda"}
+          </Link>
+          <button
+            className="button secondary"
+            onClick={() => window.location.reload()}
+          >
+            Coba lagi
+          </button>
+        </div>
+      </main>
+    </>
   );
 }

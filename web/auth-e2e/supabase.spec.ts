@@ -123,12 +123,13 @@ test("confirmed login persists on reload; provider failure still clears logout l
   await fixtures(page, 200, 503);
   await login(page);
   await expect(
-    page.getByRole("heading", { name: "Beranda", exact: true }),
+    page.getByRole("heading", { name: "Komunitas", exact: true }),
   ).toBeVisible();
   await page.reload();
   await expect(
-    page.getByRole("heading", { name: "Beranda", exact: true }),
+    page.getByRole("heading", { name: "Komunitas", exact: true }),
   ).toBeVisible();
+  await page.locator(".account-menu > summary").click();
   await page.getByRole("link", { name: "Profil", exact: true }).click();
   await page.getByRole("button", { name: "Keluar", exact: true }).click();
   await expect(
@@ -157,7 +158,7 @@ test("registration waits for confirmation; resend and password reset have explic
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Periksa email");
   await expect(
-    page.getByRole("heading", { name: "Beranda", exact: true }),
+    page.getByRole("heading", { name: "Komunitas", exact: true }),
   ).toHaveCount(0);
   expect(
     (

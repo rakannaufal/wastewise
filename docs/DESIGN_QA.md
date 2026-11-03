@@ -82,3 +82,12 @@ Cakupan: navigasi pengguna/admin, beranda/kartu komunitas, filter, profil web, r
 - Craftsmanship dan consistency locks PASS: komponen kartu/filter dipakai kembali, profil memiliki route nyata, riwayat kosong tanpa pagination palsu. Default tanpa status dibuktikan melalui pengujian empat status; laporan privat tetap terisolasi. Perbaikan worker diuji pada development dan bundle production. Source, build, typecheck/lint, screenshot dan hasil terukur disediakan; batas native/perangkat dinyatakan secara eksplisit.
 
 Batas: bukan sertifikasi semua layar/teknologi bantu; belum menguji perangkat fisik, font sistem ekstrem atau distribusi toko. Warning chunk MapLibre besar tetap dicatat. Tidak ada klaim benchmark HP atau produksi dari pemeriksaan ini.
+
+
+## Gate publikasi dan Jakob’s Law, 3 November 2026
+
+Mengikuti pilihan antislop during sebelumnya. Pola yang familier dipakai untuk mengurangi kebutuhan belajar: logo menuju Beranda, urutan navigasi bersama, label Komunitas konsisten, menu hamburger pada HP, akun berupa dropdown, Escape/outside-click menutup menu, FAQ accordion native, filter dengan Terapkan/Reset/Tutup. Kamera tetap tindakan utama. Sidebar operasional hanya admin. Ini penerapan prinsip desain; belum merupakan hasil studi usability pengguna.
+
+Identitas: Caveat Bold untuk h1–h5/judul mobile sesuai referensi; Manrope untuk paragraf, label dan kontrol. Ilustrasi SVG catatan/pensil dan material dibuat lokal sesuai permintaan, latar sage About, cream FAQ, forest footer, putih pada kartu foto. Tidak mengklaim raster hasil image generation. Footer mempertahankan teks Khay Brownies persis sesuai permintaan pengguna.
+
+Gate PASS terbatas pada source dan pengujian browser: route nyata, navigasi keyboard, overflow/axe pada viewport dalam suite, foto laporan QA nyata, caption opsional, CTA spesifik dan status berlabel. Bukti `public-policy-landing-*.png`, `community-landing-*.png`, log `public-policy-browser.txt`. Tidak ada statistik dampak/testimonial rekaan. Foto, kategori dan GPS berasal dari API; kategori tidak diketik pengguna. Batas perangkat fisik dan chunk peta tetap berlaku.

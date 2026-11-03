@@ -96,26 +96,26 @@ class LocationUpdate(StrictModel):
         return self
 
 
-class ReportCreate(StrictModel):
-    share_to_community: bool = False
-    draft_id: UUID
-    description: str = Field(min_length=10, max_length=5000)
+PUBLICATION_POLICY = "public-gps-v2"
 
-    @field_validator("description")
+
+class ReportCreate(StrictModel):
+    publication_policy: Literal["public-gps-v2"]
+    draft_id: UUID
+    description: str = Field(default="", max_length=5000)
+
+    @field_validator("description", mode="before")
     @classmethod
     def trim_description(cls, value):
-        value = value.strip()
-        if len(value) < 10:
-            raise ValueError("Description must contain at least 10 characters")
-        return value
+        return "" if value is None else value.strip() if isinstance(value, str) else value
 
 
 class ReportUpdate(StrictModel):
     revision: int = Field(ge=1)
-    description: str = Field(min_length=10, max_length=5000)
+    description: str = Field(default="", max_length=5000)
     draft_id: UUID | None = None
 
-    @field_validator("description")
+    @field_validator("description", mode="before")
     @classmethod
     def trim_description(cls, value):
         return ReportCreate.trim_description(value)

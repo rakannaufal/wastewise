@@ -7,6 +7,7 @@ import { Loading, Button, Screen, styles } from "../src/ui";
 import { StatusBar } from "expo-status-bar";
 function Router() {
   const [fontsLoaded, fontError] = useFonts({
+    Caveat_700: require("../assets/fonts/caveat-700.ttf"),
     Manrope_400: require("../assets/fonts/manrope-400.ttf"),
     Manrope_500: require("../assets/fonts/manrope-500.ttf"),
     Manrope_600: require("../assets/fonts/manrope-600.ttf"),

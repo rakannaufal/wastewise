@@ -1,8 +1,8 @@
 # WasteWise
 
-Aplikasi pengenalan12 kategori sampah, pelaporan privat, komunitas foto dengan suka/komentar, serta peta lokasi. React web, Expo mobile, FastAPI, PostgreSQL, MobileNetV2. Bahasa antarmuka Indonesia.
+Aplikasi pengenalan12 kategori sampah, pelaporan, komunitas foto publik dengan suka/komentar, serta peta lokasi. React web, Expo mobile, FastAPI, PostgreSQL, MobileNetV2. Bahasa antarmuka Indonesia.
 
-Beranda komunitas menampilkan semua status laporan yang sudah dibagikan. Laporan privat tetap di Laporan saya. Navigasi pengguna web memakai header dan navigasi bawah pada HP, tanpa sidebar; panel admin tetap terpisah. Ikon Filter membuka pilihan lokasi, kategori, dan status. Pilih Terapkan untuk mengubah hasil; Tutup membatalkan perubahan, Reset menyiapkan semua pilihan bawaan. Semua teks web/mobile memakai Manrope.
+Laporan baru otomatis dibagikan kepada publik, termasuk pengunjung tanpa akun, beserta foto dan GPS presisi. Komunitas dan peta menampilkan Menunggu, Diproses, Selesai; Ditolak hanya tersedia pada riwayat pemilik/admin. Arsip privat lama tidak dipublikasikan massal. Navigasi pengguna web memakai header dan navigasi bawah pada HP, tanpa sidebar; panel admin tetap terpisah. Ikon Filter membuka pilihan lokasi, kategori, dan status. Pilih Terapkan untuk mengubah hasil; Tutup membatalkan perubahan, Reset menyiapkan semua pilihan bawaan. Heading h1–h5 web serta judul/subjudul mobile memakai Caveat Bold sesuai referensi. Paragraf, label, tombol, dan teks kecil memakai Manrope.
 
 ## Enam hasil akhir
 
@@ -87,7 +87,7 @@ Auth, database, dan Storage adalah tiga konfigurasi terpisah. Publishable key cu
 1. Buka landing page, pilih **Masuk**. **Beranda** memuat posting komunitas; **Ringkasan** memuat statistik milik sendiri atau seluruh laporan untuk pengelola. **Peta** memuat lokasi posting yang dibagikan.
 2. Di HP pilih **Buat laporan**, lalu **Ambil foto sampah** atau **Pilih gambar dari galeri**. ML berjalan otomatis setelah foto dinormalisasi; kategori tidak dipilih pengguna. Web menyediakan alur galeri yang sama.
 3. Kamera memasangkan GPS dengan waktu pemotretan. Galeri memakai EXIF GPS jika tersedia. Jika tidak ada, tekan konfirmasi bahwa foto diambil di lokasi saat ini, lalu aplikasi mengambil GPS otomatis. Jika lokasi berbeda, ambil foto ulang di tempat tersebut. Izin ditolak atau akurasi belum cukup: klasifikasi tetap tersedia, pengiriman menunggu lokasi; tidak ada input koordinat manual.
-4. Isi deskripsi minimal 10 karakter, tekan **Kirim laporan**. Normalnya foto di-upload dan dianalisis sekali; finalisasi menggunakan draft. Draft sementara bertahan hingga 24 jam, retry pengiriman tidak menggandakan laporan. Tombol **Hapus draft foto** membatalkan draft. ML gagal: draft dipertahankan untuk retry, laporan belum dibuat.
+4. Deskripsi opsional (maksimal 5.000 karakter), tekan **Kirim dan publikasikan** setelah membaca pemberitahuan bahwa foto dan GPS presisi terlihat publik. Normalnya foto di-upload dan dianalisis sekali; finalisasi menggunakan draft. Draft sementara bertahan hingga 24 jam, retry pengiriman tidak menggandakan laporan. Tombol **Hapus draft foto** membatalkan draft. ML gagal: draft dipertahankan untuk retry, laporan belum dibuat.
 5. Laporan milik pengguna dapat diedit saat Pending, termasuk mengganti foto melalui analisis baru. Foto, kategori AI asli, sumber/waktu/akurasi lokasi dan riwayat tersedia di detail. Confidence bukan bukti ketepatan; prediksi kurang meyakinkan masuk review admin.
 6. Admin mendapat dashboard periode 30 hari, filter URL, tren, distribusi, antrean seluruh periode dan median waktu penanganan. Klik angka membuka daftar terkait. Admin mereview kategori dengan alasan tanpa menghapus prediksi AI asli.
 7. Workflow status: Pending → In Progress/Rejected; In Progress → Completed/Rejected; Completed/Rejected → Pending. Penolakan atau pembukaan ulang memerlukan alasan. Perubahan bersamaan dengan revisi lama ditolak; muat ulang detail. Delete menjadwalkan pembersihan foto/thumbnail oleh worker.
@@ -165,7 +165,7 @@ Setelah mengambil/memilih foto, kategori muncul otomatis; tidak perlu menekan Ki
 
 ## Feed, filter wilayah, dan peta
 
-Laporan baru tetap privat. Centang persetujuan publikasi saat membuat laporan, atau pilih **Bagikan laporan** pada detail. Foto, deskripsi, serta **GPS presisi** menjadi terlihat oleh seluruh pengguna yang masuk. Beri suka/komentar pada posting, gunakan filter provinsi sampai kelurahan, jelajahi titik peta. Pemilik dapat menarik posting tanpa menghapus laporan privat. Admin meninjau konten melalui **Moderasi**. Mengganti foto laporan tidak mempublikasikan foto pengganti otomatis.
+Laporan baru otomatis masuk antrean publikasi setelah **Kirim dan publikasikan**. Foto turunan, deskripsi opsional, serta **GPS presisi** terlihat publik, termasuk tanpa akun. Login tetap diperlukan untuk membuat laporan, suka, komentar, dan pengelolaan. Menunggu, Diproses, dan Selesai tampil; Ditolak dikecualikan dari feed, detail publik, dan peta. Pemilik dapat menarik posting; admin dapat menyembunyikan konten. Penggantian foto pada posting aktif masuk antrean turunan ulang, sementara hidden/withdrawn tetap terlindungi. Caption publik dan deskripsi laporan dapat diedit terpisah. Client lama tanpa `publication_policy:"public-gps-v2"` ditolak422, tidak diam-diam menerbitkan laporan.
 
 Untuk instalasi baru/upgrade, jalankan Alembic menggunakan kredensial migrator sesuai SETUP; runtime cukup DML. Kemudian dari root:
 
@@ -180,3 +180,9 @@ Publisher berjalan bersama worker cleanup yang sudah ada. Referensi wilayah seki
 Native: lima tab **Beranda, Peta, Foto, Laporan, Profil**. Kamera tengah berukuran68px; onboarding/panduan ada di Profil. Peta native memerlukan build/perangkat yang mendukung react-native-maps; Google Maps key untuk Android standalone harus dikonfigurasi sebelum distribusi. Expo web memakai daftar lokasi; peta web lengkap tersedia di React website. Ubin OpenStreetMap development memerlukan internet; tetapkan penyedia ubin production sesuai kapasitas dan kebijakan penggunaan.
 
 Logo mark/wordmark/icon sudah tersedia. Ilustrasi raster khusus masih menunggu output aset yang disetujui; prompt seluruh halaman sudah disediakan. Tidak mengklaim ilustrasi tersebut sudah dibuat. Model, split dataset dan evaluasi95,86% tidak diubah atau dilatih ulang oleh fitur komunitas.
+
+### Halaman publik dan tampilan
+
+`/` menampilkan maksimal tiga kartu terbaru dan tombol **Lihat semua laporan** ke `/app`. `/app`, `/map`, dan `/community/:id` dapat dibaca tanpa login. `/about`, `/faq`, `/privacy` menjelaskan aplikasi, batas AI, dan kebijakan publikasi. Navbar serta footer dipakai bersama. Pilihan lebih dari tiga memakai dropdown; wilayah web dapat dicari, mobile memakai panel pemilih tertutup. Model tetap menentukan kategori otomatis.
+
+Grafis SVG lokal: `web/public/illustrations/report-notes.svg`, `sort-materials.svg`. Font heading Caveat disertai OFL; font web subset WOFF62KB, native TTF lokal. Kredit footer **© 2026 Khay Brownies · Website by rakandev** mengikuti teks eksplisit pengguna, sementara identitas produk tetap WasteWise.

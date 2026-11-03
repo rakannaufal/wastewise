@@ -112,6 +112,7 @@ def main():
                 == 200
             )
             payload = {
+                "publication_policy": "public-gps-v2",
                 "draft_id": draft["id"],
                 "description": "Disposable Supabase smoke test report",
             }

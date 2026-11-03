@@ -22,6 +22,8 @@ def photo():
 
 
 def create(client, account, **fields):
+    fields.pop("share_to_community", None)
+    legacy_private = fields.pop("legacy_private", False)
     draft = client.post(
         "/api/v1/report-drafts",
         headers=account["headers"],
@@ -44,11 +46,30 @@ def create(client, account, **fields):
         },
     )
     assert location.status_code == 200, location.text
-    return client.post(
+    response = client.post(
         "/api/v1/reports",
         headers={**account["headers"], "Idempotency-Key": str(__import__("uuid").uuid4())},
-        json={"draft_id": identity, "description": "Botol plastik di dekat taman", **fields},
+        json={
+            "publication_policy": "public-gps-v2",
+            "draft_id": identity,
+            "description": "Botol plastik di dekat taman",
+            **fields,
+        },
     )
+
+    if legacy_private and response.status_code == 201:
+        from sqlalchemy import delete
+
+        from app.models import CommunityPost
+
+        # Reproduce an archive created under the former private-by-default policy.
+        with SessionLocal.begin() as db:
+            db.execute(
+                delete(CommunityPost).where(
+                    CommunityPost.report_id == UUID(response.json()["data"]["id"])
+                )
+            )
+    return response
 
 
 def test_auth_and_extra_fields(client, accounts):
@@ -166,7 +187,7 @@ def test_upload_validation_and_no_ai_spoof(client, accounts):
     assert create(client, accounts["owner"], latitude="NaN").status_code == 422
     assert create(client, accounts["owner"], latitude="91").status_code == 422
     assert create(client, accounts["owner"], category="organic").status_code == 422
-    assert create(client, accounts["owner"], description="          ").status_code == 422
+    assert create(client, accounts["owner"], description="          ").status_code == 201
     response = client.post(
         "/api/v1/predict",
         headers=accounts["owner"]["headers"],

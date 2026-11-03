@@ -155,10 +155,9 @@ def create_report(
         idempotency_key,
         digest,
     )
-    if body.share_to_community:
-        from app.community import publish
+    from app.community import publish
 
-        publish(db, row, user, body.description)
+    publish(db, row, user, body.description)
     event(db, row, user, "created", {"to": "Pending"})
     db.commit()
     return ok(report_data(row), "Laporan tersimpan")
@@ -180,7 +179,7 @@ def edit(
     check_revision(row, body.revision)
     if user.role != "admin" and row.status != "Pending":
         raise HTTPException(409, "Laporan hanya dapat diedit saat menunggu")
-    changed = row.description != body.description
+    changed = "description" in body.model_fields_set and row.description != body.description
     if body.draft_id:
         draft = get_draft(db, user, body.draft_id)
         from app.community import retire_media
@@ -191,16 +190,23 @@ def edit(
         )
         if post:
             retire_media(db, [post])
-            post.state = "hidden" if post.state == "hidden" else "withdrawn"
+            post.state = "processing" if post.state in {"published", "processing"} else post.state
+            post.attempts = 0
+            from app.models import now
+
+            post.next_attempt_at = now()
             post.revision += 1
         old_paths = (row.image_path, row.thumbnail_path)
         apply_draft(row, draft)
+        if post and post.state == "processing":
+            post.source_image_path = row.image_path
         draft.result_report_id = row.id
         for path in old_paths:
             enqueue(db, path)
         changed = True
     if changed:
-        row.description = body.description
+        if "description" in body.model_fields_set:
+            row.description = body.description
         row.revision += 1
         event(db, row, user, "edited", {"photo_replaced": body.draft_id is not None})
         db.commit()

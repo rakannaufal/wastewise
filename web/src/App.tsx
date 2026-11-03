@@ -5,6 +5,7 @@ import { Loading } from "./ui";
 import WorkspaceLayout from "./components/WorkspaceLayout";
 import Login from "./pages/Login";
 import { Landing, Onboarding, ErrorPage } from "./pages/Public";
+const Information = lazy(() => import("./pages/Information"));
 const Moderation = lazy(() => import("./pages/Moderation"));
 const Community = lazy(() => import("./pages/Community"));
 const PostDetail = lazy(() =>
@@ -36,6 +37,14 @@ export default function App() {
   if (recovery || location.pathname === "/auth/reset-password")
     return <Login />;
   if (location.pathname === "/") return <Landing />;
+  if (["/about", "/faq", "/privacy"].includes(location.pathname))
+    return (
+      <Suspense fallback={<Loading />}>
+        <Information
+          page={location.pathname.slice(1) as "about" | "faq" | "privacy"}
+        />
+      </Suspense>
+    );
   if (location.pathname === "/onboarding") return <Onboarding />;
   if (location.pathname.startsWith("/errors/"))
     return (
@@ -43,9 +52,21 @@ export default function App() {
         <Route path="/errors/:code" element={<ErrorPage />} />
       </Routes>
     );
-  if (!user || location.pathname === "/login")
-    return user ? <Navigate to="/app" replace /> : <Login />;
-  const isAdmin = user.role === "admin";
+  const publicRoute =
+    ["/app", "/map", "/guide"].includes(location.pathname) ||
+    location.pathname.startsWith("/community/");
+  if (location.pathname === "/login" || (!user && !publicRoute)) {
+    const requested =
+      new URLSearchParams(location.search).get("returnTo") || "/app";
+    const target =
+      requested.startsWith("/") &&
+      !requested.startsWith("//") &&
+      !requested.startsWith("/login")
+        ? requested
+        : "/app";
+    return user ? <Navigate to={target} replace /> : <Login />;
+  }
+  const isAdmin = user?.role === "admin";
   const adminSurface =
     isAdmin &&
     (new Set(["/dashboard", "/users", "/moderation", "/reports"]).has(

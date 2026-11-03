@@ -3,7 +3,6 @@
 import argparse
 import io
 import logging
-import time
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
@@ -14,6 +13,7 @@ from app.db import SessionLocal
 from app.models import CleanupJob, CommunityPost, Region, Report
 from app.region_reference import contains
 from app.storage import storage, thumbnail
+from app.worker_loop import run_worker
 from app.workflow import enqueue_many
 
 logger = logging.getLogger("wastewise.community")
@@ -128,9 +128,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
-    while True:
-        worked = run_once()
-        if not worked:
-            if args.once:
-                break
-            time.sleep(5)
+    run_worker(run_once, once=args.once)

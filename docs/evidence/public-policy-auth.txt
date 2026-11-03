@@ -1,0 +1,14 @@
+> wastewise-web@1.0.0 e2e:auth
+> playwright test --config playwright.auth.config.ts
+
+
+Running 4 tests using 1 worker
+
+(node:79440) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 auth-e2e/supabase.spec.ts:120:1 › confirmed login persists on reload; provider failure still clears logout locally (7.5s)
+  ✓  2 auth-e2e/supabase.spec.ts:146:1 › registration waits for confirmation; resend and password reset have explicit states (3.7s)
+  ✓  3 auth-e2e/supabase.spec.ts:178:1 › invalid credentials keep the form available (1.9s)
+  ✓  4 auth-e2e/supabase.spec.ts:186:1 › PKCE recovery exchanges code before updating password (2.8s)
+
+  4 passed (21.1s)

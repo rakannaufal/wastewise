@@ -34,6 +34,7 @@ export default function PostCard({
   }
   return (
     <View
+      testID={`post-${post.id}`}
       style={{
         backgroundColor: "#fff",
         borderRadius: 16,
@@ -52,7 +53,15 @@ export default function PostCard({
           }}
         >
           <Text
-            style={[styles.heading, { flex: 1, fontSize: 16, lineHeight: 24 }]}
+            style={[
+              styles.heading,
+              {
+                flex: 1,
+                fontSize: 16,
+                lineHeight: 24,
+                fontFamily: "Manrope_600",
+              },
+            ]}
           >
             {post.author_name}
           </Text>
@@ -104,12 +113,14 @@ export default function PostCard({
             ? " · Perlu review"
             : ""}
         </Text>
-        <Text
-          numberOfLines={detail ? undefined : 3}
-          style={[styles.text, { color: colors.ink }]}
-        >
-          {post.caption}
-        </Text>
+        {post.caption ? (
+          <Text
+            numberOfLines={detail ? undefined : 3}
+            style={[styles.text, { color: colors.ink }]}
+          >
+            {post.caption}
+          </Text>
+        ) : null}
         {!detail && post.caption.length > 140 && (
           <Pressable
             accessibilityRole="button"
@@ -146,7 +157,7 @@ export default function PostCard({
           </Text>
         </Pressable>
         <Text style={styles.label}>
-          GPS {post.latitude.toFixed(5)}, {post.longitude.toFixed(5)}
+          GPS {post.latitude.toFixed(6)}, {post.longitude.toFixed(6)}
           {post.location_accuracy_m !== null
             ? ` · ±${Math.round(post.location_accuracy_m)} m`
             : ""}

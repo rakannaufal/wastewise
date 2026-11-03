@@ -22,8 +22,8 @@ export default function Onboarding() {
           copy: "GPS kamera atau metadata galeri melengkapi laporan. Galeri tanpa GPS memerlukan konfirmasi lokasi saat unggah.",
         },
         {
-          title: "Kamu memilih untuk berbagi",
-          copy: "Laporan privat secara bawaan. Publikasi akan memperlihatkan foto, deskripsi, dan GPS presisi kepada seluruh pengguna yang masuk.",
+          title: "Pahami publikasi laporan",
+          copy: "Laporan baru otomatis dibagikan. Foto, deskripsi opsional, dan GPS presisi terlihat oleh publik, termasuk pengunjung tanpa akun. Laporan Ditolak tidak ditampilkan.",
         },
         {
           title: "Dukung langkah berikutnya",

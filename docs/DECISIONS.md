@@ -66,3 +66,13 @@ Permintaan landing/onboarding menggantikan larangan hero pada D-07. Palet forest
 ## D-16: Navigasi pengguna, tipografi tunggal, dan filter bertahap (2026-11-03)
 
 Instruksi terbaru menggantikan bagian tipografi D-15: Manrope menjadi satu-satunya keluarga font teks pada web/native. Halaman pengguna memakai navigasi atas/bawah tanpa sidebar; operasi admin mempertahankan sidebar berdasarkan role dan konteks route. Filter lokasi/kategori/status tersembunyi sampai ikon dibuka, menggunakan draft dan Terapkan; Tutup tidak mengubah hasil. Parameter URL web tetap dapat dibagikan. Pengguna mengonfirmasi beranda hanya berisi posting komunitas yang sudah dibagikan, semua status laporan tampil secara default. Ini tidak memberikan izin publikasi laporan privat lama. Tidak ada perubahan schema, model, atau kontrak API server.
+
+## D-17: Public read, automatic publication and optional description (2026-11-03)
+
+User explicitly allows anonymous access to photos and precise GPS, automatic publication of new reports, and visibility of Pending/In Progress/Completed while excluding Rejected. This supersedes earlier login-only/opt-in/all-status community decisions. Client must send publication_policy=public-gps-v2 after displaying the accurate notice. Legacy v1 is not silently upgraded; only two specifically approved old reports are backfilled. Public reads use an allowlisted DTO and no-store, private originals stay in private storage; writes retain verified sessions, DB roles and report-first row locks. Rejected details/interactions404; operational owner/admin history remains available. Signed links may live for15minutes.
+
+Description/caption are normalized empty strings or trimmed1..5000 characters. PATCH omitted preserves, explicit null clears. No fabricated text. Shared SiteHeader/SiteFooter, root preview, public /about /faq /privacy; dropdown inputs for >3 options. User later clarified handwritten h1–h5: Caveat Bold, body/controls Manrope. Two authored SVG graphics follow the user's explicit illustration reference. Footer preserves the exact Khay Brownies/rakandev text requested, without renaming WasteWise.
+
+## D-18: Familiar UI interactions (Jakob's Law)
+
+At the user's request, use familiar web/mobile patterns rather than custom navigation semantics: consistent Komunitas label, desktop top bar, small-screen menu button, account dropdown with outside/Escape dismissal, five-tab app navigation with central camera action, staged filters, native FAQ accordion. Preserve the approved handwritten headings and forest/sage/cream surfaces. Shared informational content is extracted from the lazy route so the landing page does not force the complete information page module into its initial bundle.

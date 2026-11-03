@@ -1,3 +1,4 @@
+import SelectField from "../../src/SelectField";
 import ShareReport from "../../src/ShareReport";
 import { useCallback, useRef, useState } from "react";
 import { Alert, Image, Linking, Platform, Text, View } from "react-native";
@@ -221,17 +222,13 @@ export default function Detail() {
               <Text style={styles.text}>
                 Koreksi admin menyimpan prediksi asli AI.
               </Text>
-              <View style={{ gap: 8, flexDirection: "row", flexWrap: "wrap" }}>
-                {categories.map((c) => (
-                  <Button
-                    key={c.id}
-                    secondary
-                    title={`${(reviewCategory || row.category) === c.id ? "Dipilih: " : ""}${c.name}`}
-                    disabled={busy}
-                    onPress={() => setReviewCategory(c.id)}
-                  />
-                ))}
-              </View>
+              <SelectField
+                title="Kategori hasil review"
+                choices={categories}
+                value={reviewCategory || row.category}
+                disabled={busy}
+                onChange={setReviewCategory}
+              />
               <Input
                 label="Alasan review"
                 value={reviewReason}

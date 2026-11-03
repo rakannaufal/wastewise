@@ -24,19 +24,28 @@ function fromParams(params: URLSearchParams): CommunityFilters {
 export function communityParams(params: URLSearchParams) {
   return new URLSearchParams(filterQuery(fromParams(params)));
 }
-function RegionPicker({
+function RegionField({
   value,
   onChange,
+  level,
 }: {
   value: CommunityFilters;
   onChange: (v: CommunityFilters) => void;
+  level: number;
 }) {
-  const [level, setLevel] = useState(0);
+  const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
+  const [highlight, setHighlight] = useState(0);
   const parent = level ? value.codes[level - 1] : "";
+  const disabled = level > 0 && !parent;
+  const label = regionLevels[level];
+  const id = `region-${level}`;
   useEffect(() => {
-    const timer = setTimeout(() => setDebounced(search), 250);
+    const timer = setTimeout(() => {
+      setDebounced(search);
+      setHighlight(0);
+    }, 250);
     return () => clearTimeout(timer);
   }, [search]);
   const query = useQuery({
@@ -46,78 +55,129 @@ function RegionPicker({
         `/api/v1/regions?level=${level + 1}&search=${encodeURIComponent(debounced)}${parent ? "&parent=" + encodeURIComponent(parent) : ""}`,
         { signal },
       ),
-    enabled: level === 0 || !!parent,
+    enabled: open && !disabled,
     staleTime: 3600000,
   });
+  const rows = [
+    { code: "", name: `Semua ${label.toLowerCase()}` },
+    ...(query.data?.regions || []),
+  ];
+  useEffect(() => {
+    if (open)
+      document
+        .getElementById(`${id}-option-${highlight}`)
+        ?.scrollIntoView({ block: "nearest" });
+  }, [id, highlight, open]);
+  function choose(code: string, name: string) {
+    onChange(chooseRegion(value, level, code, code ? name : ""));
+    setOpen(false);
+    setSearch("");
+    setDebounced("");
+  }
+  return (
+    <div className="region-field">
+      <label htmlFor={id}>{label}</label>
+      <input
+        id={id}
+        role="combobox"
+        aria-expanded={open}
+        aria-controls={`${id}-options`}
+        aria-autocomplete="list"
+        aria-activedescendant={
+          open
+            ? `${id}-option-${Math.min(highlight, rows.length - 1)}`
+            : undefined
+        }
+        autoComplete="off"
+        disabled={disabled}
+        placeholder={`Semua ${label.toLowerCase()}`}
+        value={
+          open ? search : value.labels?.[level] || value.codes[level] || ""
+        }
+        onFocus={() => setOpen(true)}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setOpen(true);
+        }}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            setOpen(false);
+            e.stopPropagation();
+          }
+          if (["ArrowDown", "ArrowUp"].includes(e.key)) {
+            e.preventDefault();
+            setOpen(true);
+            setHighlight((v) =>
+              Math.max(
+                0,
+                Math.min(rows.length - 1, v + (e.key === "ArrowDown" ? 1 : -1)),
+              ),
+            );
+          }
+          if (e.key === "Enter" && open) {
+            e.preventDefault();
+            const row = rows[Math.min(highlight, rows.length - 1)];
+            choose(row.code, row.name);
+          }
+        }}
+      />
+      {open && (
+        <div className="region-dropdown">
+          {query.isFetching && <p role="status">Memuat wilayah…</p>}
+          {query.error && (
+            <Failure error={query.error} retry={() => void query.refetch()} />
+          )}
+          <div
+            role="listbox"
+            id={`${id}-options`}
+            aria-label={`Pilihan ${label}`}
+          >
+            {rows.map((row, i) => (
+              <div
+                role="option"
+                aria-selected={
+                  value.codes[level] === row.code ||
+                  (!value.codes[level] && !row.code)
+                }
+                id={`${id}-option-${i}`}
+                key={row.code}
+                className={highlight === i ? "highlighted" : ""}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => choose(row.code, row.name)}
+              >
+                {row.name}
+              </div>
+            ))}
+          </div>
+          {!query.isPending && !query.data?.regions.length && (
+            <p>Tidak ada wilayah yang cocok.</p>
+          )}
+          {query.data?.truncated && <p>Persempit dengan pencarian.</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+function RegionPicker({
+  value,
+  onChange,
+}: {
+  value: CommunityFilters;
+  onChange: (v: CommunityFilters) => void;
+}) {
   return (
     <fieldset className="region-picker">
       <legend>Lokasi</legend>
-      <div className="region-levels">
-        {regionLevels.map((name, i) => (
-          <button
-            type="button"
-            key={name}
-            aria-pressed={i === level}
-            disabled={i > 0 && !value.codes[i - 1]}
-            onClick={() => {
-              setLevel(i);
-              setSearch("");
-              setDebounced("");
-            }}
-          >
-            <small>{name}</small>
-            <span>
-              {value.labels?.[i] || value.codes[i] || "Pilih wilayah"}
-            </span>
-          </button>
+      <div className="region-fields">
+        {regionLevels.map((label, level) => (
+          <RegionField
+            key={`${label}-${value.codes[level - 1] || "root"}`}
+            value={value}
+            onChange={onChange}
+            level={level}
+          />
         ))}
-      </div>
-      <input
-        autoComplete="off"
-        aria-label={`Cari ${regionLevels[level]}`}
-        placeholder={`Cari ${regionLevels[level].toLowerCase()}`}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-      <div
-        className="region-options"
-        aria-label={`Pilihan ${regionLevels[level]}`}
-      >
-        <button
-          type="button"
-          onClick={() => onChange(chooseRegion(value, level, "", ""))}
-        >
-          Semua {regionLevels[level].toLowerCase()}
-        </button>
-        {query.isPending ? (
-          <p role="status">Memuat wilayah…</p>
-        ) : query.error ? (
-          <Failure error={query.error} retry={() => void query.refetch()} />
-        ) : (
-          <>
-            {query.data?.regions.map((r) => (
-              <button
-                type="button"
-                key={r.code}
-                aria-pressed={value.codes[level] === r.code}
-                onClick={() => {
-                  onChange(chooseRegion(value, level, r.code, r.name));
-                  if (level < 3) setLevel(level + 1);
-                  setSearch("");
-                  setDebounced("");
-                }}
-              >
-                {r.name}
-              </button>
-            ))}
-            {!query.data?.regions.length && (
-              <p>Tidak ada wilayah yang cocok.</p>
-            )}
-            {query.data?.truncated && (
-              <p>Gunakan pencarian untuk mempersempit pilihan.</p>
-            )}
-          </>
-        )}
       </div>
     </fieldset>
   );
@@ -243,11 +303,13 @@ export default function RegionFilters() {
                     }
                   >
                     <option value="">Semua status</option>
-                    {Object.entries(statusName).map(([id, name]) => (
-                      <option key={id} value={id}>
-                        {name}
-                      </option>
-                    ))}
+                    {Object.entries(statusName)
+                      .filter(([id]) => id !== "Rejected")
+                      .map(([id, name]) => (
+                        <option key={id} value={id}>
+                          {name}
+                        </option>
+                      ))}
                   </select>
                 </label>
               </div>

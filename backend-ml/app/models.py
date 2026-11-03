@@ -156,7 +156,7 @@ class Report(LocationFields, Timestamps, Base):
             name="report_automatic",
         ),
         CheckConstraint(
-            "char_length(btrim(description)) BETWEEN 10 AND 5000", name="description_length"
+            "char_length(btrim(description)) BETWEEN 0 AND 5000", name="description_length"
         ),
         CheckConstraint("latitude BETWEEN -90 AND 90", name="latitude_range"),
         CheckConstraint("longitude BETWEEN -180 AND 180", name="longitude_range"),
@@ -243,7 +243,7 @@ class CommunityPost(Timestamps, Base):
         CheckConstraint(
             "state IN ('processing','published','hidden','withdrawn')", name="post_state"
         ),
-        CheckConstraint("char_length(btrim(caption)) BETWEEN 10 AND 5000", name="post_caption"),
+        CheckConstraint("char_length(btrim(caption)) BETWEEN 0 AND 5000", name="post_caption"),
         Index("ix_posts_state_created", "state", "created_at", "id"),
         Index("ix_posts_region", "region_code"),
     )

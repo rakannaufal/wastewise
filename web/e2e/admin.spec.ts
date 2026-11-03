@@ -83,4 +83,9 @@ test("admin aggregates, URL filters, review, revision, workflow and history", as
   await expect(
     page.getByText("Perlu pemeriksaan lokasi kembali", { exact: true }),
   ).toBeVisible();
+  expect(
+    (
+      await request.delete(`${apiURL}/api/v1/reports/${row.id}`, { headers })
+    ).status(),
+  ).toBe(200);
 });

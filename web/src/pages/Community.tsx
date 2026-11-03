@@ -38,7 +38,7 @@ export default function Community() {
     <>
       <div className="page-heading feed-heading">
         <div>
-          <h1>Beranda</h1>
+          <h1>Komunitas</h1>
           <p>Foto dan kabar dari lingkunganmu.</p>
         </div>
         <Link className="text-button" to={"/map?" + params.toString()}>
@@ -76,8 +76,8 @@ export default function Community() {
             <MapPin size={32} />
             <h2>Belum ada cerita di sini.</h2>
             <p>
-              Coba wilayah lain, atau bagikan laporan pertamamu. Laporan privat
-              tidak tampil di beranda.
+              Coba wilayah lain, atau buat laporan pertamamu. Laporan Ditolak
+              tidak ditampilkan.
             </p>
             <Link className="button secondary" to="/reports/new">
               Foto sampah di sekitarmu
@@ -161,31 +161,40 @@ export function PostDetail() {
       {post.data?.state === "published" && (
         <section className="comments">
           <h2>Percakapan</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              send.mutate();
-            }}
-          >
-            <label>
-              Komentar
-              <textarea
-                value={body}
-                onChange={(e) => {
-                  setBody(e.target.value);
-                  setRequestId(crypto.randomUUID());
-                }}
-                maxLength={1000}
-                required
-              />
-            </label>
-            <button
-              className="button primary"
-              disabled={send.isPending || !body.trim()}
+          {user ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                send.mutate();
+              }}
             >
-              {send.isPending ? "Mengirim…" : "Kirim komentar"}
-            </button>
-          </form>
+              <label>
+                Komentar
+                <textarea
+                  value={body}
+                  onChange={(e) => {
+                    setBody(e.target.value);
+                    setRequestId(crypto.randomUUID());
+                  }}
+                  maxLength={1000}
+                  required
+                />
+              </label>
+              <button
+                className="button primary"
+                disabled={send.isPending || !body.trim()}
+              >
+                {send.isPending ? "Mengirim…" : "Kirim komentar"}
+              </button>
+            </form>
+          ) : (
+            <Link
+              className="button secondary"
+              to={`/login?returnTo=${encodeURIComponent(`/community/${id}`)}`}
+            >
+              Masuk untuk berkomentar
+            </Link>
+          )}
           {send.error && <Failure error={send.error} />}{" "}
           {remove.error && <Failure error={remove.error} />}{" "}
           {comments.isPending ? (

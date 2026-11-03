@@ -156,8 +156,8 @@ export default function Login() {
           />
         )}
         <Text style={[styles.text, { fontSize: 12, marginTop: 20 }]}>
-          Foto laporan bersifat privat. Sesi disimpan di penyimpanan aman
-          perangkat.
+          Foto laporan dan GPS presisi yang dikirim akan terlihat publik. Sesi
+          disimpan di penyimpanan aman perangkat.
         </Text>
       </Screen>
     </KeyboardAvoidingView>

@@ -7,17 +7,17 @@ import {
   ClipboardList,
   House,
   LayoutDashboard,
-  LogOut,
   MapPin,
   Menu,
   UserRound,
   Users,
 } from "lucide-react";
-import { useAuth } from "../Auth";
-import { Brand, Dialog } from "../ui";
+import SiteHeader from "./SiteHeader";
+import SiteFooter from "./SiteFooter";
+import { Dialog } from "../ui";
 
 const userLinks = [
-  { path: "/app", label: "Beranda", icon: House },
+  { path: "/app", label: "Komunitas", icon: House },
   { path: "/map", label: "Peta", icon: MapPin },
   { path: "/reports", label: "Laporan", icon: ClipboardList },
   { path: "/guide", label: "Panduan", icon: BookOpen },
@@ -37,13 +37,9 @@ export default function WorkspaceLayout({
   offline: boolean;
   children: ReactNode;
 }) {
-  const { user, logout } = useAuth();
   const [drawer, setDrawer] = useState(false);
   const adminNav = (
     <>
-      <Link to="/dashboard" aria-label="WasteWise, panel admin">
-        <Brand />
-      </Link>
       <p className="nav-caption">PENGELOLAAN</p>
       <nav aria-label="Navigasi admin">
         {adminLinks.map(({ path, label, icon: Icon }) => (
@@ -61,20 +57,6 @@ export default function WorkspaceLayout({
         <House size={18} />
         Lihat komunitas
       </Link>
-      <div className="profile">
-        <span className="avatar">{user?.full_name[0]}</span>
-        <div>
-          <strong>{user?.full_name}</strong>
-          <small>Pengelola</small>
-        </div>
-        <button
-          className="icon-button"
-          aria-label="Keluar"
-          onClick={() => void logout()}
-        >
-          <LogOut size={18} />
-        </button>
-      </div>
     </>
   );
   return (
@@ -82,7 +64,8 @@ export default function WorkspaceLayout({
       <a href="#main" className="skip-link">
         Lewati ke konten
       </a>
-      {admin ? (
+      <SiteHeader />
+      {admin && (
         <>
           <aside className="sidebar">{adminNav}</aside>
           {drawer && (
@@ -91,33 +74,6 @@ export default function WorkspaceLayout({
             </Dialog>
           )}
         </>
-      ) : (
-        <header className="user-header">
-          <Link to="/app" aria-label="WasteWise, beranda">
-            <Brand />
-          </Link>
-          <nav aria-label="Navigasi utama">
-            {userLinks.map(({ path, label }) => (
-              <NavLink key={path} to={path}>
-                {path === "/reports" && user?.role === "user"
-                  ? "Laporan saya"
-                  : label}
-              </NavLink>
-            ))}
-          </nav>
-          <div className="user-header-actions">
-            <Link className="button primary header-report" to="/reports/new">
-              <Camera size={18} />
-              Buat laporan
-            </Link>
-            <NavLink className="account-link" to="/profile" aria-label="Profil">
-              <span className="avatar" aria-hidden="true">
-                {user?.full_name[0]}
-              </span>
-              <span>Profil</span>
-            </NavLink>
-          </div>
-        </header>
       )}
       <div className={admin ? "workspace" : "user-workspace"}>
         {admin && (
@@ -142,6 +98,7 @@ export default function WorkspaceLayout({
           {children}
         </main>
       </div>
+      <SiteFooter />
       {!admin && (
         <nav className="user-bottom-nav" aria-label="Navigasi bawah">
           {userLinks.slice(0, 2).map(({ path, label, icon: Icon }) => (

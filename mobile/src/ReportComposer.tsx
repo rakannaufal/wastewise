@@ -50,7 +50,6 @@ export function ReportComposer({
   const [stored] = useState(() => loadDraft(owner, editId));
   const [photo, setPhoto] = useState<Photo | null>(stored?.photo || null);
   const [draft, setDraft] = useState<PhotoDraft | null>(stored?.remote || null);
-  const [share, setShare] = useState(false);
   const [description, setDescription] = useState(stored?.description || "");
   const [original, setOriginal] = useState<Report | null>(null);
   const [busy, setBusy] = useState("");
@@ -218,7 +217,7 @@ export function ReportComposer({
           headers: { "Idempotency-Key": ids.current.finalKey },
           body: JSON.stringify({
             description,
-            ...(!editId ? { share_to_community: share } : {}),
+            ...(!editId ? { publication_policy: "public-gps-v2" } : {}),
             ...(draft ? { draft_id: draft.id } : {}),
             ...(editId ? { revision: original?.revision } : {}),
           }),
@@ -258,7 +257,6 @@ export function ReportComposer({
     }
   }
   const ready =
-    description.trim().length >= 10 &&
     (!editId || original) &&
     (draft
       ? result &&
@@ -421,25 +419,16 @@ export function ReportComposer({
         )}
         {!editId && (
           <View style={styles.action}>
-            <Text style={styles.heading}>Bagikan ke komunitas?</Text>
+            <Text style={styles.heading}>Laporan publik</Text>
             <Text style={styles.text}>
-              Foto, deskripsi, dan GPS presisi akan terlihat oleh seluruh
-              pengguna yang masuk. Laporan tetap privat jika tidak dibagikan.
+              Foto, lokasi GPS presisi, dan deskripsi yang kamu isi akan
+              terlihat oleh publik, termasuk pengunjung tanpa akun. Hindari
+              wajah dan data pribadi.
             </Text>
-            <Button
-              secondary
-              title={
-                share
-                  ? "Dibagikan: ubah menjadi privat"
-                  : "Privat: setujui berbagi foto dan GPS"
-              }
-              disabled={!!busy}
-              onPress={() => setShare(!share)}
-            />
           </View>
         )}
         <Input
-          label="Deskripsi kondisi sampah"
+          label="Deskripsi (opsional)"
           editable={!deleting && (!editId || !!original)}
           value={description}
           onChangeText={setDescription}
@@ -453,12 +442,14 @@ export function ReportComposer({
           </Text>
         )}
         <Text style={styles.text}>
-          Foto dan lokasi hanya terlihat oleh pemilik dan pengelola. Draft
-          disimpan sementara hingga 24 jam.
+          Draft foto hanya terlihat oleh pemilik dan pengelola. Draft disimpan
+          sementara hingga 24 jam.
         </Text>
         <ErrorText message={error} />
         <Button
-          title={busy || (editId ? "Simpan perubahan" : "Kirim laporan")}
+          title={
+            busy || (editId ? "Simpan perubahan" : "Kirim dan publikasikan")
+          }
           disabled={!!busy || !ready}
           onPress={() => {
             void submit();

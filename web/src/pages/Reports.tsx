@@ -179,27 +179,29 @@ export default function Reports() {
               reports={result.data.reports}
               open={(id) => navigate(`/reports/${id}`)}
             />
-            <footer className="pagination">
-              <span>
-                {result.data.pagination.total_items} laporan · Halaman {page}
-              </span>
-              <div>
-                <button
-                  className="button secondary"
-                  disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
-                >
-                  Sebelumnya
-                </button>
-                <button
-                  className="button secondary"
-                  disabled={page >= result.data.pagination.total_pages}
-                  onClick={() => setPage(page + 1)}
-                >
-                  Berikutnya
-                </button>
-              </div>
-            </footer>
+            {result.data.pagination.total_pages > 1 && (
+              <footer className="pagination">
+                <span>
+                  {result.data.pagination.total_items} laporan · Halaman {page}
+                </span>
+                <div>
+                  <button
+                    className="button secondary"
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                  >
+                    Sebelumnya
+                  </button>
+                  <button
+                    className="button secondary"
+                    disabled={page >= result.data.pagination.total_pages}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    Berikutnya
+                  </button>
+                </div>
+              </footer>
+            )}
           </>
         )}
       </section>
