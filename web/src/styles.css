@@ -2136,7 +2136,6 @@ a {
   gap: 20px;
 }
 .comments form,
-.post-owner,
 .moderation {
   display: grid;
   gap: 12px;
@@ -3053,19 +3052,12 @@ textarea {
   background: transparent;
 }
 
-@font-face {
-  font-family: "Caveat";
-  src: url("/fonts/caveat-latin-700.woff") format("woff");
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-}
 h1,
 h2,
 h3,
 h4,
 h5 {
-  font-family: "Caveat", cursive;
+  font-family: "Manrope", sans-serif;
   font-weight: 700;
   font-synthesis: none;
   letter-spacing: 0;
@@ -3358,4 +3350,73 @@ h5 {
   .site-header .brand {
     font-size: 22px;
   }
+}
+
+/* Keep the social composer compact while preserving keyboard and touch access. */
+.feed-order {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.feed-order select {
+  width: auto;
+  min-width: 130px;
+}
+.comments .comment-composer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-block: 1px solid var(--border);
+}
+.comment-composer textarea {
+  flex: 1;
+  min-height: 44px;
+  min-width: 0;
+  width: auto;
+  resize: vertical;
+  border: 0;
+  background: transparent;
+  padding: 10px 0;
+}
+.comment-composer .text-button {
+  flex: none;
+  padding-inline: 8px;
+}
+.comments .comment {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  padding: 16px 0;
+}
+.comment-content {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.comment-content strong {
+  display: block;
+}
+.comment-content p {
+  margin: 4px 0;
+}
+.comment-content small {
+  font-size: 12px;
+}
+
+.post-owner {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.post-detail > .icon-button {
+  justify-self: start;
 }

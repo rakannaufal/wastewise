@@ -1,3 +1,4 @@
+import { BackButton } from "./BrandHeader";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -455,9 +456,8 @@ export function ReportComposer({
             void submit();
           }}
         />
-        <Button
-          secondary
-          title="Kembali"
+        <BackButton
+          label="Kembali"
           onPress={() => {
             if (router.canGoBack()) router.back();
             else router.replace("/reports");

@@ -92,6 +92,15 @@ test("report automatically becomes a public feed post; peers like, comment, map,
         ),
       ).toBe(true);
     }
+    await expect(peer.locator(".post-detail")).toHaveCount(1);
+    await expect(peer.locator(".comment-composer")).toHaveCSS(
+      "display",
+      "flex",
+    );
+    await peer.evaluate(() => {
+      (document.activeElement as HTMLElement)?.blur();
+      window.scrollTo(0, 0);
+    });
     await peer.screenshot({
       path: "../docs/evidence/community-post-desktop.png",
       fullPage: true,
@@ -106,7 +115,14 @@ test("report automatically becomes a public feed post; peers like, comment, map,
     await expect(peer.locator(".post-card header")).not.toContainText(
       /Menunggu|Diproses|Selesai|Ditolak/,
     );
-    await expect(peer.getByRole("option")).toHaveCount(0);
+    await peer
+      .getByRole("combobox", { name: "Urutan posting", exact: true })
+      .selectOption("oldest");
+    await expect(peer).toHaveURL(/order=oldest/);
+    await expect(peer.locator(".post-card")).toHaveCount(1);
+    await peer
+      .getByRole("combobox", { name: "Urutan posting", exact: true })
+      .selectOption("newest");
     // Install before opening the panel so cached reference data uses this fixture.
     await peer.route("**/api/v1/regions?**", async (route) => {
       const level = new URL(route.request().url()).searchParams.get("level");
@@ -204,7 +220,7 @@ test("report automatically becomes a public feed post; peers like, comment, map,
         await peer
           .locator("h1")
           .evaluate((el) => getComputedStyle(el).fontFamily),
-      ).toContain("Caveat");
+      ).toContain("Manrope");
     }
     await peer.screenshot({
       path: "../docs/evidence/refinement-web-feed.png",

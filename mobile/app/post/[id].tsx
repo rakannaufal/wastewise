@@ -1,5 +1,7 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { BackButton, IconAction } from "../../src/BrandHeader";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { Alert, Text, TextInput, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Crypto from "expo-crypto";
 import { api } from "../../src/api";
@@ -11,6 +13,7 @@ import {
   Loading,
   Screen,
   styles,
+  colors,
 } from "../../src/ui";
 import PostCard from "../../src/PostCard";
 import type { Post, Comment, Comments } from "../../../shared/community";
@@ -24,6 +27,7 @@ export default function PostDetail() {
   const [caption, setCaption] = useState("");
   const [editing, setEditing] = useState(false);
   const [reason, setReason] = useState("");
+  const [flagging, setFlagging] = useState(false);
   const [requestId, setRequestId] = useState(() => Crypto.randomUUID());
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -89,7 +93,11 @@ export default function PostDetail() {
   }
   return (
     <Screen>
-      <Button secondary title="Kembali" onPress={() => router.back()} />
+      <BackButton
+        onPress={() =>
+          router.canGoBack() ? router.back() : router.replace("/")
+        }
+      />
       <ErrorText message={error} />
       {!post ? (
         error ? (
@@ -102,14 +110,37 @@ export default function PostDetail() {
           <PostCard post={post} reload={() => void load()} detail />
           {post.is_owner && (
             <>
-              <Button
-                secondary
-                title="Edit deskripsi"
-                onPress={() => {
-                  setCaption(post.caption);
-                  setEditing(!editing);
-                }}
-              />
+              <View style={[styles.row, { justifyContent: "flex-end" }]}>
+                <IconAction
+                  name="create-outline"
+                  label="Edit deskripsi"
+                  onPress={() => {
+                    setCaption(post.caption);
+                    setEditing(!editing);
+                  }}
+                />
+                <IconAction
+                  name="trash-outline"
+                  destructive
+                  label="Batalkan publikasi"
+                  disabled={busy}
+                  onPress={() =>
+                    Alert.alert(
+                      "Tarik posting?",
+                      "Foto dan GPS dihapus dari komunitas. Laporan privat tetap tersimpan.",
+                      [
+                        { text: "Batal", style: "cancel" },
+                        {
+                          text: "Tarik posting",
+                          style: "destructive",
+                          onPress: () =>
+                            void mutate(`community/posts/${id}`, "DELETE"),
+                        },
+                      ],
+                    )
+                  }
+                />
+              </View>
               {editing && (
                 <>
                   <Input
@@ -131,62 +162,111 @@ export default function PostDetail() {
                   />
                 </>
               )}
-              <Button
-                secondary
-                title="Batalkan publikasi"
-                disabled={busy}
-                onPress={() =>
-                  Alert.alert(
-                    "Tarik posting?",
-                    "Foto dan GPS dihapus dari komunitas. Laporan privat tetap tersimpan.",
-                    [
-                      { text: "Batal", style: "cancel" },
-                      {
-                        text: "Tarik posting",
-                        style: "destructive",
-                        onPress: () =>
-                          void mutate(`community/posts/${id}`, "DELETE"),
-                      },
-                    ],
-                  )
-                }
-              />
             </>
           )}
           {post.state === "published" && (
             <>
               <Text style={styles.heading}>Percakapan</Text>
-              <Input
-                label="Komentar"
-                multiline
-                value={body}
-                maxLength={1000}
-                onChangeText={(v) => {
-                  setBody(v);
-                  setRequestId(Crypto.randomUUID());
-                }}
-              />
-              <Button
-                title={busy ? "Mengirim…" : "Kirim komentar"}
-                disabled={busy || !body.trim()}
-                onPress={() =>
-                  void mutate(`community/posts/${id}/comments`, "POST", {
-                    body,
-                    request_id: requestId,
-                  })
-                }
-              />
+              <View
+                style={[
+                  styles.row,
+                  {
+                    gap: 10,
+                    borderTopWidth: 1,
+                    borderBottomWidth: 1,
+                    borderColor: colors.border,
+                    paddingVertical: 10,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="happy-outline"
+                  size={25}
+                  color={colors.muted}
+                  accessible={false}
+                />
+                <TextInput
+                  accessibilityLabel="Komentar"
+                  placeholder="Tambahkan komentar…"
+                  placeholderTextColor={colors.muted}
+                  multiline
+                  value={body}
+                  maxLength={1000}
+                  style={[
+                    styles.text,
+                    {
+                      flex: 1,
+                      minHeight: 44,
+                      maxHeight: 120,
+                      paddingVertical: 10,
+                      color: colors.ink,
+                    },
+                  ]}
+                  onChangeText={(v) => {
+                    setBody(v);
+                    setRequestId(Crypto.randomUUID());
+                  }}
+                />
+                <IconAction
+                  name="send-outline"
+                  label={busy ? "Mengirim komentar" : "Kirim komentar"}
+                  disabled={busy || !body.trim()}
+                  onPress={() =>
+                    void mutate(`community/posts/${id}/comments`, "POST", {
+                      body,
+                      request_id: requestId,
+                    })
+                  }
+                />
+              </View>
               {comments.map((c) => (
-                <View key={c.id} style={styles.panel}>
-                  <Text style={styles.heading}>{c.author_name}</Text>
-                  <Text style={styles.label}>
-                    {new Date(c.created_at).toLocaleDateString("id-ID")}
-                  </Text>
-                  <Text style={styles.text}>{c.body}</Text>
+                <View
+                  key={c.id}
+                  style={[
+                    styles.row,
+                    {
+                      alignItems: "flex-start",
+                      paddingVertical: 12,
+                      borderBottomWidth: 1,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <View
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 17,
+                      backgroundColor: "#E4EFE5",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text style={[styles.label, { color: colors.accent }]}>
+                      {c.author_name[0]}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1, gap: 5 }}>
+                    <Text
+                      style={[
+                        styles.text,
+                        { fontFamily: "Manrope_700", color: colors.ink },
+                      ]}
+                    >
+                      {c.author_name}
+                    </Text>
+                    <Text style={[styles.text, { color: colors.ink }]}>
+                      {c.body}
+                    </Text>
+                    <Text style={styles.label}>
+                      {new Date(c.created_at).toLocaleDateString("id-ID")}
+                    </Text>
+                  </View>
                   {(c.is_owner || user?.role === "admin") && (
-                    <Button
-                      secondary
-                      title="Hapus komentar"
+                    <IconAction
+                      name="trash-outline"
+                      destructive
+                      label="Hapus komentar"
                       disabled={busy}
                       onPress={() =>
                         Alert.alert(
@@ -218,23 +298,32 @@ export default function PostDetail() {
                   onPress={() => void more()}
                 />
               )}
-              <Input
-                label="Alasan laporan konten"
-                value={reason}
-                onChangeText={setReason}
-                maxLength={1000}
+              <IconAction
+                name="flag-outline"
+                label="Laporkan konten"
+                onPress={() => setFlagging(!flagging)}
               />
-              <Button
-                secondary
-                title="Laporkan ke moderator"
-                disabled={busy || reason.trim().length < 5}
-                onPress={() =>
-                  void mutate("community/flags", "POST", {
-                    post_id: id,
-                    reason,
-                  })
-                }
-              />
+              {flagging && (
+                <>
+                  <Input
+                    label="Alasan laporan konten"
+                    value={reason}
+                    onChangeText={setReason}
+                    maxLength={1000}
+                  />
+                  <Button
+                    secondary
+                    title="Laporkan ke moderator"
+                    disabled={busy || reason.trim().length < 5}
+                    onPress={() =>
+                      void mutate("community/flags", "POST", {
+                        post_id: id,
+                        reason,
+                      })
+                    }
+                  />
+                </>
+              )}
             </>
           )}
         </>

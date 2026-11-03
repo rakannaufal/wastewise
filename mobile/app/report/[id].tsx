@@ -1,3 +1,4 @@
+import { BackButton, IconAction } from "../../src/BrandHeader";
 import SelectField from "../../src/SelectField";
 import ShareReport from "../../src/ShareReport";
 import { useCallback, useRef, useState } from "react";
@@ -99,9 +100,8 @@ export default function Detail() {
   const stamp = (value: string) => new Date(value).toLocaleString("id-ID");
   return (
     <Screen>
-      <Button
-        secondary
-        title="Kembali ke laporan"
+      <BackButton
+        label="Kembali ke laporan"
         onPress={() => router.replace("/reports")}
       />
       <ErrorText message={error} />
@@ -172,9 +172,9 @@ export default function Detail() {
                 : "Kategori hasil otomatis / data lama"}
           </Text>
           {(user?.role === "admin" || row.status === "Pending") && (
-            <Button
-              secondary
-              title="Edit deskripsi / ganti foto"
+            <IconAction
+              name="create-outline"
+              label="Edit deskripsi / ganti foto"
               onPress={() =>
                 router.push({
                   pathname: "/new-report",
@@ -284,14 +284,16 @@ export default function Detail() {
               </Text>
             )}
           </View>
-          <Button
-            secondary
-            title="Perbarui data"
+          <IconAction
+            name="refresh-outline"
+            label="Perbarui data"
             disabled={busy}
             onPress={load}
           />
-          <Button
-            title={busy ? "Memproses…" : "Hapus laporan"}
+          <IconAction
+            name="trash-outline"
+            destructive
+            label={busy ? "Memproses…" : "Hapus laporan"}
             disabled={busy}
             onPress={remove}
           />

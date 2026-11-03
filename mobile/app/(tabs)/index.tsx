@@ -30,7 +30,7 @@ export default function Home() {
         windowSize={5}
         ListHeaderComponent={
           <View style={{ gap: 12, marginBottom: 20 }}>
-            <CommunityFilters value={filters} onChange={setFilters} />
+            <CommunityFilters showOrder value={filters} onChange={setFilters} />
             <Text style={styles.text}>Foto dan kabar dari lingkunganmu.</Text>
             <ErrorText message={feed.error} />
             {!!feed.error && (

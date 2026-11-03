@@ -224,7 +224,7 @@ All endpoints below require a verified session. Existing `/reports` remains owne
 
 | Method | Endpoint under `/api/v1` | Contract |
 | --- | --- | --- |
-| GET | `/community/feed` | `per_page=1..30`, opaque `cursor`, optional `region_code`, `category`, `status`; data `{posts,next_cursor}`. Descending `(created_at,id)` cursor. Public eligible posts plus authenticated caller's eligible processing posts. Pending/In Progress/Completed only; Rejected excluded even when explicitly filtered. |
+| GET | `/community/feed` | `per_page=1..30`, opaque `cursor`, optional `region_code`, `category`, `status`, `order=newest|oldest` (default newest); data `{posts,next_cursor}`. Keyset `(created_at,id)` descending for newest, ascending for oldest. Restart pagination when order changes. Public eligible posts plus authenticated caller's eligible processing posts. Pending/In Progress/Completed only; Rejected excluded even when explicitly filtered. |
 | POST | `/community/posts` | `{report_id,caption?:0..5000 chars,consent:true,publication_policy:"public-gps-v2"}`. Own report only. One post per report; hidden posts cannot be republished by owners. Returns 201 post. |
 | GET | `/community/posts/{id}` | Public eligible post. Processing/withdrawn/hidden restricted to owner/admin; Rejected returns404, including old links. Allowlisted DTO only. |
 | PATCH | `/community/posts/{id}` | Owner caption edit `{caption,revision}`. Stale revision 409. |

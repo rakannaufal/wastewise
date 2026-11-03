@@ -2,7 +2,7 @@ import ShareReport from "../components/ShareReport";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, MapPin, Trash2 } from "lucide-react";
+import { ChevronLeft, MapPin, Pencil, Trash2 } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../Auth";
 import type { Report, ReportEvent, Status } from "../types";
@@ -91,9 +91,13 @@ export default function ReportDetail() {
     value ? statusName[value as Status] || categoryName(String(value)) : "";
   return (
     <>
-      <Link to="/reports" className="text-button back">
-        <ArrowLeft size={17} />
-        Kembali ke laporan
+      <Link
+        to="/reports"
+        className="icon-button back"
+        aria-label="Kembali ke laporan"
+        title="Kembali ke laporan"
+      >
+        <ChevronLeft size={24} />
       </Link>
       <div className="page-heading">
         <div>
@@ -265,15 +269,21 @@ export default function ReportDetail() {
           )}
           {(user?.role === "admin" || row.status === "Pending") && (
             <Link
-              className="button secondary"
+              className="icon-button"
+              aria-label="Edit deskripsi / ganti foto"
+              title="Edit deskripsi / ganti foto"
               to={`/reports/new?edit=${row.id}`}
             >
-              Edit deskripsi / ganti foto
+              <Pencil size={20} />
             </Link>
           )}
-          <button className="button danger" onClick={() => setConfirm(true)}>
-            <Trash2 size={17} />
-            Hapus laporan
+          <button
+            className="icon-button"
+            aria-label="Hapus laporan"
+            title="Hapus laporan"
+            onClick={() => setConfirm(true)}
+          >
+            <Trash2 size={20} />
           </button>
         </section>
       </div>

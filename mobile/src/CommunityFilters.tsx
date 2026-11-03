@@ -15,15 +15,16 @@ import { emptyFilters, filterCount } from "../../shared/filters";
 import type { Filters } from "./community";
 import RegionPicker from "./RegionPicker";
 import SelectField from "./SelectField";
+import { BrandHeader } from "./BrandHeader";
 export default function CommunityFilters({
   value,
   onChange,
-  title = "Beranda",
+  showOrder = false,
   statusOnly = false,
 }: {
   value: Filters;
   onChange: (v: Filters) => void;
-  title?: string;
+  showOrder?: boolean;
   statusOnly?: boolean;
 }) {
   const [active, setActive] = useState("");
@@ -32,6 +33,11 @@ export default function CommunityFilters({
   const [resetVersion, setResetVersion] = useState(0);
   const count = filterCount(value);
   const chips = [
+    {
+      name: "urutan",
+      text: showOrder && value.order === "oldest" ? "Terlama" : "",
+      clear: () => onChange({ ...value, order: "newest" }),
+    },
     {
       name: "lokasi",
       text: value.labels?.filter(Boolean).at(-1) || value.codes.at(-1),
@@ -50,10 +56,7 @@ export default function CommunityFilters({
   ];
   return (
     <View style={{ gap: 10 }}>
-      <View style={[styles.row, { justifyContent: "space-between" }]}>
-        <Text accessibilityRole="header" style={[styles.title, { flex: 1 }]}>
-          {title}
-        </Text>
+      <BrandHeader>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Buka filter${count ? `, ${count} aktif` : ""}`}
@@ -73,7 +76,7 @@ export default function CommunityFilters({
             </Text>
           )}
         </Pressable>
-      </View>
+      </BrandHeader>
       {count > 0 && (
         <View style={[styles.row, { flexWrap: "wrap", gap: 8 }]}>
           {chips
@@ -141,6 +144,24 @@ export default function CommunityFilters({
                 nestedScrollEnabled
                 contentContainerStyle={{ gap: 20 }}
               >
+                {showOrder && (
+                  <SelectField
+                    open={active === "order"}
+                    onToggle={(open) => setActive(open ? "order" : "")}
+                    title="Urutan posting"
+                    choices={[
+                      { id: "newest", name: "Terbaru" },
+                      { id: "oldest", name: "Terlama" },
+                    ]}
+                    value={draft.order || "newest"}
+                    onChange={(order) =>
+                      setDraft({
+                        ...draft,
+                        order: order === "oldest" ? "oldest" : "newest",
+                      })
+                    }
+                  />
+                )}
                 {!statusOnly && (
                   <>
                     <RegionPicker

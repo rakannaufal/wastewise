@@ -1,3 +1,4 @@
+import { BrandHeader } from "../../src/BrandHeader";
 import { useState } from "react";
 import { Image, Text, View } from "react-native";
 import { categories, Input, Screen, styles } from "../../src/ui";
@@ -9,7 +10,8 @@ export default function Guide() {
   );
   return (
     <Screen>
-      <Text style={styles.title}>Panduan memilah</Text>
+      <BrandHeader />
+      <Text style={styles.heading}>Panduan memilah</Text>
       <Text style={styles.text}>
         Beda bahan, beda penanganan. Ikuti aturan fasilitas setempat.
       </Text>

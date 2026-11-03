@@ -79,7 +79,6 @@ export default function Reports() {
         ListHeaderComponent={
           <View style={{ gap: 14, marginBottom: 8 }}>
             <CommunityFilters
-              title={user?.role === "admin" ? "Laporan sampah" : "Laporan saya"}
               value={filters}
               statusOnly
               onChange={(v) => {

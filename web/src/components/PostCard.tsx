@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, MapPin } from "lucide-react";
+import { Heart, MessageCircle, MapPin, Pencil, Trash2 } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../Auth";
 import { categoryName, date, Failure } from "../ui";
@@ -152,13 +152,17 @@ export default function PostCard({
             {post.is_owner && (
               <div className="post-owner">
                 <button
-                  className="text-button"
+                  className="icon-button"
+                  aria-label="Edit deskripsi"
+                  title="Edit deskripsi"
                   onClick={() => setEditing(!editing)}
                 >
-                  Edit deskripsi
+                  <Pencil size={19} />
                 </button>
                 <button
-                  className="text-button"
+                  className="icon-button"
+                  aria-label="Batalkan publikasi"
+                  title="Batalkan publikasi"
                   disabled={action.isPending}
                   onClick={() => {
                     if (
@@ -169,7 +173,7 @@ export default function PostCard({
                       mutate("", "DELETE");
                   }}
                 >
-                  Batalkan publikasi
+                  <Trash2 size={19} />
                 </button>
               </div>
             )}

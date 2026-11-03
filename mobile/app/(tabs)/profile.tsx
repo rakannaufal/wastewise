@@ -1,13 +1,14 @@
 import { Text, View } from "react-native";
 import { router } from "expo-router";
 import { useSession } from "../../src/session";
+import { BrandHeader } from "../../src/BrandHeader";
 import { Button, Screen, styles } from "../../src/ui";
 
 export default function Profile() {
   const { user, logout } = useSession();
   return (
     <Screen>
-      <Text style={styles.title}>Profil akun</Text>
+      <BrandHeader />
       <View style={styles.panel}>
         <Text style={styles.label}>NAMA LENGKAP</Text>
         <Text style={styles.heading}>{user?.full_name}</Text>

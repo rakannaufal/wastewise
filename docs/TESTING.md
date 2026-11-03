@@ -120,3 +120,8 @@ Browser: **5 skenario** mencakup navigasi bersama, menu HP, kartu komunitas, pre
 `npm run check`, `npm run build`, instalasi bersih terkunci web/mobile, build web bersih dan typecheck mobile bersih lulus. Audit npm kedua client:0kerentanan. Warning chunk MapLibre>500kB serta deprecation Starlette/httpx tetap ada.
 
 Supabase nyata: migrasi `d53e20c61fb8` direhearsal pada restore backup lokal sebelum diterapkan. Backfill hanya dua laporan yang disetujui, idempoten. Feed anonim200, dua posting Pending/Completed dengan foto siap, dua marker, detail/foto200: `evidence/public-policy-supabase.json`. Tidak ada uji inbox email, instalasi perangkat fisik, atau deployment production pada tahap ini.
+
+
+## Professional social UI (3 November 2026)
+
+`tests/test_public_policy.py` + `tests/test_community.py`:18tes lulus, termasuk newest/oldest keyset dengan timestamp sama dan UUID tie-breaker. Shared filter3tes lulus. Browser menguji Manrope, composer flex, tombol ikon berlabel, urutan posting di URL, komentar mobile, serta logo pada loading yang sengaja ditahan melalui mock config. Teks komentar harus hilang dari composer setelah respons, lalu muncul pada daftar; screenshot loading/input bukan bukti posting tersimpan. Ekspor native tidak membuktikan splash standalone; verifikasi melalui development build/perangkat masih diperlukan.

@@ -13,7 +13,22 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
     accuracy: 10,
   });
   await page.setViewportSize({ width: 390, height: 844 });
+  let releaseStartup!: () => void;
+  const startup = new Promise<void>((resolve) => {
+    releaseStartup = resolve;
+  });
+  await page.route("**/api/v1/auth/config", async (route) => {
+    await startup;
+    await route.continue();
+  });
   await page.goto(mobileURL);
+  await expect(
+    page.getByLabel("Logo WasteWise", { exact: true }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: "../docs/evidence/professional-mobile-startup.png",
+  });
+  releaseStartup();
   await page.getByRole("button", { name: "Belum punya akun? Daftar" }).click();
   await page
     .getByLabel("Nama lengkap", { exact: true })
@@ -143,6 +158,27 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
     .click();
   await expect(page).toHaveURL(/\/post\/[0-9a-f-]+$/);
   const postId = new URL(page.url()).pathname.split("/").at(-1)!;
+  await page
+    .getByRole("textbox", { name: "Komentar", exact: true })
+    .fill("Komentar dari aplikasi WasteWise");
+  await page
+    .getByRole("button", { name: "Kirim komentar", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Komentar", exact: true }),
+  ).toHaveValue("");
+  await expect(
+    page.getByText("Komentar dari aplikasi WasteWise", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByText("Komentar dari aplikasi WasteWise", { exact: true })
+    .scrollIntoViewIfNeeded();
+
+  await page.screenshot({
+    path: "../docs/evidence/professional-mobile-comments.png",
+    fullPage: true,
+  });
+
   await page.goBack();
   await page
     .getByRole("button", { name: "Kembali ke laporan", exact: true })

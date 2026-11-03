@@ -91,3 +91,10 @@ Mengikuti pilihan antislop during sebelumnya. Pola yang familier dipakai untuk m
 Identitas: Caveat Bold untuk h1–h5/judul mobile sesuai referensi; Manrope untuk paragraf, label dan kontrol. Ilustrasi SVG catatan/pensil dan material dibuat lokal sesuai permintaan, latar sage About, cream FAQ, forest footer, putih pada kartu foto. Tidak mengklaim raster hasil image generation. Footer mempertahankan teks Khay Brownies persis sesuai permintaan pengguna.
 
 Gate PASS terbatas pada source dan pengujian browser: route nyata, navigasi keyboard, overflow/axe pada viewport dalam suite, foto laporan QA nyata, caption opsional, CTA spesifik dan status berlabel. Bukti `public-policy-landing-*.png`, `community-landing-*.png`, log `public-policy-browser.txt`. Tidak ada statistik dampak/testimonial rekaan. Foto, kategori dan GPS berasal dari API; kategori tidak diketik pengguna. Batas perangkat fisik dan chunk peta tetap berlaku.
+
+
+## Professional social refinement, 3 November 2026
+
+User explicitly replaces handwriting with Manrope throughout web/native. WasteWise header on native tabs, familiar bottom navigation retained. Back/edit/delete controls have44px targets and accessible labels; destructive confirmation remains explicit. Comment composer uses compact inline layout, author avatar/body/date rows and labelled delete icon, preserving pending/error handling. UI does not add inactive repost/bookmark controls from the reference. Startup logo uses the existing brand asset; native splash configuration is not proof of standalone behavior.
+
+Purpose: reduce repetitive buttons and establish a consistent reading hierarchy, with actual report photos/category/location as the focus. Public eligibility and privacy contracts unchanged. Desktop/mobile screenshot inspection found a CSS specificity conflict on the composer and a stretched back link; both corrected. Screenshot capture resets scroll/focus to avoid sticky-header capture artifacts. Native physical accessibility/splash remains unverified; automated browser checks are scoped evidence.

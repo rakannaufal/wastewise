@@ -3,6 +3,7 @@ export type CommunityFilters = {
   labels?: string[];
   category: string;
   status: string;
+  order?: "newest" | "oldest";
 };
 export const emptyFilters: CommunityFilters = {
   codes: [],
@@ -14,7 +15,8 @@ export function filterCount(value: CommunityFilters) {
   return (
     Number(value.codes.some(Boolean)) +
     Number(!!value.category) +
-    Number(!!value.status)
+    Number(!!value.status) +
+    Number(value.order === "oldest")
   );
 }
 export function chooseRegion(
@@ -35,5 +37,6 @@ export function filterQuery(value: CommunityFilters) {
   if (code) params.set("region_code", code);
   if (value.category) params.set("category", value.category);
   if (value.status) params.set("status", value.status);
+  if (value.order === "oldest") params.set("order", "oldest");
   return params.toString();
 }

@@ -6,7 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { MapPin } from "lucide-react";
+import { ChevronLeft, MapPin, Smile, Trash2 } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../Auth";
 import { date, Failure, Loading } from "../ui";
@@ -14,7 +14,7 @@ import RegionFilters, { communityParams } from "../components/RegionFilters";
 import PostCard from "../components/PostCard";
 import type { Feed, Post, Comments } from "../../../shared/community";
 export default function Community() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const filter = communityParams(params).toString();
   const { user } = useAuth();
   const feed = useInfiniteQuery({
@@ -45,6 +45,21 @@ export default function Community() {
           <MapPin size={18} />
           Lihat peta
         </Link>
+      </div>
+      <div className="feed-order">
+        <label htmlFor="feed-order">Urutan posting</label>
+        <select
+          id="feed-order"
+          value={params.get("order") === "oldest" ? "oldest" : "newest"}
+          onChange={(e) => {
+            const next = new URLSearchParams(params);
+            next.set("order", e.target.value);
+            setParams(next);
+          }}
+        >
+          <option value="newest">Terbaru</option>
+          <option value="oldest">Terlama</option>
+        </select>
       </div>
       <RegionFilters />
       <section aria-label="Posting komunitas">
@@ -150,7 +165,9 @@ export function PostDetail() {
   });
   return (
     <div className="post-detail">
-      <Link to="/app">Kembali ke beranda</Link>
+      <Link to="/app" className="icon-button" aria-label="Kembali ke beranda">
+        <ChevronLeft size={24} />
+      </Link>
       {post.isPending ? (
         <Loading />
       ) : post.error ? (
@@ -163,28 +180,34 @@ export function PostDetail() {
           <h2>Percakapan</h2>
           {user ? (
             <form
+              className="comment-composer"
               onSubmit={(e) => {
                 e.preventDefault();
                 send.mutate();
               }}
             >
-              <label>
+              <Smile size={24} aria-hidden="true" />
+              <label className="sr-only" htmlFor="comment-body">
                 Komentar
-                <textarea
-                  value={body}
-                  onChange={(e) => {
-                    setBody(e.target.value);
-                    setRequestId(crypto.randomUUID());
-                  }}
-                  maxLength={1000}
-                  required
-                />
               </label>
+              <textarea
+                id="comment-body"
+                placeholder="Tambahkan komentar…"
+                rows={1}
+                value={body}
+                onChange={(e) => {
+                  setBody(e.target.value);
+                  setRequestId(crypto.randomUUID());
+                }}
+                maxLength={1000}
+                required
+              />
               <button
-                className="button primary"
+                className="text-button"
+                aria-label="Kirim komentar"
                 disabled={send.isPending || !body.trim()}
               >
-                {send.isPending ? "Mengirim…" : "Kirim komentar"}
+                {send.isPending ? "Mengirim…" : "Kirim"}
               </button>
             </form>
           ) : (
@@ -210,19 +233,26 @@ export function PostDetail() {
                 .flatMap((p) => p.comments)
                 .map((c) => (
                   <article key={c.id} className="comment">
-                    <strong>{c.author_name}</strong>
-                    <small>{date(c.created_at)}</small>
-                    <p>{c.body}</p>
+                    <span className="avatar" aria-hidden="true">
+                      {c.author_name[0]}
+                    </span>
+                    <div className="comment-content">
+                      <strong>{c.author_name}</strong>
+                      <small>{date(c.created_at)}</small>
+                      <p>{c.body}</p>
+                    </div>
                     {(c.is_owner || user?.role === "admin") && (
                       <button
-                        className="text-button"
+                        className="icon-button"
+                        aria-label="Hapus komentar"
+                        title="Hapus komentar"
                         disabled={remove.isPending}
                         onClick={() => {
                           if (window.confirm("Hapus komentar ini?"))
                             remove.mutate(c.id);
                         }}
                       >
-                        Hapus komentar
+                        <Trash2 size={18} />
                       </button>
                     )}
                   </article>

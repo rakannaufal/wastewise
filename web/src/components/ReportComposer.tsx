@@ -1,3 +1,4 @@
+import { ChevronLeft } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -224,8 +225,13 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
   if (loadedKey !== key) return <Loading />;
   return (
     <>
-      <Link to="/reports" className="text-button back">
-        Kembali ke laporan
+      <Link
+        to="/reports"
+        className="icon-button back"
+        aria-label="Kembali ke laporan"
+        title="Kembali ke laporan"
+      >
+        <ChevronLeft size={24} />
       </Link>
       <div className="page-heading">
         <div>

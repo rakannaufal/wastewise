@@ -19,6 +19,7 @@ function fromParams(params: URLSearchParams): CommunityFilters {
     labels: [0, 1, 2, 3].map((i) => params.get(`rn${i}`) || ""),
     category: params.get("category") || "",
     status: params.get("status") || "",
+    order: params.get("order") === "oldest" ? "oldest" : "newest",
   };
 }
 export function communityParams(params: URLSearchParams) {
@@ -199,7 +200,7 @@ export default function RegionFilters() {
         if (value.labels?.[i]) next.set(`rn${i}`, value.labels[i]);
       }
     }
-    for (const key of ["category", "status"] as const) {
+    for (const key of ["category", "status", "order"] as const) {
       next.delete(key);
       if (value[key]) next.set(key, value[key]);
     }
@@ -257,7 +258,20 @@ export default function RegionFilters() {
               <X size={14} aria-label="Hapus filter status" />
             </button>
           )}
-          <button onClick={() => apply(emptyFilters)}>Hapus semua</button>
+          {applied.order === "oldest" && (
+            <button
+              onClick={() => {
+                const next = new URLSearchParams(params);
+                next.delete("order");
+                setParams(next);
+              }}
+            >
+              Terlama <X size={14} aria-label="Hapus urutan" />
+            </button>
+          )}
+          <button onClick={() => apply({ ...emptyFilters, order: "newest" })}>
+            Hapus semua
+          </button>
         </div>
       )}
       {open && (

@@ -23,11 +23,7 @@ export default function MapScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={["top", "left", "right"]}>
       <View style={{ padding: 16 }}>
-        <CommunityFilters
-          title="Peta lingkungan"
-          value={filters}
-          onChange={setFilters}
-        />
+        <CommunityFilters value={filters} onChange={setFilters} />
       </View>
       <CommunityMap query={filterQuery(filters)} focus={focus} />
     </SafeAreaView>

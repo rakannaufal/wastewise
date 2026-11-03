@@ -41,7 +41,16 @@
           "microphonePermission": false
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F5F7F4",
+          "image": "./assets/brand/icon.png",
+          "imageWidth": 128,
+          "resizeMode": "contain"
+        }
+      ]
     ],
     "web": {
       "bundler": "metro",

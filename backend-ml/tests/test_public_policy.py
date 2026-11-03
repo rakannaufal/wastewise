@@ -121,3 +121,40 @@ def test_v1_consent_not_silently_upgraded(client, accounts, monkeypatch):
     assert client.get("/api/v1/community/posts/" + identity).status_code == 404
     assert client.get("/api/v1/community/feed").json()["data"]["posts"] == []
     assert client.get("/api/v1/community/map").json()["data"]["features"] == []
+
+
+def test_feed_order_keyset_pagination_and_timestamp_ties(client, accounts, monkeypatch):
+    from datetime import UTC, datetime, timedelta
+
+    prediction(monkeypatch)
+    identities = []
+    for _ in range(3):
+        response = create(client, accounts["owner"])
+        assert response.status_code == 201
+        report = response.json()["data"]
+        assert run_once()
+        with SessionLocal() as db:
+            post = db.scalar(
+                select(CommunityPost).where(CommunityPost.report_id == UUID(report["id"]))
+            )
+            identities.append(post.id)
+    stamp = datetime(2026, 1, 1, tzinfo=UTC)
+    with SessionLocal.begin() as db:
+        for i, identity in enumerate(identities):
+            db.get(CommunityPost, identity).created_at = stamp + timedelta(days=i // 2)
+    expected = sorted(identities[:2]) + [identities[2]]
+    for order, sequence in [("oldest", expected), ("newest", expected[::-1])]:
+        cursor = None
+        seen = []
+        for _ in range(3):
+            response = client.get(
+                "/api/v1/community/feed",
+                params={"per_page": 1, "order": order, **({"cursor": cursor} if cursor else {})},
+            )
+            assert response.status_code == 200
+            page = response.json()["data"]
+            seen.extend(UUID(post["id"]) for post in page["posts"])
+            cursor = page["next_cursor"]
+        assert seen == sequence
+        assert cursor is None
+    assert client.get("/api/v1/community/feed?order=invalid").status_code == 422

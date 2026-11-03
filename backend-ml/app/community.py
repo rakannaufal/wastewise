@@ -4,6 +4,7 @@ import base64
 import binascii
 import json
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -268,6 +269,7 @@ def feed(
     category: Category | None = None,
     status: Status | None = None,
     per_page: int = Query(15, ge=1, le=30),
+    order: Literal["newest", "oldest"] = "newest",
     user: User | None = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
@@ -292,15 +294,23 @@ def feed(
         stamp, identity = decode_cursor(cursor)
         q = q.where(
             or_(
-                CommunityPost.created_at < stamp,
-                and_(CommunityPost.created_at == stamp, CommunityPost.id < identity),
+                CommunityPost.created_at > stamp
+                if order == "oldest"
+                else CommunityPost.created_at < stamp,
+                and_(
+                    CommunityPost.created_at == stamp,
+                    CommunityPost.id > identity
+                    if order == "oldest"
+                    else CommunityPost.id < identity,
+                ),
             )
         )
-    rows = list(
-        db.scalars(
-            q.order_by(CommunityPost.created_at.desc(), CommunityPost.id.desc()).limit(per_page + 1)
-        )
+    ordering = (
+        (CommunityPost.created_at.asc(), CommunityPost.id.asc())
+        if order == "oldest"
+        else (CommunityPost.created_at.desc(), CommunityPost.id.desc())
     )
+    rows = list(db.scalars(q.order_by(*ordering).limit(per_page + 1)))
     return ok(
         {
             "posts": project(db, rows[:per_page], user),

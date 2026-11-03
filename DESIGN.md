@@ -12,7 +12,7 @@ ENERGY 2 / RHYTHM 2 / MOTION 1. Design variance 4, craft level 8, density 5. Mot
 - Foreground: `#17281F`; muted text: `#56665C`; subtle border: `#DCE4DC`.
 - Main action: `#215B3C`; hover: `#17492F`; selection: `#E4EFE5`.
 - Status colors are semantic: amber pending, blue in progress, green completed, red rejected. Always pair with text.
-- Typeface: self-hosted Caveat Bold for h1–h5 and native titles/subtitles, matching the user's handwritten reference; Manrope (400/500/600/700) for paragraphs, small text, navigation, labels and controls. Use a consistent semantic type hierarchy. System fallback only on font failure. Tabular numerals on counts/confidence.
+- Typeface: self-hosted Manrope (400/500/600/700) for all web/native text. Bold headings use size/weight, not a second font family. This supersedes the handwritten reference at the user's request. Use a consistent semantic type hierarchy. System fallback only on font failure. Tabular numerals on counts/confidence.
 - Web heading 32/40, native heading 26/34, subheading 20/28, body 15/22, compact labels 12/18. No display font in data tables.
 - Spacing: 4, 8, 12, 16, 24, 32, 48. Inputs 10px radius, surfaces 16px, drawers/dialogs 20px. Controls minimum 44px.
 
@@ -45,3 +45,5 @@ Public information surfaces (3 November): shared SiteHeader/SiteFooter; root pre
 Jakob’s Law: preserve familiar destination names and interaction patterns. Desktop uses a standard top navigation/account dropdown; mobile web uses a compact brand/account/menu header plus a five-destination app bottom bar with a prominent camera action. Dropdown closes on outside pointer/Escape, restoring focus. Filter changes are staged with Reset/Apply; cancel preserves existing results. FAQ uses native details/summary accordion behavior. Photo cards keep author/date/photo/category/location/support/comment hierarchy. Operational status, public eligibility and privacy are server contracts, never inferred from visual position.
 
 Material guide refinement: twelve authored illustrations replace dataset photographs in the guide. Web uses SVG; native uses matching PNG renders without a new runtime dependency. Community cards omit operational status badges; status remains in report history/detail and filtering. AI review uncertainty remains visible beside category. Report photos remain actual user submissions.
+
+Professional social refinement: native tab surfaces lead with the WasteWise brand, bottom-tab labels remain for orientation. Compact inline comments use avatar, author, body, time and labelled delete icon. Icons replace back/edit/delete controls while primary submit/save actions keep text. Startup uses a branded loading view plus configured native splash; Expo Go is not a standalone splash preview. Feed order is server-paginated newest/oldest.

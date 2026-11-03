@@ -43,3 +43,10 @@ test("changing a parent clears its descendants and keeps category/status", () =>
     "31.71.01.1001",
   ]);
 });
+
+test("oldest order survives region changes and is sent to the API", () => {
+  const value = { ...emptyFilters, order: "oldest" as const };
+  assert.equal(new URLSearchParams(filterQuery(value)).get("order"), "oldest");
+  assert.equal(chooseRegion(value, 0, "31", "Jakarta").order, "oldest");
+  assert.equal(filterQuery({ ...emptyFilters, order: "newest" }), "");
+});

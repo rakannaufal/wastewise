@@ -4148,6 +4148,20 @@
               "default": 15,
               "title": "Per Page"
             }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "newest",
+                "oldest"
+              ],
+              "type": "string",
+              "default": "newest",
+              "title": "Order"
+            }
           }
         ],
         "responses": {

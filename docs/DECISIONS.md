@@ -81,3 +81,8 @@ At the user's request, use familiar web/mobile patterns rather than custom navig
 ## D-19: Guide graphics and quieter community cards (2026-11-03)
 
 User requests graphics instead of dataset photos in the material guide, and no status badge on community cards. Use twelve authored SVG illustrations with matching native PNG renders, reusing the forest/sage/cream direction. Public cards retain actual report photos, category, AI uncertainty, location and interactions. Operational status remains available in report history/detail and filters; server publication eligibility is unchanged.
+
+
+## D-20: Professional typography, branded launch and compact social controls (2026-11-03)
+
+User replaces handwritten font direction with professional typography: all text uses existing Manrope assets. Mobile tab headers show WasteWise, preserving bottom navigation labels. Back uses chevron; edit/delete use labelled44px icons and keep confirmation/authorization. Comments use inline composer and compact avatar rows, moderation hidden until requested. Feed supports validated order=newest|oldest with timestamp/UUID keyset pagination; clients restart on order changes. No schema migration. Native expo-splash-screen uses the existing brand icon; Expo Go has its own native splash, then the app shows branded initialization without artificial delay.
