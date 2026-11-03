@@ -23,7 +23,8 @@ test("photo automatically becomes an owned report; edit, resume, search, delete"
     .fill("WasteWise1!temporary");
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
   await page.waitForURL("**/app");
-  await page.getByRole("link",{name:"Ringkasan",exact:true}).click();
+  await page.getByRole("link", { name: "Profil", exact: true }).click();
+  await page.getByRole("link", { name: /^(Ringkasan|Panel admin)$/ }).click();
   await expect(
     page.getByRole("heading", { name: "Langkah baik, Penguji." }),
   ).toBeVisible();

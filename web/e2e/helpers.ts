@@ -19,7 +19,8 @@ export async function login(
     .fill(credentials.password);
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
   await page.waitForURL("**/app");
-  await page.getByRole("link",{name:"Ringkasan",exact:true}).click();
+  await page.getByRole("link", { name: "Profil", exact: true }).click();
+  await page.getByRole("link", { name: /^(Ringkasan|Panel admin)$/ }).click();
 }
 export async function createReport(
   request: APIRequestContext,

@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Map as MapLibre, Marker, NavigationControl } from "maplibre-gl";
+import {
+  Map as MapLibre,
+  Marker,
+  NavigationControl,
+  setWorkerUrl,
+} from "maplibre-gl";
+import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { api } from "../api";
 import { Failure } from "../ui";
 import RegionFilters, { communityParams } from "../components/RegionFilters";
 import type { MapPoints } from "../../../shared/community";
+// Vite relocates the main module; bundle its worker explicitly so relative URLs stay valid.
+setWorkerUrl(mapWorkerUrl);
 export default function WasteMap() {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<MapLibre | null>(null);
@@ -15,6 +23,8 @@ export default function WasteMap() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const filter = communityParams(params).toString();
+  const focusLat = params.get("lat"),
+    focusLng = params.get("lng");
   const points = useQuery({
     queryKey: ["community", "map", view, filter],
     queryFn: ({ signal }) =>
@@ -77,6 +87,18 @@ export default function WasteMap() {
       map.current = null;
     };
   }, []);
+  useEffect(() => {
+    if (!focusLat || !focusLng) return;
+    const lat = Number(focusLat),
+      lng = Number(focusLng);
+    if (
+      Number.isFinite(lat) &&
+      Number.isFinite(lng) &&
+      Math.abs(lat) <= 90 &&
+      Math.abs(lng) <= 180
+    )
+      map.current?.jumpTo({ center: [lng, lat], zoom: 16 });
+  }, [focusLat, focusLng]);
   useEffect(() => {
     if (!map.current) return;
     const markers = points.data?.features.map((p) => {

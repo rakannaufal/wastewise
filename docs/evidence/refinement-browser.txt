@@ -1,0 +1,83 @@
+
+> wastewise-mobile@1.0.0 export
+> expo export --platform all --output-dir ../.local/mobile-browser
+
+Starting Metro Bundler
+
+iOS Bundled 6034ms node_modules/expo-router/entry.js (1289 modules)
+Android Bundled 11015ms node_modules/expo-router/entry.js (1343 modules)
+Static rendering is enabled. Learn more: https://docs.expo.dev/router/web/static-rendering/
+λ Bundled 584ms node_modules/@expo/router-server/node/render.js (257 modules)
+Web Bundled 875ms node_modules/expo-router/entry.js (961 modules)
+
+› ios bundles (1):
+_expo/static/js/ios/entry-2e537bd49abaf33dac14d3150a1a7033.hbc (3.6MB)
+
+› android bundles (1):
+_expo/static/js/android/entry-689f876c461adebf42a537120bdf767e.hbc (3.6MB)
+
+› web bundles (21):
+_expo/static/js/web/__common-162f905f87e8cfe95344efe7e0309821.js (491KB)
+_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js (3.8KB)
+_expo/static/js/web/_layout-358b023670e7c43e60d955bcdd5c414e.js (2KB)
+_expo/static/js/web/_layout-63998fd53244286322e7478b64e0bb6d.js (2.2KB)
+_expo/static/js/web/[id]-68659fd9fb6fc22d76b6eca6a349d0d2.js (4.3KB)
+_expo/static/js/web/[id]-ead9221e133c5499f051af47b6f97eab.js (7.9KB)
+_expo/static/js/web/+not-found-febb359a15822d210c71c8554aed3919.js (705B)
+_expo/static/js/web/camera-a614fb6875a466b996989b9e2c3fad17.js (28KB)
+_expo/static/js/web/capture-7fea644015c265bf1e245e813ad716b3.js (627B)
+_expo/static/js/web/classify-1a142e591bed61a68f91367892b76ad2.js (270B)
+_expo/static/js/web/entry-b757eb7a266b99c72f720735e6b9f6d0.js (1.1MB)
+_expo/static/js/web/error-314e5a4acd95bcf3e32c9cd4b6a607ae.js (1.5KB)
+_expo/static/js/web/guide-78f6f55ec42baf5670fe09190284b310.js (1.2KB)
+_expo/static/js/web/index-0493894bf33383965be0bb36378a2bc3.js (45KB)
+_expo/static/js/web/index-91f124a193b580292fc32504d132edf4.js (2.3KB)
+_expo/static/js/web/login-f650c964285a3c8f7b1087f4c1d4a257.js (3KB)
+_expo/static/js/web/map-3f06df316c138bdddf39be37dba16264.js (2.4KB)
+_expo/static/js/web/new-report-4f9036977d95cfa920892eed68e3239e.js (10KB)
+_expo/static/js/web/onboarding-1a8734637af531b41f0dba48eaa859db.js (1.5KB)
+_expo/static/js/web/profile-9a8f9847dd67ede2a2e34eadb22893ec.js (1.7KB)
+_expo/static/js/web/reports-747e9c96571053380b4f9113250c7250.js (4.9KB)
+
+› Static routes (23):
+/map (21KB)
+/error (21KB)
+/login (21KB)
+/guide (21KB)
+/ (index) (21KB)
+/camera (21KB)
+/capture (22KB)
+/profile (22KB)
+/reports (22KB)
+/_sitemap (19KB)
+/classify (22KB)
+/post/[id] (21KB)
+/+not-found (21KB)
+/new-report (21KB)
+/onboarding (21KB)
+/(tabs)/map (21KB)
+/report/[id] (21KB)
+/(tabs)/guide (21KB)
+/(tabs) (21KB)
+/(tabs)/capture (22KB)
+/(tabs)/profile (22KB)
+/(tabs)/reports (22KB)
+/(tabs)/classify (22KB)
+
+Exported: ../.local/mobile-browser
+
+> wastewise-web@1.0.0 e2e
+> playwright test
+
+
+Running 5 tests using 1 worker
+
+(node:69746) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 e2e/admin.spec.ts:6:1 › admin aggregates, URL filters, review, revision, workflow and history (6.8s)
+  ✓  2 e2e/community.spec.ts:4:1 › private report becomes an opt-in feed post; peers like, comment, map, withdraw (10.7s)
+  ✓  3 e2e/community.spec.ts:242:1 › landing, onboarding and error pages remain readable across viewports (6.4s)
+  ✓  4 e2e/mobile-web.spec.ts:5:1 › Expo gallery, automatic ML/GPS, report and editable history (10.2s)
+  ✓  5 e2e/smoke.spec.ts:6:1 › photo automatically becomes an owned report; edit, resume, search, delete (5.5s)
+
+  5 passed (51.8s)

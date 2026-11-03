@@ -25,12 +25,7 @@ export default function ErrorScreen() {
         slot={status.startsWith("5") ? "error-5xx" : "error-4xx"}
         alt=""
       />
-      <Text
-        style={[
-          styles.title,
-          { fontFamily: "Caveat_700", fontSize: 80, lineHeight: 96 },
-        ]}
-      >
+      <Text style={[styles.title, { fontSize: 72, lineHeight: 88 }]}>
         {status}
       </Text>
       <Text style={styles.heading}>Belum bisa dilanjutkan.</Text>

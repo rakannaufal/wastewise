@@ -39,8 +39,8 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontFamily: "Manrope_700",
-    fontSize: 29,
-    lineHeight: 37,
+    fontSize: 26,
+    lineHeight: 34,
     fontWeight: "700",
     color: colors.ink,
     letterSpacing: -1,
@@ -54,8 +54,8 @@ export const styles = StyleSheet.create({
   },
   text: {
     fontFamily: "Manrope_400",
-    fontSize: 14,
-    lineHeight: 23,
+    fontSize: 15,
+    lineHeight: 22,
     color: colors.muted,
   },
   label: {
@@ -100,6 +100,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#FFF",
   },
   error: {
+    fontFamily: "Manrope_400",
     color: "#9A332B",
     backgroundColor: "#FFF0ED",
     padding: 14,
@@ -108,6 +109,26 @@ export const styles = StyleSheet.create({
     lineHeight: 21,
   },
   action: { padding: 18, borderRadius: 12, backgroundColor: "#E4EFE5", gap: 8 },
+  filterTrigger: {
+    minHeight: 44,
+    minWidth: 44,
+    padding: 10,
+    flexDirection: "row",
+    gap: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    backgroundColor: "#fff",
+  },
+  activeFilter: {
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    minHeight: 44,
+    backgroundColor: "#E4EFE5",
+    borderRadius: 8,
+  },
 });
 export function Screen({ children }: { children: ReactNode }) {
   return (

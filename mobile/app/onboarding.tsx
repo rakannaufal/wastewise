@@ -5,12 +5,7 @@ import { Button, Screen, styles } from "../src/ui";
 export default function Onboarding() {
   return (
     <Screen>
-      <Text
-        style={[
-          styles.title,
-          { fontFamily: "Caveat_700", fontSize: 42, lineHeight: 50 },
-        ]}
-      >
+      <Text style={[styles.title, { fontSize: 30, lineHeight: 38 }]}>
         Mulai dari sekitarmu.
       </Text>
       <Illustration

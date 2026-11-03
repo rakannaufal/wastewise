@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
-import { Linking, Text, View } from "react-native";
+import { Linking, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { api } from "./api";
 import type { MapPoints } from "../../shared/community";
 import { Button, ErrorText, styles } from "./ui";
-export default function CommunityMap({ query }: { query: string }) {
+export default function CommunityMap({
+  query,
+}: {
+  query: string;
+  focus?: { latitude: number; longitude: number };
+}) {
   const [points, setPoints] = useState<MapPoints | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -19,7 +24,7 @@ export default function CommunityMap({ query }: { query: string }) {
     return () => controller.abort();
   }, [query]);
   return (
-    <View style={{ gap: 12 }}>
+    <ScrollView contentContainerStyle={{ gap: 12, padding: 16 }}>
       <Text style={styles.heading}>Lokasi laporan komunitas</Text>
       <Text style={styles.text}>
         Expo web menampilkan daftar lokasi. Peta interaktif tersedia di aplikasi
@@ -50,6 +55,6 @@ export default function CommunityMap({ query }: { query: string }) {
           )}
         </View>
       ))}
-    </View>
+    </ScrollView>
   );
 }

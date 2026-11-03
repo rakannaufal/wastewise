@@ -11,8 +11,6 @@ function Router() {
     Manrope_500: require("../assets/fonts/manrope-500.ttf"),
     Manrope_600: require("../assets/fonts/manrope-600.ttf"),
     Manrope_700: require("../assets/fonts/manrope-700.ttf"),
-    Caveat_400: require("../assets/fonts/caveat-400.ttf"),
-    Caveat_700: require("../assets/fonts/caveat-700.ttf"),
   });
   const { user, loading } = useSession();
   const segments = useSegments();

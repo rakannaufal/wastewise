@@ -12,13 +12,15 @@ ENERGY 2 / RHYTHM 2 / MOTION 1. Design variance 4, craft level 8, density 5. Mot
 - Foreground: `#17281F`; muted text: `#56665C`; subtle border: `#DCE4DC`.
 - Main action: `#215B3C`; hover: `#17492F`; selection: `#E4EFE5`.
 - Status colors are semantic: amber pending, blue in progress, green completed, red rejected. Always pair with text.
-- Typeface: self-hosted Manrope (400/500/600/700), with Caveat (400/700) for public display emphasis for WasteWise identity and readable product labels, with system fallback. Tabular numerals on counts/confidence.
-- Heading 32/40, subheading 20/28, body 14/22, compact labels 12/18. No display font in data tables.
+- Typeface: self-hosted Manrope (400/500/600/700) for every web/native text surface, including landing, onboarding, errors, navigation and controls. Use weight and scale for emphasis, no handwriting font. System fallback only on font failure. Tabular numerals on counts/confidence.
+- Web heading 32/40, native heading 26/34, subheading 20/28, body 15/22, compact labels 12/18. No display font in data tables.
 - Spacing: 4, 8, 12, 16, 24, 32, 48. Inputs 10px radius, surfaces 16px, drawers/dialogs 20px. Controls minimum 44px.
 
 ## Composition
 
-Desktop: 248px tinted sidebar, 72px topbar, 32px content padding. Sidebar collapses to an accessible drawer on small screens. Dashboard pairs a broad report queue with a narrower classification action and twelve-class guide. Counts come from the API; no fake trend percentages or filler sparklines. Classification uses a large real photo preview and clearly ranked results. Reports use an accessible table on desktop and readable list on phones.
+Resident web uses a 72px top navigation, centered content up to1184px, no sidebar. Small-screen web uses a five-item bottom navigation with a larger camera action. Community routes use this shell even for admins. Administrative dashboard, users, moderation and report management retain the248px sidebar and accessible small-screen drawer. Counts come from the API; no fake trend percentages or filler sparklines. Classification uses a large real photo preview and clearly ranked results. Reports use an accessible table on desktop and readable list on phones.
+
+Community cards lead the home page: two chronological columns from1024px, one column below, actual4:3 photos, author/time, status, category, description, GPS and interactions. No permanent slogan rail. Filters stay behind one options icon; the panel stages region/category/status until Apply. Cancel preserves the applied query; Reset stages unfiltered values. Active chips expose applied filters. Every published report status appears by default; private reports never become feed entries automatically. Native maps fill the remaining screen and provide an accessible location list; report history uses compact search and a status filter sheet.
 
 One signature detail: a material preview paired with its next handling action. It appears in classification, report detail, and category guide, tying the product to the twelve-class mechanism.
 

@@ -16,6 +16,7 @@ jobs:
       - run: npm ci --prefix mobile
       - run: npm run check
       - run: node --experimental-strip-types --test shared/photo-location.test.ts
+      - run: node --experimental-strip-types --test shared/filters.test.ts
       - run: node --test mobile/scripts/photo-upload.test.mjs
       - run: npm run build
       - run: npm --prefix mobile run export

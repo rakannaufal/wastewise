@@ -4,14 +4,7 @@ import { Button, Screen, styles } from "../src/ui";
 export default function Missing() {
   return (
     <Screen>
-      <Text
-        style={[
-          styles.title,
-          { fontFamily: "Caveat_700", fontSize: 72, lineHeight: 85 },
-        ]}
-      >
-        404
-      </Text>
+      <Text style={[styles.title, { fontSize: 72, lineHeight: 88 }]}>404</Text>
       <Text style={styles.heading}>Halaman belum ditemukan.</Text>
       <Text style={styles.text}>
         Tautannya mungkin berubah. Kembali ke beranda untuk melanjutkan.

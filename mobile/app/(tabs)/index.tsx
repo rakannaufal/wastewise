@@ -3,8 +3,9 @@ import { FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useFeed, emptyFilters } from "../../src/community";
+import { filterCount } from "../../../shared/filters";
 import CommunityFilters from "../../src/CommunityFilters";
-import PostCard from "../../src/PostCard";
+import PostCard, { PostSkeleton } from "../../src/PostCard";
 import { Button, ErrorText, styles } from "../../src/ui";
 export default function Home() {
   const [filters, setFilters] = useState(emptyFilters);
@@ -15,8 +16,8 @@ export default function Home() {
         data={feed.posts}
         keyExtractor={(p) => p.id}
         contentContainerStyle={{
-          padding: 18,
-          paddingBottom: 35,
+          padding: 16,
+          paddingBottom: 40,
           width: "100%",
           maxWidth: 760,
           alignSelf: "center",
@@ -28,33 +29,37 @@ export default function Home() {
         maxToRenderPerBatch={4}
         windowSize={5}
         ListHeaderComponent={
-          <View style={{ gap: 16, marginBottom: 22 }}>
-            <Text
-              style={[
-                styles.title,
-                { fontFamily: "Caveat_700", fontSize: 40, lineHeight: 48 },
-              ]}
-            >
-              Kabar dari sekitar.
-            </Text>
-            <Text style={styles.text}>
-              Foto, cerita, dan langkah baik di lingkunganmu.
-            </Text>
+          <View style={{ gap: 12, marginBottom: 20 }}>
             <CommunityFilters value={filters} onChange={setFilters} />
+            <Text style={styles.text}>Foto dan kabar dari lingkunganmu.</Text>
             <ErrorText message={feed.error} />
-            {feed.error && (
+            {!!feed.error && (
               <Button secondary title="Muat ulang" onPress={feed.reload} />
             )}
           </View>
         }
         ListEmptyComponent={
-          !feed.loading && !feed.error ? (
+          feed.loading ? (
+            <PostSkeleton />
+          ) : !feed.error ? (
             <View style={styles.panel}>
-              <Text style={styles.heading}>Belum ada cerita di sini.</Text>
-              <Text style={styles.text}>
-                Coba wilayah lain atau bagikan laporan pertamamu. Laporan privat
-                tidak muncul di beranda.
+              <Text style={styles.heading}>
+                {filterCount(filters)
+                  ? "Belum ada posting yang cocok."
+                  : "Belum ada posting komunitas."}
               </Text>
+              <Text style={styles.text}>
+                {filterCount(filters)
+                  ? "Coba ubah atau hapus filter untuk melihat posting lainnya."
+                  : "Posting yang dibagikan muncul di sini untuk semua status. Laporan privat tetap di Laporan saya."}
+              </Text>
+              {filterCount(filters) > 0 && (
+                <Button
+                  secondary
+                  title="Hapus semua filter"
+                  onPress={() => setFilters(emptyFilters)}
+                />
+              )}
               <Button
                 title="Buat laporan"
                 onPress={() => router.push("/new-report")}
@@ -64,12 +69,21 @@ export default function Home() {
         }
         ListFooterComponent={
           feed.cursor ? (
-            <Button
-              secondary
-              disabled={feed.loading}
-              title={feed.loading ? "Memuat…" : "Lihat berikutnya"}
-              onPress={() => void feed.more()}
-            />
+            <View style={{ gap: 12 }}>
+              <ErrorText message={feed.pageError} />
+              <Button
+                secondary
+                disabled={feed.loadingMore || feed.loading}
+                title={
+                  feed.loadingMore
+                    ? "Memuat…"
+                    : feed.pageError
+                      ? "Coba muat berikutnya"
+                      : "Lihat berikutnya"
+                }
+                onPress={() => void feed.more()}
+              />
+            </View>
           ) : undefined
         }
       />

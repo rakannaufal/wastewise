@@ -73,7 +73,7 @@ Pendamping: [rencana utama](COMMUNITY_REDESIGN_PLAN.md), [prompt aset](ASSET_PRO
 
 ## 5. Layout, warna dan navbar
 
-- Manrope dan Caveat sama di web/iOS/Android; loader/fallback tidak menghasilkan layar kosong. Data table/caption/GPS tidak memakai tulisan tangan.
+- Manrope tunggal di web/iOS/Android; loader/fallback tidak menghasilkan layar kosong. Data table/caption/GPS tidak memakai tulisan tangan.
 - Token berasal dari satu sumber; tidak ada hijau berbeda yang ditambahkan sembarang di komponen. Status tetap memiliki teks dan warna semantik.
 - Tombol Foto tengah lebih besar dan mudah dijangkau, label terbaca, hit area penuh, ikon bukan gambar raster. Membuka modal kamera, batal kembali ke tab asal.
 - Lima posisi Beranda/Peta/Foto/Laporan/Profil muat pada320px, safe area iPhone dan Android; ikon lain tidak menyusut ke target sentuh kecil.
@@ -85,7 +85,7 @@ Pendamping: [rencana utama](COMMUNITY_REDESIGN_PLAN.md), [prompt aset](ASSET_PRO
 
 - Guest membuka `/` tanpa diarahkan login. Landing tetap menyajikan informasi inti saat backend mati.
 - Komunitas/Peta dari landing mempunyai login returnTo internal yang aman. Reset password/PKCE lama tetap bekerja.
-- Hero dan langkah mengikuti screenshot melalui Caveat/Manrope, whitespace dan ilustrasi hijau asli; tidak ada testimonial/mitra/angka dampak palsu.
+- Hero dan langkah mengikuti screenshot melalui Manrope, whitespace dan ilustrasi hijau asli; tidak ada testimonial/mitra/angka dampak palsu.
 - Onboarding hanya first-run/versi yang relevan, bisa dilewati dan dibuka ulang. Tidak memaksa kamera/GPS sebelum tombol terkait dipakai.
 - Semua4xx/5xx mempunyai mapping/fallback;400/422/413 tetap dekat form bila memungkinkan. Unknown status tidak menampilkan stack trace.
 - Offline/runtime failure tidak dilabeli kode HTTP yang tidak diterima; API tetap JSON dengan status benar.

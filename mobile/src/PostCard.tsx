@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
@@ -8,13 +8,16 @@ import { categoryName, statusName, styles, colors, ErrorText } from "./ui";
 export default function PostCard({
   post,
   reload,
+  detail = false,
 }: {
   post: Post;
   reload: () => void;
+  detail?: boolean;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [post.image_url]);
   async function like() {
     setBusy(true);
     setError("");
@@ -37,7 +40,7 @@ export default function PostCard({
         borderWidth: 1,
         borderColor: colors.border,
         overflow: "hidden",
-        marginBottom: 22,
+        marginBottom: 16,
       }}
     >
       <View style={{ padding: 16, gap: 5 }}>
@@ -48,8 +51,16 @@ export default function PostCard({
             gap: 10,
           }}
         >
-          <Text style={styles.heading}>{post.author_name}</Text>
-          <Text style={styles.text}>{statusName[post.status]}</Text>
+          <Text
+            style={[styles.heading, { flex: 1, fontSize: 16, lineHeight: 24 }]}
+          >
+            {post.author_name}
+          </Text>
+          <Text
+            style={[styles.label, { color: colors.accent, maxWidth: "45%" }]}
+          >
+            {statusName[post.status]}
+          </Text>
         </View>
         <Text style={styles.label}>
           {new Date(post.created_at).toLocaleDateString("id-ID")}
@@ -93,10 +104,47 @@ export default function PostCard({
             ? " · Perlu review"
             : ""}
         </Text>
-        <Text style={[styles.text, { color: colors.ink }]}>{post.caption}</Text>
+        <Text
+          numberOfLines={detail ? undefined : 3}
+          style={[styles.text, { color: colors.ink }]}
+        >
+          {post.caption}
+        </Text>
+        {!detail && post.caption.length > 140 && (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push(`/post/${post.id}`)}
+            style={{ minHeight: 44, justifyContent: "center" }}
+          >
+            <Text style={[styles.label, { color: colors.accent }]}>
+              Baca selengkapnya
+            </Text>
+          </Pressable>
+        )}
         <Text style={styles.text}>
           {post.location_label || "Nama wilayah belum terverifikasi"}
         </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Lihat lokasi di peta"
+          onPress={() =>
+            router.push({
+              pathname: "/map",
+              params: { lat: post.latitude, lng: post.longitude },
+            })
+          }
+          style={{
+            minHeight: 44,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          <Ionicons name="location-outline" size={18} color={colors.accent} />
+          <Text style={[styles.label, { color: colors.accent }]}>
+            Lihat di peta
+          </Text>
+        </Pressable>
         <Text style={styles.label}>
           GPS {post.latitude.toFixed(5)}, {post.longitude.toFixed(5)}
           {post.location_accuracy_m !== null
@@ -154,6 +202,29 @@ export default function PostCard({
         </View>
         <ErrorText message={error} />
       </View>
+    </View>
+  );
+}
+
+export function PostSkeleton() {
+  return (
+    <View
+      accessibilityLabel="Memuat posting"
+      style={[styles.panel, { marginBottom: 16 }]}
+    >
+      <View
+        style={{ height: 32, backgroundColor: "#E4EBE4", borderRadius: 8 }}
+      />
+      <View
+        style={{
+          aspectRatio: 4 / 3,
+          backgroundColor: "#E4EBE4",
+          borderRadius: 8,
+        }}
+      />
+      <View
+        style={{ height: 48, backgroundColor: "#E4EBE4", borderRadius: 8 }}
+      />
     </View>
   );
 }

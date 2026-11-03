@@ -59,6 +59,7 @@ test("private report becomes an opt-in feed post; peers like, comment, map, with
       .getByLabel("Kata sandi", { exact: true })
       .fill(accounts[1].password);
     await peer.getByRole("button", { name: "Masuk", exact: true }).click();
+    await expect(peer.locator(".sidebar")).toHaveCount(0);
     await peer.getByRole("button", { name: "0 suka" }).click();
     await expect(peer.getByRole("button", { name: "1 suka" })).toHaveAttribute(
       "aria-pressed",
@@ -80,15 +81,146 @@ test("private report becomes an opt-in feed post; peers like, comment, map, with
           .analyze()
       ).violations,
     ).toEqual([]);
-    for(const width of [320,390,768,1440]){await peer.setViewportSize({width,height:900});expect(await peer.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);}
-    await peer.screenshot({path:'../docs/evidence/community-post-desktop.png',fullPage:true});
+    for (const width of [320, 390, 768, 1440]) {
+      await peer.setViewportSize({ width, height: 900 });
+      expect(
+        await peer.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+    await peer.screenshot({
+      path: "../docs/evidence/community-post-desktop.png",
+      fullPage: true,
+    });
+    await peer.setViewportSize({ width: 1440, height: 900 });
+    await peer.getByRole("link", { name: "Beranda", exact: true }).click();
+    await expect(peer.locator(".post-card")).toHaveCount(1);
+    await expect(peer.getByLabel("Cari Provinsi", { exact: true })).toHaveCount(
+      0,
+    );
+    // Install before opening the panel so cached reference data uses this fixture.
+    await peer.route("**/api/v1/regions?**", async (route) => {
+      const level = new URL(route.request().url()).searchParams.get("level");
+      await route.fulfill({
+        json: {
+          success: true,
+          message: "Region picker fixture",
+          data: {
+            regions:
+              level === "1"
+                ? [
+                    {
+                      code: "99",
+                      name: "Wilayah QA",
+                      level: 1,
+                      parent_code: null,
+                    },
+                  ]
+                : [],
+            truncated: false,
+          },
+        },
+      });
+    });
+    await peer
+      .getByRole("button", { name: "Buka filter", exact: true })
+      .click();
+    const filterDialog = peer.getByRole("dialog", {
+      name: "Filter",
+      exact: true,
+    });
+    await filterDialog
+      .getByLabel("Status laporan", { exact: true })
+      .selectOption("Rejected");
+    await filterDialog
+      .getByRole("button", { name: "Tutup", exact: true })
+      .click();
+    await expect(peer).not.toHaveURL(/status=/);
+    await peer
+      .getByRole("button", { name: "Buka filter", exact: true })
+      .click();
+    await peer
+      .getByRole("dialog")
+      .getByLabel("Status laporan", { exact: true })
+      .selectOption("Rejected");
+    await peer.getByRole("button", { name: "Terapkan", exact: true }).click();
+    await expect(peer).toHaveURL(/status=Rejected/);
+    await expect(peer.locator(".post-card")).toHaveCount(0);
+    await peer
+      .getByRole("button", { name: "Hapus semua", exact: true })
+      .click();
+    await expect(peer.locator(".post-card")).toHaveCount(1);
+    await peer
+      .getByRole("button", { name: "Buka filter", exact: true })
+      .click();
+    await filterDialog
+      .getByRole("button", { name: "Wilayah QA", exact: true })
+      .click();
+    await expect(
+      filterDialog.getByLabel("Cari Kabupaten / kota", { exact: true }),
+    ).toBeVisible();
+    await filterDialog
+      .getByRole("button", { name: "Reset", exact: true })
+      .click();
+    await expect(
+      filterDialog.getByLabel("Cari Provinsi", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      filterDialog.getByRole("button", { name: /Kabupaten \/ kota/ }),
+    ).toBeDisabled();
+    await filterDialog
+      .getByRole("button", { name: "Terapkan", exact: true })
+      .click();
+    await expect(peer).not.toHaveURL(/r0=|status=/);
+    await peer.unroute("**/api/v1/regions?**");
+    for (const width of [320, 390, 768, 1024, 1440]) {
+      await peer.setViewportSize({ width, height: 900 });
+      expect(
+        await peer.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      expect(
+        await peer
+          .locator(".post-photo")
+          .evaluate((el) => el.getBoundingClientRect().top),
+      ).toBeLessThan(450);
+      expect(
+        await peer
+          .locator("h1")
+          .evaluate((el) => getComputedStyle(el).fontFamily),
+      ).toContain("Manrope");
+    }
+    await peer.screenshot({
+      path: "../docs/evidence/refinement-web-feed.png",
+      fullPage: true,
+    });
+    await peer.setViewportSize({ width: 390, height: 844 });
+    await peer.screenshot({
+      path: "../docs/evidence/refinement-web-feed-mobile.png",
+      fullPage: true,
+    });
+    await peer.setViewportSize({ width: 1440, height: 900 });
+    const workerReady = peer.waitForEvent("worker");
     await peer.getByRole("link", { name: "Peta", exact: true }).click();
+    const worker = await workerReady;
+    await expect
+      .poll(() =>
+        worker.evaluate(() =>
+          Boolean((globalThis as unknown as { worker?: unknown }).worker),
+        ),
+      )
+      .toBe(true);
     await expect(peer.getByText(/titik atau kelompok pada area/)).toBeVisible();
     await peer.getByText("Daftar lokasi yang dapat diakses tanpa peta").click();
     await expect(
       peer.getByRole("link", { name: /Lihat laporan -6.20000/ }),
     ).toBeVisible();
-    await peer.screenshot({path:"../docs/evidence/community-map-desktop.png",fullPage:true});
+    await peer.screenshot({
+      path: "../docs/evidence/community-map-desktop.png",
+      fullPage: true,
+    });
     page.once("dialog", (d) => d.accept());
     await page
       .getByRole("button", { name: "Batalkan publikasi", exact: true })

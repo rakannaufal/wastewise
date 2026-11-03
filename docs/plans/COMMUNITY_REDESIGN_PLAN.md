@@ -2,6 +2,8 @@
 
 Status: **rencana untuk ditinjau, belum implementasi**. Tanggal: 2 November 2026.
 
+Catatan 3 November: rencana ini disimpan sebagai riwayat brief awal. Keputusan visual terbaru memakai Manrope tunggal, UserShell tanpa sidebar, dan filter ikon sesuai D-16 serta USER_EXPERIENCE_REFINEMENT_PLAN.md. Bukti implementasi ada di docs/PROGRESS.md.
+
 Dokumen pendamping: [prompt aset](ASSET_PROMPTS.md), [matriks layar dan penerimaan](SCREEN_MATRIX.md).
 
 ## 1. Keputusan pengguna dan batas rencana

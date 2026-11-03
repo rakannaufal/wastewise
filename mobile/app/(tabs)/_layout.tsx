@@ -21,8 +21,23 @@ export default function Layout() {
           minHeight: 72,
         },
         tabBarLabelStyle: { fontFamily: "Manrope_600", fontSize: 11 },
+        tabBarAllowFontScaling: true,
+        tabBarAccessibilityLabel: (
+          {
+            index: "Beranda",
+            map: "Peta",
+            reports: "Laporan",
+            profile: "Profil",
+            capture: "Foto",
+            guide: "Panduan",
+            classify: "Klasifikasi",
+          } as Record<string, string>
+        )[route.name],
         tabBarIcon: ({ color, size }) => (
           <Ionicons
+            accessible={false}
+            accessibilityElementsHidden
+            importantForAccessibility="no"
             name={icons[route.name] || "ellipse-outline"}
             color={typeof color === "string" ? color : "#215B3C"}
             size={size}

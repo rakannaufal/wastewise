@@ -6,248 +6,13 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Heart, MessageCircle, MapPin, Camera } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../Auth";
-import { categoryName, date, Failure, Loading, StatusBadge } from "../ui";
+import { date, Failure, Loading } from "../ui";
 import RegionFilters, { communityParams } from "../components/RegionFilters";
+import PostCard from "../components/PostCard";
 import type { Feed, Post, Comments } from "../../../shared/community";
-export function PostCard({
-  post,
-  detail = false,
-}: {
-  post: Post;
-  detail?: boolean;
-}) {
-  const client = useQueryClient();
-  const [error, setError] = useState<Error | null>(null);
-  const [imageFailed, setImageFailed] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [caption, setCaption] = useState(post.caption);
-  const [reason, setReason] = useState("");
-  const { user } = useAuth();
-  const action = useMutation({
-    mutationFn: async ({
-      path,
-      method,
-      body,
-    }: {
-      path: string;
-      method: string;
-      body?: object;
-    }) =>
-      api(`/api/v1/${path}`, {
-        method,
-        body: body ? JSON.stringify(body) : undefined,
-      }),
-    onSuccess: () => {
-      setError(null);
-      setEditing(false);
-      setReason("");
-      void client.invalidateQueries({ queryKey: ["community"] });
-    },
-    onError: (e) => setError(e),
-  });
-  const mutate = (suffix: string, method: string, body?: object) =>
-    action.mutate({
-      path: `community/posts/${post.id}${suffix}`,
-      method,
-      body,
-    });
-  return (
-    <article className="post-card">
-      <header>
-        <span className="avatar" aria-hidden="true">
-          {post.author_name[0]}
-        </span>
-        <div>
-          <strong>{post.author_name}</strong>
-          <small>{date(post.created_at)}</small>
-        </div>
-        <StatusBadge value={post.status} />
-      </header>
-      {post.image_url && !imageFailed ? (
-        <Link
-          to={`/community/${post.id}`}
-          aria-label={`Lihat foto ${categoryName(post.category)}`}
-        >
-          <img
-            className="post-photo"
-            src={post.image_url}
-            alt={`Sampah ${categoryName(post.category)}`}
-            loading="lazy"
-            width="720"
-            height="540"
-            onError={() => setImageFailed(true)}
-          />
-        </Link>
-      ) : (
-        <div className="post-processing" role="status">
-          {imageFailed
-            ? "Foto belum dapat dimuat. Coba muat ulang posting."
-            : post.state === "processing"
-              ? "Foto sedang disiapkan. Laporanmu sudah tersimpan."
-              : post.state === "hidden"
-                ? "Posting disembunyikan moderator."
-                : "Publikasi sudah dicabut. Laporan privat tetap tersimpan."}
-        </div>
-      )}
-      <div className="post-body">
-        <div className="post-material">
-          {categoryName(post.category)}
-          {post.classification_state === "needs_review" && (
-            <small> · Menunggu review AI</small>
-          )}
-        </div>
-        <p className="post-caption">{post.caption}</p>
-        <p className="post-location">
-          <MapPin size={16} />
-          {post.location_label || "Nama wilayah belum terverifikasi"}
-        </p>
-        <small>
-          GPS {post.latitude.toFixed(5)}, {post.longitude.toFixed(5)}
-          {post.location_accuracy_m !== null
-            ? ` · ±${Math.round(post.location_accuracy_m)} m`
-            : ""}
-        </small>
-        <div className="post-actions">
-          <button
-            disabled={action.isPending || post.state !== "published"}
-            aria-pressed={post.liked_by_me}
-            onClick={() => mutate("/like", post.liked_by_me ? "DELETE" : "PUT")}
-          >
-            <Heart
-              size={21}
-              fill={post.liked_by_me ? "currentColor" : "none"}
-            />
-            {post.like_count} suka
-          </button>
-          <Link to={`/community/${post.id}`}>
-            <MessageCircle size={21} />
-            {post.comment_count} komentar
-          </Link>
-        </div>
-        {detail && (
-          <>
-            {post.is_owner && (
-              <div className="post-owner">
-                <button
-                  className="text-button"
-                  onClick={() => setEditing(!editing)}
-                >
-                  Edit deskripsi
-                </button>
-                <button
-                  className="text-button"
-                  disabled={action.isPending}
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        "Tarik foto dan GPS dari komunitas? Laporan privat tetap tersimpan.",
-                      )
-                    )
-                      mutate("", "DELETE");
-                  }}
-                >
-                  Batalkan publikasi
-                </button>
-              </div>
-            )}
-            {editing && (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  mutate("", "PATCH", { caption, revision: post.revision });
-                }}
-              >
-                <label>
-                  Deskripsi
-                  <textarea
-                    value={caption}
-                    minLength={10}
-                    maxLength={5000}
-                    onChange={(e) => setCaption(e.target.value)}
-                    required
-                  />
-                </label>
-                <button className="button primary" disabled={action.isPending}>
-                  Simpan deskripsi
-                </button>
-              </form>
-            )}
-            <details>
-              <summary>Laporkan konten</summary>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  action.mutate({
-                    path: "community/flags",
-                    method: "POST",
-                    body: { post_id: post.id, reason },
-                  });
-                }}
-              >
-                <label>
-                  Alasan
-                  <input
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    minLength={5}
-                    maxLength={1000}
-                    required
-                  />
-                </label>
-                <button
-                  className="button secondary"
-                  disabled={action.isPending}
-                >
-                  Kirim ke moderator
-                </button>
-              </form>
-            </details>
-            {user?.role === "admin" && (
-              <form
-                className="moderation"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  action.mutate({
-                    path: `admin/community/posts/${post.id}`,
-                    method: "PATCH",
-                    body: {
-                      state: post.state === "hidden" ? "published" : "hidden",
-                      reason,
-                      revision: post.revision,
-                    },
-                  });
-                }}
-              >
-                <label>
-                  Alasan moderasi
-                  <input
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    minLength={5}
-                    maxLength={1000}
-                    required
-                  />
-                </label>
-                <button
-                  className="button secondary"
-                  disabled={action.isPending}
-                >
-                  {post.state === "hidden"
-                    ? "Pulihkan posting"
-                    : "Sembunyikan posting"}
-                </button>
-              </form>
-            )}
-          </>
-        )}
-        {error && <Failure error={error} />}
-      </div>
-    </article>
-  );
-}
 export default function Community() {
   const [params] = useSearchParams();
   const filter = communityParams(params).toString();
@@ -271,72 +36,74 @@ export default function Community() {
   const posts = feed.data?.pages.flatMap((p) => p.posts) || [];
   return (
     <>
-      <div className="page-heading">
+      <div className="page-heading feed-heading">
         <div>
-          <h1>Kabar dari sekitar.</h1>
-          <p>Temukan laporan, dukung langkah baik di lingkunganmu.</p>
+          <h1>Beranda</h1>
+          <p>Foto dan kabar dari lingkunganmu.</p>
         </div>
-        <Link className="button primary" to="/reports/new">
-          <Camera size={18} />
-          Buat laporan
+        <Link className="text-button" to={"/map?" + params.toString()}>
+          <MapPin size={18} />
+          Lihat peta
         </Link>
       </div>
-      <div className="community-layout">
-        <div>
-          <RegionFilters />
-          {feed.isPending ? (
-            <Loading />
-          ) : feed.error ? (
-            <Failure error={feed.error} retry={() => void feed.refetch()} />
-          ) : posts.length === 0 ? (
-            <div className="community-empty">
-              <MapPin size={32} />
-              <h2>Belum ada cerita di sini.</h2>
-              <p>
-                Coba wilayah lain, atau bagikan laporan pertamamu. Laporan
-                privat tidak tampil di beranda.
-              </p>
-              <Link className="button secondary" to="/reports/new">
-                Foto sampah di sekitarmu
-              </Link>
-            </div>
-          ) : (
-            <div className="feed-list">
-              {posts.map((p) => (
-                <PostCard key={p.id} post={p} />
-              ))}
-              {feed.hasNextPage && (
-                <button
-                  className="button secondary"
-                  disabled={feed.isFetchingNextPage}
-                  onClick={() => void feed.fetchNextPage()}
-                >
-                  {feed.isFetchingNextPage
-                    ? "Memuat…"
+      <RegionFilters />
+      <section aria-label="Posting komunitas">
+        {feed.error && posts.length > 0 && (
+          <Failure
+            error={feed.error}
+            retry={() =>
+              void (feed.isFetchNextPageError
+                ? feed.fetchNextPage()
+                : feed.refetch())
+            }
+          />
+        )}
+        {feed.isPending ? (
+          <div className="feed-list" aria-label="Memuat posting" role="status">
+            {[0, 1].map((i) => (
+              <div key={i} className="post-skeleton" aria-hidden="true">
+                <div />
+                <div />
+                <div />
+              </div>
+            ))}
+            <span className="sr-only">Memuat posting…</span>
+          </div>
+        ) : feed.error && !posts.length ? (
+          <Failure error={feed.error} retry={() => void feed.refetch()} />
+        ) : posts.length === 0 ? (
+          <div className="community-empty">
+            <MapPin size={32} />
+            <h2>Belum ada cerita di sini.</h2>
+            <p>
+              Coba wilayah lain, atau bagikan laporan pertamamu. Laporan privat
+              tidak tampil di beranda.
+            </p>
+            <Link className="button secondary" to="/reports/new">
+              Foto sampah di sekitarmu
+            </Link>
+          </div>
+        ) : (
+          <div className="feed-list">
+            {posts.map((p) => (
+              <PostCard key={p.id} post={p} />
+            ))}
+            {feed.hasNextPage && (
+              <button
+                className="button secondary"
+                disabled={feed.isFetchingNextPage}
+                onClick={() => void feed.fetchNextPage()}
+              >
+                {feed.isFetchingNextPage
+                  ? "Memuat…"
+                  : feed.isFetchNextPageError
+                    ? "Coba muat berikutnya"
                     : "Lihat laporan berikutnya"}
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-        <aside className="community-aside">
-          <h2>
-            Lingkunganmu,
-            <br />
-            langkah kecilmu.
-          </h2>
-          <p>
-            AI membantu mengenali material. Pengelola menindaklanjuti laporan.
-            Kamu bisa mengikuti perkembangannya.
-          </p>
-          <Link to={"/map?" + params.toString()}>Jelajahi peta</Link>
-          <p className="privacy-note">
-            Posting hanya terlihat oleh pengguna yang masuk. GPS presisi ikut
-            terlihat saat kamu memilih membagikan laporan.
-          </p>
-          <Link to="/onboarding">Cara memakai WasteWise</Link>
-        </aside>
-      </div>
+              </button>
+            )}
+          </div>
+        )}
+      </section>
     </>
   );
 }

@@ -281,3 +281,44 @@ def test_withdrawal_during_derivative_upload_cannot_republish(client, accounts, 
     while cleanup():
         pass
     assert all(not storage.path(path).exists() for path in paths)
+
+
+def test_feed_includes_every_report_status_without_revealing_private_reports(
+    client, accounts, monkeypatch
+):
+    from app.models import Report
+
+    prediction(monkeypatch)
+    owner, peer = accounts["owner"]["headers"], accounts["other"]["headers"]
+    expected = {}
+    for status in ("Pending", "In Progress", "Completed", "Rejected"):
+        report = create(client, accounts["owner"], share_to_community=True).json()["data"]
+        assert run_once()
+        with SessionLocal.begin() as db:
+            row = db.get(Report, UUID(report["id"]))
+            row.status = status
+            post = db.scalar(select(CommunityPost).where(CommunityPost.report_id == row.id))
+            expected[str(post.id)] = status
+    private = create(client, accounts["owner"]).json()["data"]
+    result = client.get("/api/v1/community/feed", headers=peer).json()["data"]
+    assert {p["id"]: p["status"] for p in result["posts"]} == expected
+    for status in expected.values():
+        result = client.get(
+            "/api/v1/community/feed", params={"status": status}, headers=peer
+        ).json()["data"]
+        assert len(result["posts"]) == 1 and result["posts"][0]["status"] == status
+        points = client.get(
+            "/api/v1/community/map", params={"status": status}, headers=peer
+        ).json()["data"]
+        assert sum(p["count"] for p in points["features"]) == 1
+    seen, cursor = [], None
+    for _ in range(2):
+        params = {"per_page": 2}
+        if cursor:
+            params["cursor"] = cursor
+        result = client.get("/api/v1/community/feed", params=params, headers=peer).json()["data"]
+        seen.extend(p["id"] for p in result["posts"])
+        cursor = result["next_cursor"]
+    assert len(seen) == len(set(seen)) == 4 and not cursor
+    assert client.get("/api/v1/reports/" + private["id"], headers=owner).status_code == 200
+    assert client.get("/api/v1/reports/" + private["id"], headers=peer).status_code == 404

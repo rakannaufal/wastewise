@@ -1,0 +1,11 @@
+
+> wastewise@1.0.0 check
+> npm --prefix web run check && npm --prefix mobile run typecheck
+
+
+> wastewise-web@1.0.0 check
+> tsc -b && eslint .
+
+
+> wastewise-mobile@1.0.0 typecheck
+> tsc --noEmit

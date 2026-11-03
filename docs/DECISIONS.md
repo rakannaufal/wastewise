@@ -62,3 +62,7 @@ Instruksi pengguna menambahkan feed login-only, suka/komentar, filter sampai kel
 ## D-15: Permukaan publik dan identitas bersama
 
 Permintaan landing/onboarding menggantikan larangan hero pada D-07. Palet forest dipertahankan, font berubah ke Manrope/Caveat sesuai referensi. Operasi admin tetap tersendiri; komunitas menjadi beranda pengguna. MapLibre hanya dimuat di rute peta; react-native-maps versi Expo digunakan pada native. Raster ilustrasi menunggu aset yang disetujui; contoh dataset diberi label, logo asli berupa vector geometry.
+
+## D-16: Navigasi pengguna, tipografi tunggal, dan filter bertahap (2026-11-03)
+
+Instruksi terbaru menggantikan bagian tipografi D-15: Manrope menjadi satu-satunya keluarga font teks pada web/native. Halaman pengguna memakai navigasi atas/bawah tanpa sidebar; operasi admin mempertahankan sidebar berdasarkan role dan konteks route. Filter lokasi/kategori/status tersembunyi sampai ikon dibuka, menggunakan draft dan Terapkan; Tutup tidak mengubah hasil. Parameter URL web tetap dapat dibagikan. Pengguna mengonfirmasi beranda hanya berisi posting komunitas yang sudah dibagikan, semua status laporan tampil secara default. Ini tidak memberikan izin publikasi laporan privat lama. Tidak ada perubahan schema, model, atau kontrak API server.

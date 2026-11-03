@@ -25,8 +25,54 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
     .getByLabel("Kata sandi", { exact: true })
     .fill("WasteWise1!temporary");
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
-  await expect(page.getByText("Kabar dari sekitar.", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Buat laporan", exact: true }).click();
+  await expect(
+    page.getByText("Foto dan kabar dari lingkunganmu.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Semua material", { exact: true })).toHaveCount(
+    0,
+  );
+  await page.getByRole("button", { name: "Buka filter", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Terapkan", exact: true }),
+  ).toBeInViewport();
+  await page.screenshot({
+    path: "../docs/evidence/refinement-mobile-filter.png",
+    animations: "disabled",
+  });
+  await page.getByRole("radio", { name: "Ditolak", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Tutup filter", exact: true }),
+  ).toBeInViewport();
+  await expect(
+    page.getByRole("button", { name: "Terapkan", exact: true }),
+  ).toBeInViewport();
+  await page.getByRole("button", { name: "Tutup filter", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Tutup filter", exact: true }),
+  ).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Buka filter", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Buka filter", exact: true }).click();
+  await page.getByRole("radio", { name: "Ditolak", exact: true }).click();
+  await page.getByRole("button", { name: "Terapkan", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Tutup filter", exact: true }),
+  ).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Hapus filter status", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Hapus filter status", exact: true })
+    .click();
+  await page.screenshot({
+    path: "../docs/evidence/refinement-mobile-home.png",
+    fullPage: true,
+  });
+  await page.getByRole("tab", { name: "Laporan", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Buat laporan baru", exact: true })
+    .click();
   const chooser = page.waitForEvent("filechooser");
   await page
     .getByRole("button", { name: "Pilih gambar dari galeri", exact: true })
@@ -79,9 +125,43 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+  await page
+    .getByRole("button", {
+      name: "Saya setuju membagikan foto dan GPS",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("button", { name: "Bagikan laporan", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Lihat dan kelola posting", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Kembali ke laporan", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "Beranda", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Buka foto dan percakapan", exact: true }),
+  ).toBeVisible({ timeout: 30000 });
+  await page.screenshot({
+    path: "../docs/evidence/refinement-mobile-feed.png",
+  });
+  await page
+    .getByRole("button", { name: "Sukai posting", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Batalkan suka", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("tab", { name: "Laporan", exact: true }).click();
+  await page.getByRole("button", { name: /^Laporan / }).click();
   page.once("dialog", (dialog) => dialog.accept());
   await page
     .getByRole("button", { name: "Hapus laporan", exact: true })
     .click();
-  await expect(page.getByText("Belum ada laporan yang cocok.")).toBeVisible();
+  await expect(
+    page
+      .getByText("Belum ada laporan.", { exact: true })
+      .filter({ visible: true }),
+  ).toBeVisible();
 });

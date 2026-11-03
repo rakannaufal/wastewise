@@ -1,166 +1,244 @@
-import { useEffect, useState } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
-import { api } from "./api";
-import { Button, ErrorText, Input, styles, categories, statusName } from "./ui";
-import { regionLevels } from "../../shared/community";
-import type { Region } from "../../shared/community";
+import { useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Button, styles, categories, statusName, colors } from "./ui";
+import { emptyFilters, filterCount } from "../../shared/filters";
 import type { Filters } from "./community";
-export default function CommunityFilters({
+import RegionPicker from "./RegionPicker";
+function Choices({
+  title,
+  choices,
   value,
   onChange,
 }: {
-  value: Filters;
-  onChange: (v: Filters) => void;
+  title: string;
+  choices: { id: string; name: string }[];
+  value: string;
+  onChange: (id: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const [level, setLevel] = useState(0);
-  const [rows, setRows] = useState<Region[]>([]);
-  const [search, setSearch] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [retry, setRetry] = useState(0);
-  const [labels, setLabels] = useState<string[]>([]);
-  const parent = level > 0 ? value.codes[level - 1] : null;
-  useEffect(() => {
-    if (!open) return;
-    const controller = new AbortController();
-    setLoading(true);
-    setRows([]);
-    setError("");
-    const timer = setTimeout(() => {
-      const q = new URLSearchParams();
-      if (parent) q.set("parent", parent);
-      if (search) q.set("search", search);
-      q.set("level", String(level + 1));
-      api<{ regions: Region[]; truncated: boolean }>(`/api/v1/regions?${q}`, {
-        signal: controller.signal,
-      })
-        .then((r) => setRows(r.regions))
-        .catch((e) => {
-          if (!controller.signal.aborted) setError((e as Error).message);
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) setLoading(false);
-        });
-    }, 250);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [level, parent, search, open, retry]);
   return (
     <View style={{ gap: 10 }}>
-      <Button
-        secondary
-        title={labels.filter(Boolean).join(" / ") || "Filter wilayah Indonesia"}
-        onPress={() => {
-          setLevel(0);
-          setSearch("");
-          setOpen(true);
-        }}
-      />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 8 }}
+      <Text style={styles.label}>{title}</Text>
+      <View
+        style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}
+        accessibilityRole="radiogroup"
+        accessibilityLabel={title}
       >
-        {[{ id: "", name: "Semua material" }, ...categories].map((c) => (
+        {choices.map((c) => (
           <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ selected: value.category === c.id }}
             key={c.id}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: value === c.id }}
+            onPress={() => onChange(c.id)}
             style={[
               styles.chip,
-              value.category === c.id && { backgroundColor: "#e4efe5" },
+              value === c.id && {
+                backgroundColor: "#E4EFE5",
+                borderColor: colors.accent,
+              },
             ]}
-            onPress={() => onChange({ ...value, category: c.id })}
           >
             <Text style={styles.text}>{c.name}</Text>
           </Pressable>
         ))}
-      </ScrollView>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 8 }}
-      >
-        {[["", "Semua status"], ...Object.entries(statusName)].map(
-          ([id, name]) => (
-            <Pressable
-              key={id}
-              accessibilityRole="button"
-              accessibilityState={{ selected: value.status === id }}
-              style={[
-                styles.chip,
-                value.status === id && { backgroundColor: "#e4efe5" },
-              ]}
-              onPress={() => onChange({ ...value, status: id })}
-            >
-              <Text style={styles.text}>{name}</Text>
-            </Pressable>
-          ),
-        )}
-      </ScrollView>
-      <Modal
-        visible={open}
-        animationType="slide"
-        onRequestClose={() => setOpen(false)}
-        presentationStyle="pageSheet"
-      >
-        <View style={[styles.screen, { padding: 24, paddingTop: 48, gap: 16 }]}>
-          <Text style={styles.heading}>{regionLevels[level]}</Text>
-          <Text style={styles.text}>
-            {labels.slice(0, level).join(" / ") || "Indonesia"}
-          </Text>
-          <Input label="Cari wilayah" value={search} onChangeText={setSearch} />
-          <ErrorText message={error} />
-          {error && (
-            <Button
-              secondary
-              title="Coba kembali"
-              onPress={() => setRetry((v) => v + 1)}
-            />
+      </View>
+    </View>
+  );
+}
+export default function CommunityFilters({
+  value,
+  onChange,
+  title = "Beranda",
+  statusOnly = false,
+}: {
+  value: Filters;
+  onChange: (v: Filters) => void;
+  title?: string;
+  statusOnly?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<Filters>(value);
+  const [resetVersion, setResetVersion] = useState(0);
+  const count = filterCount(value);
+  const chips = [
+    {
+      name: "lokasi",
+      text: value.labels?.filter(Boolean).at(-1) || value.codes.at(-1),
+      clear: () => onChange({ ...value, codes: [], labels: [] }),
+    },
+    {
+      name: "kategori",
+      text: categories.find((c) => c.id === value.category)?.name,
+      clear: () => onChange({ ...value, category: "" }),
+    },
+    {
+      name: "status",
+      text: value.status ? statusName[value.status] : "",
+      clear: () => onChange({ ...value, status: "" }),
+    },
+  ];
+  return (
+    <View style={{ gap: 10 }}>
+      <View style={[styles.row, { justifyContent: "space-between" }]}>
+        <Text accessibilityRole="header" style={[styles.title, { flex: 1 }]}>
+          {title}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Buka filter${count ? `, ${count} aktif` : ""}`}
+          accessibilityState={{ expanded: open }}
+          onPress={() => {
+            setDraft(value);
+            setResetVersion((v) => v + 1);
+            setOpen(true);
+          }}
+          style={styles.filterTrigger}
+        >
+          <Ionicons name="options-outline" size={23} color={colors.accent} />
+          {count > 0 && (
+            <Text style={[styles.label, { color: colors.accent }]}>
+              {count}
+            </Text>
           )}
-          <ScrollView keyboardShouldPersistTaps="handled">
-            <Text style={styles.text}>{loading ? "Memuat wilayah…" : ""}</Text>
-            {rows.map((r) => (
+        </Pressable>
+      </View>
+      {count > 0 && (
+        <View style={[styles.row, { flexWrap: "wrap", gap: 8 }]}>
+          {chips
+            .filter((c) => c.text)
+            .map((c) => (
               <Pressable
-                key={r.code}
-                style={styles.chip}
+                key={c.name}
                 accessibilityRole="button"
-                onPress={() => {
-                  const codes = value.codes.slice(0, level);
-                  codes.push(r.code);
-                  onChange({ ...value, codes });
-                  setLabels((v) => [...v.slice(0, level), r.name]);
-                  setSearch("");
-                  if (level < 3) setLevel((v) => v + 1);
-                  else setOpen(false);
-                }}
+                accessibilityLabel={`Hapus filter ${c.name}`}
+                style={[
+                  styles.activeFilter,
+                  styles.row,
+                  { gap: 6, flexShrink: 1 },
+                ]}
+                onPress={c.clear}
               >
-                <Text style={styles.text}>{r.name}</Text>
+                <Text style={[styles.label, { flexShrink: 1 }]}>{c.text}</Text>
+                <Ionicons name="close" size={14} color={colors.muted} />
               </Pressable>
             ))}
-          </ScrollView>
-          <Button
-            title="Gunakan wilayah terpilih"
-            onPress={() => setOpen(false)}
-          />
-          <Button
-            secondary
-            title={level ? "Kembali satu tingkat" : "Hapus filter lokasi"}
-            onPress={() => {
-              if (level) {
-                setLevel((v) => v - 1);
-                setSearch("");
-              } else {
-                onChange({ ...value, codes: [] });
-                setLabels([]);
-                setOpen(false);
-              }
-            }}
-          />
         </View>
+      )}
+      <Modal
+        visible={open}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setOpen(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+            backgroundColor: "#17281f66",
+          }}
+        >
+          <SafeAreaView
+            edges={["bottom", "left", "right"]}
+            style={{
+              maxHeight: "92%",
+              backgroundColor: "#fff",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+            }}
+          >
+            <View
+              accessibilityViewIsModal
+              style={{ padding: 20, gap: 16, flexShrink: 1 }}
+            >
+              <View style={[styles.row, { justifyContent: "space-between" }]}>
+                <Text accessibilityRole="header" style={styles.heading}>
+                  Filter
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Tutup filter"
+                  onPress={() => setOpen(false)}
+                  style={styles.filterTrigger}
+                >
+                  <Ionicons name="close" size={24} color={colors.ink} />
+                </Pressable>
+              </View>
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled
+                contentContainerStyle={{ gap: 20 }}
+              >
+                {!statusOnly && (
+                  <>
+                    <RegionPicker
+                      key={resetVersion}
+                      value={draft}
+                      onChange={setDraft}
+                    />
+                    <Choices
+                      title="Kategori sampah"
+                      choices={[
+                        { id: "", name: "Semua material" },
+                        ...categories,
+                      ]}
+                      value={draft.category}
+                      onChange={(category) => setDraft({ ...draft, category })}
+                    />
+                  </>
+                )}
+                <Choices
+                  title="Status laporan"
+                  choices={[
+                    ["", "Semua status"],
+                    ...Object.entries(statusName),
+                  ].map(([id, name]) => ({ id, name }))}
+                  value={draft.status}
+                  onChange={(status) => setDraft({ ...draft, status })}
+                />
+              </ScrollView>
+              <View
+                style={[
+                  styles.row,
+                  {
+                    borderTopWidth: 1,
+                    borderColor: colors.border,
+                    paddingTop: 16,
+                  },
+                ]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Button
+                    secondary
+                    title="Reset"
+                    onPress={() => {
+                      setDraft(emptyFilters);
+                      setResetVersion((v) => v + 1);
+                    }}
+                  />
+                </View>
+                <View style={{ flex: 2 }}>
+                  <Button
+                    title="Terapkan"
+                    onPress={() => {
+                      onChange(draft);
+                      setOpen(false);
+                    }}
+                  />
+                </View>
+              </View>
+            </View>
+          </SafeAreaView>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

@@ -99,7 +99,7 @@ export default function PostDetail() {
         )
       ) : (
         <>
-          <PostCard post={post} reload={() => void load()} />
+          <PostCard post={post} reload={() => void load()} detail />
           {post.is_owner && (
             <>
               <Button

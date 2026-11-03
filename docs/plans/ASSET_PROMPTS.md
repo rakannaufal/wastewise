@@ -4,7 +4,7 @@ Status: **prompt/rencana produksi, belum menghasilkan gambar atau logo final**. 
 
 ## 1. Sistem visual dan penggunaan
 
-Mengikuti screenshot Bantuin yang diberikan: ilustrasi tinta sederhana, bentuk terbaca, sorotan warna datar, ruang kosong. Warna diadaptasi menjadi hijau WasteWise. Teks UI ditulis oleh web/native menggunakan Caveat dan Manrope; jangan memasukkan heading, tombol, kode error atau label ke gambar.
+Mengikuti screenshot Bantuin yang diberikan: ilustrasi tinta sederhana, bentuk terbaca, sorotan warna datar, ruang kosong. Warna diadaptasi menjadi hijau WasteWise. Teks UI ditulis oleh web/native menggunakan Manrope; jangan memasukkan heading, tombol, kode error atau label ke gambar.
 
 Prompt generatif ditulis dalam bahasa Inggris agar dapat langsung dipakai pada generator; copy antarmuka tetap Indonesia. Untuk ilustrasi, gabungkan **BASE + satu VARIANT + NEGATIVE**. Buat satu hero/onboarding sebagai acuan visual, setujui konsistensinya, lalu gunakan sebagai image reference untuk varian lain. Jangan menghasilkan seluruh batch dengan gaya yang berbeda-beda.
 
@@ -44,7 +44,7 @@ Final: `brand/wastewise-wordmark.svg`; ekspor lebar1200×240; P0.
 Explore a clean typographic wordmark reading exactly "WasteWise" with this exact capitalization. Use the visual character of Manrope SemiBold: open counters, readable proportions, calm and contemporary. Introduce one subtle custom joining detail in the W forms that echoes folded material, without reducing legibility. Forest green #215B3C, one horizontal wordmark, transparent background, ample whitespace. No icon, no tagline, no punctuation, no extra text, no cursive lettering, no gradient, no presentation mockup. Prioritize exact spelling and optical spacing.
 ```
 
-Produksi: ketik `WasteWise` dengan font berlisensi dan kerning manual, bukan memakai piksel ejaan AI. Simpan versi editable/font serta outlined SVG. Caveat tetap font display halaman, bukan wajib menjadi logo teks.
+Produksi: ketik `WasteWise` dengan font berlisensi dan kerning manual, bukan memakai piksel ejaan AI. Simpan versi editable/font serta outlined SVG. Seluruh teks halaman dan logo teks memakai Manrope sesuai keputusan D-16.
 
 ### B03 — lockup simbol + teks
 
@@ -259,7 +259,7 @@ State body/form tidak harus menampilkan ilustrasi besar. Contoh413 di composer c
 
 - Marker peta, cluster, ikon status dan ikon kamera dibuat sebagai komponen/SVG asli; tidak menggunakan bitmap AI pada ratusan pin.
 - Basemap memakai penyedia tiles nyata dengan atribusi; ilustrasi E03/S02 tidak boleh ditampilkan sebagai peta geografis sungguhan.
-- Open Graph1200×630 dirakit dari master logo, Caveat headline dan ilustrasi L01. Prompt opsional untuk latar saja:
+- Open Graph1200×630 dirakit dari master logo, Manrope headline dan ilustrasi L01. Prompt opsional untuk latar saja:
 
 ```text
 A very spacious wide editorial composition for WasteWise, with a folded paper carton, one unbranded empty bottle and a small location pin grouped in the right third. The left two-thirds remain nearly empty warm off-white for real typography added later. Forest-green ink and pale sage accents, coherent with the supplied approved WasteWise illustration reference. No words, no UI, no real map, no logo.

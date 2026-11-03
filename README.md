@@ -2,6 +2,8 @@
 
 Aplikasi pengenalan12 kategori sampah, pelaporan privat, komunitas foto dengan suka/komentar, serta peta lokasi. React web, Expo mobile, FastAPI, PostgreSQL, MobileNetV2. Bahasa antarmuka Indonesia.
 
+Beranda komunitas menampilkan semua status laporan yang sudah dibagikan. Laporan privat tetap di Laporan saya. Navigasi pengguna web memakai header dan navigasi bawah pada HP, tanpa sidebar; panel admin tetap terpisah. Ikon Filter membuka pilihan lokasi, kategori, dan status. Pilih Terapkan untuk mengubah hasil; Tutup membatalkan perubahan, Reset menyiapkan semua pilihan bawaan. Semua teks web/mobile memakai Manrope.
+
 ## Enam hasil akhir
 
 | Artefak | Lokasi |
@@ -115,7 +117,7 @@ HP dan komputer harus berada pada Wi-Fi yang saling dapat mengakses. Buka `http:
 npm run dev:mobile
 ```
 
-Lima tab: Ringkasan, Laporan, Klasifikasi, Panduan, Profil. Riwayat menyediakan pencarian, filter status, dan pagination. Kamera/galeri, SecureStore, lokasi dan izin membutuhkan pengujian perangkat nyata. Bundel iOS/Android/web telah diekspor; pemasangan perangkat dan rilis toko belum dilakukan.
+Lima tab: **Beranda, Peta, Foto, Laporan, Profil**. Filter lokasi/kategori/status dibuka melalui ikon pengaturan; tutup panel untuk membatalkan, atau tekan Terapkan. Ringkasan pribadi, klasifikasi terpisah, serta panduan tersedia melalui Profil. Riwayat menyediakan pencarian, filter status, dan pagination. Kamera/galeri, SecureStore, lokasi dan izin membutuhkan pengujian perangkat nyata. Bundel iOS/Android/web telah diekspor; pemasangan perangkat dan rilis toko belum dilakukan.
 
 ## Data, model, dan evaluasi ulang
 

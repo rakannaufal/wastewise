@@ -1,0 +1,1 @@
+PASS: production-bundled MapLibre worker bootstrapped in Chrome.

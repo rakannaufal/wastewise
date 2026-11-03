@@ -1,5 +1,7 @@
 # WasteWise: design delivery gate
 
+Catatan: laporan 2 November di bawah merupakan bukti historis. Gate penyempurnaan terbaru berada pada bagian terakhir; Manrope menggantikan font lama sesuai D-16.
+
 Tanggal: 2 November 2026. Mode antislop: **during**, sesuai pilihan pengguna. Hasil: **PASS untuk web dan alur Expo web yang diuji**. Native iOS/Android baru melewati typecheck/ekspor; gate pemasangan dan interaksi perangkat tetap terbuka, bukan dinyatakan PASS.
 
 Arah sebelum implementasi: PRODUCT.md dan DESIGN.md, ruang kerja daylight forest/sage, foto material nyata, alur foto/kategori/tindakan. ENERGY 2 / RHYTHM 2 / MOTION 1, variance 4. Bukti: source, screenshot pada evidence/, skenario Playwright pengguna/pengelola/Expo web, dan audit axe WCAG 2 A/AA serta 2.1 AA. Laporan ini bukan sertifikasi aksesibilitas seluruh platform.
@@ -69,3 +71,14 @@ Arah sebelum implementasi: PRODUCT.md dan DESIGN.md, ruang kerja daylight forest
 ## Bukti dan batas
 
 `evidence/browser-tests.txt`: tiga skenario lulus. `evidence/web-smoke-final.txt`: audit tambahan setelah padding grafik/kontras diperbaiki. `evidence/accessibility-*.json`: daftar pelanggaran kosong pada layar yang diuji. Screenshot menunjukkan laporan QA temporer, bukan aktivitas pengguna produksi. Kamera native, izin OS, perangkat nyata, pengujian pembaca layar manual, serta cakupan semua ukuran/font sistem belum diverifikasi; lihat TESTING.md dan PROGRESS.md.
+
+## Gate penyempurnaan, 3 November 2026
+
+Cakupan: navigasi pengguna/admin, beranda/kartu komunitas, filter, profil web, riwayat dan peta mobile, tipografi bersama. Antislop during dan Impeccable mengikuti arah yang sudah tersedia; ENERGY2/RHYTHM2/MOTION1 dipertahankan. Bukti: `refinement-web-feed*.png`, `refinement-mobile-*.png`, log browser/check/build/export serta TESTING.md. PASS berlaku pada web/Expo web yang dijalankan; pemasangan iOS/Android tetap terbuka.
+
+- Hard Gate PASS: foto dari laporan QA yang benar-benar dikirim; tanpa aktivitas/testimonial/angka dampak palsu. Sidebar pengguna tidak ada; seluruh route navigasi tersedia. Screenshot, assertion overflow320–1440px, Manrope dan audit axe pada layar dalam suite memeriksa layout/kontras. Filter punya label, draft, Cancel/Reset/Apply; empty/loading/error/retry nyata. Alur galeri, ML/GPS mock, suka, komentar, admin dan delete dijalankan.
+- Purpose Gate PASS: hijau forest meneruskan identitas; ikon filter menyembunyikan kepadatan kontrol, kamera menonjolkan tugas utama, marker menunjukkan lokasi nyata. Kartu4:3 mengutamakan foto laporan; dua kolom desktop menjaga urutan kronologis. Manrope dipakai karena tersedia di kedua platform dan diminta konsisten; alasan warna/layout/font/spacing/kartu tercatat DESIGN.md dan rencana.
+- Liveliness PASS: foto menjadi fokus Beranda; ruang memisahkan toolbar dan posting; aksen hanya tindakan/selection, status berteks; material/kategori/lokasi mengikat identitas WasteWise. Tidak menambah animasi dekoratif atau section pengisi; dials sesuai arah sebelum implementasi.
+- Craftsmanship dan consistency locks PASS: komponen kartu/filter dipakai kembali, profil memiliki route nyata, riwayat kosong tanpa pagination palsu. Default tanpa status dibuktikan melalui pengujian empat status; laporan privat tetap terisolasi. Perbaikan worker diuji pada development dan bundle production. Source, build, typecheck/lint, screenshot dan hasil terukur disediakan; batas native/perangkat dinyatakan secara eksplisit.
+
+Batas: bukan sertifikasi semua layar/teknologi bantu; belum menguji perangkat fisik, font sistem ekstrem atau distribusi toko. Warning chunk MapLibre besar tetap dicatat. Tidak ada klaim benchmark HP atau produksi dari pemeriksaan ini.
