@@ -197,4 +197,6 @@ Grafis SVG lokal: `web/public/illustrations/report-notes.svg`, `sort-materials.s
 
 ### Interaksi komunitas
 
-Menu tiga titik di dalam kartu membuka Edit deskripsi, Batalkan publikasi (pemilik), dan Laporkan konten. Pembatalan publikasi menyimpan laporan operasional; penghapusan laporan tersedia di riwayat/detail. Ikon hati menjadi merah saat disukai, merespons langsung, kembali ke keadaan semula jika API gagal. Komentar pada detail posting memiliki tombol Balas; buka jumlah balasan untuk membaca percakapan. Balasan satu tingkat,30 per halaman; menghapus komentar utama juga menghapus balasannya. Pengguna harus login untuk menulis.
+Menu tiga titik di dalam kartu membuka **Edit**, **Hapus** (pemilik), dan **Laporkan**. Pembatalan publikasi menyimpan laporan operasional; penghapusan laporan tersedia di riwayat/detail. Ikon hati menjadi merah saat disukai, merespons langsung, kembali ke keadaan semula jika API gagal. Komentar pada detail posting memiliki tombol Balas; buka jumlah balasan untuk membaca percakapan. Balasan satu tingkat,30 per halaman; menghapus komentar utama juga menghapus balasannya. Pengguna harus login untuk menulis.
+
+Optimasi client: halaman login web dimuat saat dibuka; foto komunitas memakai lazy loading dan decoding asinkron. Feed, detail posting dan peta native menghentikan polling ketika layar tidak fokus atau aplikasi berada di latar belakang, lalu mengambil data terbaru saat aktif kembali. Preferensi reduced motion dibaca melalui satu observer bersama untuk semua kartu. Tidak menambah dependensi runtime.

@@ -22,17 +22,17 @@ export default function PostMenu({
       ? [
           {
             name: "create-outline" as const,
-            label: "Edit deskripsi",
+            label: "Edit",
             action: edit,
           },
           {
             name: "trash-outline" as const,
-            label: "Batalkan publikasi",
+            label: "Hapus",
             action: remove,
           },
         ]
       : []),
-    { name: "flag-outline" as const, label: "Laporkan konten", action: report },
+    { name: "flag-outline" as const, label: "Laporkan", action: report },
   ];
   return (
     <View style={{ position: "relative", zIndex: 10 }}>

@@ -14,10 +14,14 @@ import {
   colors,
 } from "../../src/ui";
 import PostCard from "../../src/PostCard";
+import { useActiveScreen } from "../../src/useActiveScreen";
 import CommentThread from "../../src/CommentThread";
 import type { Post, Comment, Comments } from "../../../shared/community";
 export default function PostDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const active = useActiveScreen();
+  const controller = useRef<AbortController | null>(null);
+  const pending = useRef(false);
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -31,30 +35,47 @@ export default function PostDetail() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const load = useCallback(async () => {
+    if (!active) return;
+    controller.current?.abort();
+    const abort = new AbortController();
+    controller.current = abort;
+    pending.current = true;
     try {
-      const p = await api<Post>(`/api/v1/community/posts/${id}`);
+      const p = await api<Post>(`/api/v1/community/posts/${id}`, {
+        signal: abort.signal,
+      });
+      if (abort.signal.aborted) return;
       setPost(p);
       if (p.state === "published") {
-        const c = await api<Comments>(`/api/v1/community/posts/${id}/comments`);
+        const c = await api<Comments>(
+          `/api/v1/community/posts/${id}/comments`,
+          { signal: abort.signal },
+        );
+        if (abort.signal.aborted) return;
         setComments(c.comments);
         setCursor(c.next_cursor);
       }
       setError("");
     } catch (e) {
-      setError((e as Error).message);
+      if (!abort.signal.aborted) setError((e as Error).message);
+    } finally {
+      if (controller.current === abort) pending.current = false;
     }
-  }, [id]);
+  }, [id, active]);
   useEffect(() => {
     void load();
+    return () => controller.current?.abort();
   }, [load]);
   useEffect(() => {
-    if (!post) return;
+    if (!active || !post) return;
     const timer = setInterval(
-      () => void load(),
+      () => {
+        if (!pending.current) void load();
+      },
       post.state === "processing" ? 2000 : 60000,
     );
     return () => clearInterval(timer);
-  }, [post?.state, load]);
+  }, [active, post?.state, load]);
   async function mutate(path: string, method: string, data?: object) {
     setBusy(true);
     setError("");

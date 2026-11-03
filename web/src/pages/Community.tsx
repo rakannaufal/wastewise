@@ -20,6 +20,7 @@ export default function Community() {
   const { user } = useAuth();
   const feed = useInfiniteQuery({
     queryKey: ["community", "feed", user?.id, filter],
+    staleTime: 30000,
     initialPageParam: "",
     queryFn: ({ pageParam, signal }) =>
       api<Feed>(

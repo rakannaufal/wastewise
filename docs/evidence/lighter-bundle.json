@@ -1,0 +1,14 @@
+{
+  "before": {
+    "file": "/assets/index-Cl9Gn3wY.js",
+    "bytes": 431403,
+    "gzip_bytes": 133999
+  },
+  "after": {
+    "file": "/assets/index-CZyk1KO9.js",
+    "bytes": 309268,
+    "gzip_bytes": 96813
+  },
+  "main_entry_reduction_percent": 28.31,
+  "measurement": "Production main entry only; bytes uncompressed, gzip via Python gzip.compress. Not total route/network transfer or device latency."
+}

@@ -3,7 +3,8 @@ import { Modal, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MapView, { Marker } from "react-native-maps";
 import type { Region as MapRegion } from "react-native-maps";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
+import { useActiveScreen } from "./useActiveScreen";
 import { api } from "./api";
 import type { MapPoints, Post } from "../../shared/community";
 import { Button, categoryName, ErrorText, statusName, styles } from "./ui";
@@ -15,6 +16,8 @@ export default function CommunityMap({
   query: string;
   focus?: Focus;
 }) {
+  const active = useActiveScreen();
+  const pending = useRef(false);
   const map = useRef<MapView>(null);
   const [view, setView] = useState<MapRegion>({
     latitude: -2.5,
@@ -31,13 +34,13 @@ export default function CommunityMap({
   const [post, setPost] = useState<Post | null>(null);
   const [postError, setPostError] = useState("");
   const reload = useCallback(() => setVersion((v) => v + 1), []);
-  useFocusEffect(
-    useCallback(() => {
-      reload();
-      const timer = setInterval(reload, 60000);
-      return () => clearInterval(timer);
-    }, [reload]),
-  );
+  useEffect(() => {
+    if (!active) return;
+    const timer = setInterval(() => {
+      if (!pending.current) reload();
+    }, 60000);
+    return () => clearInterval(timer);
+  }, [active, reload]);
   const focusLat = focus?.latitude,
     focusLng = focus?.longitude;
   useEffect(() => {
@@ -52,6 +55,8 @@ export default function CommunityMap({
     setView(next);
   }, [focusLat, focusLng]);
   useEffect(() => {
+    if (!active) return;
+    pending.current = true;
     const controller = new AbortController();
     setLoading(true);
     setError("");
@@ -75,14 +80,18 @@ export default function CommunityMap({
           if (!controller.signal.aborted) setError((e as Error).message);
         })
         .finally(() => {
-          if (!controller.signal.aborted) setLoading(false);
+          if (!controller.signal.aborted) {
+            pending.current = false;
+            setLoading(false);
+          }
         });
     }, 300);
     return () => {
       clearTimeout(timer);
       controller.abort();
+      pending.current = false;
     };
-  }, [view, query, version]);
+  }, [active, view, query, version]);
   useEffect(() => {
     setSelected(null);
     setPost(null);
@@ -91,7 +100,7 @@ export default function CommunityMap({
   useEffect(() => {
     setPost(null);
     setPostError("");
-    if (!selected) return;
+    if (!active || !selected) return;
     const controller = new AbortController();
     api<Post>(`/api/v1/community/posts/${selected}`, {
       signal: controller.signal,
@@ -103,7 +112,7 @@ export default function CommunityMap({
         if (!controller.signal.aborted) setPostError((e as Error).message);
       });
     return () => controller.abort();
-  }, [selected]);
+  }, [active, selected]);
   function zoomTo(p: MapPoints["features"][number]) {
     map.current?.animateToRegion({
       latitude: p.latitude,

@@ -3,7 +3,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./Auth";
 import { Loading } from "./ui";
 import WorkspaceLayout from "./components/WorkspaceLayout";
-import Login from "./pages/Login";
+const Login = lazy(() => import("./pages/Login"));
 import { Landing, Onboarding, ErrorPage } from "./pages/Public";
 const Information = lazy(() => import("./pages/Information"));
 const Moderation = lazy(() => import("./pages/Moderation"));
@@ -35,7 +35,11 @@ export default function App() {
   }, []);
   if (loading) return <Loading />;
   if (recovery || location.pathname === "/auth/reset-password")
-    return <Login />;
+    return (
+      <Suspense fallback={<Loading />}>
+        <Login />
+      </Suspense>
+    );
   if (location.pathname === "/") return <Landing />;
   if (["/about", "/faq", "/privacy"].includes(location.pathname))
     return (
@@ -64,7 +68,13 @@ export default function App() {
       !requested.startsWith("/login")
         ? requested
         : "/app";
-    return user ? <Navigate to={target} replace /> : <Login />;
+    return user ? (
+      <Navigate to={target} replace />
+    ) : (
+      <Suspense fallback={<Loading />}>
+        <Login />
+      </Suspense>
+    );
   }
   const isAdmin = user?.role === "admin";
   const adminSurface =

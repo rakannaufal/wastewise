@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useFocusEffect } from "expo-router";
+import { useActiveScreen } from "./useActiveScreen";
 import { api } from "./api";
 import { useSession } from "./session";
 import type { Feed, Post } from "../../shared/community";
@@ -9,6 +9,8 @@ export type { CommunityFilters as Filters } from "../../shared/filters";
 import type { CommunityFilters } from "../../shared/filters";
 export function useFeed(filters: CommunityFilters) {
   const { user } = useSession();
+  const active = useActiveScreen();
+  const pending = useRef(false);
   const generation = useRef(0);
   const previous = useRef("");
   const [posts, setPosts] = useState<Post[]>([]);
@@ -22,14 +24,19 @@ export function useFeed(filters: CommunityFilters) {
   const account = user?.id;
   const processing = posts.some((p) => p.state === "processing");
   const reload = useCallback(() => setVersion((v) => v + 1), []);
-  useFocusEffect(
-    useCallback(() => {
-      reload();
-      const timer = setInterval(reload, processing ? 2000 : 60000);
-      return () => clearInterval(timer);
-    }, [reload, processing]),
-  );
   useEffect(() => {
+    if (!active) return;
+    const timer = setInterval(
+      () => {
+        if (!pending.current) reload();
+      },
+      processing ? 2000 : 60000,
+    );
+    return () => clearInterval(timer);
+  }, [active, processing, reload]);
+  useEffect(() => {
+    if (!active) return;
+    pending.current = true;
     generation.current++;
     const controller = new AbortController();
     const identity = `${account}:${query}`;
@@ -55,15 +62,19 @@ export function useFeed(filters: CommunityFilters) {
         if (!controller.signal.aborted) setError((e as Error).message);
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) {
+          pending.current = false;
+          setLoading(false);
+        }
       });
     return () => {
       controller.abort();
+      pending.current = false;
       generation.current++;
     };
-  }, [query, version, account]);
+  }, [active, query, version, account]);
   async function more() {
-    if (!cursor || loading || loadingMore) return;
+    if (!active || !cursor || loading || loadingMore) return;
     const current = generation.current;
     setLoadingMore(true);
     setPageError("");

@@ -22,6 +22,7 @@ export function Landing() {
     queryKey: ["community", "preview", user?.id],
     queryFn: ({ signal }) =>
       api<Feed>("/api/v1/community/feed?per_page=3", { signal }),
+    staleTime: 30000,
     refetchInterval: 60000,
   });
   return (

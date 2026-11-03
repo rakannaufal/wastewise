@@ -132,3 +132,8 @@ Supabase nyata: migrasi `d53e20c61fb8` direhearsal pada restore backup lokal seb
 `python scripts/test_local.py`:50tests pass in91.05s, including same-post/root validation, nested reply rejection, idempotency,32reply pagination without duplicates, ownership, root/child soft deletion, counts and withdrawal guard. Initial test expected404 for owner withdrawal; corrected to existing409 contract. `python scripts/test_browser.py`:5E2E pass in1.0m; exports iOS/Android/web first. Browser assertions cover owner/peer menus, Escape, red heart, rollback on503, zero post/feed GETs after successful like, web and Expo-web reply submission/expansion, axe and narrow viewport overflow.
 
 `npm run check`, `npm run build`, Ruff and mypy27modules pass. Existing map chunk>500kB warning and Starlette/httpx deprecation remain. No new runtime dependency. Card screenshot evidence: `card-menu-web.png`, `card-menu-mobile.png`, `community-post-desktop.png`. Expo native bundling is verified; physical device animation smoothness, keyboard and assistive technologies remain untested.
+
+
+## Client weight and focus lifecycle (3 November 2026)
+
+Production entry comparison is in `docs/evidence/lighter-bundle.json` (uncompressed main entry, Python gzip compression separately). Login is a lazy route;4mocked-provider Auth tests pass,5application E2E pass. Expo-web test counts one initial feed GET, advances61seconds on Profil with no feed polling, then asserts one refresh returning to Beranda. This exercises navigation blur, not a physical OS background transition. Native exports include AppState-aware feed/map/detail and shared reduced-motion observation; test on devices before claiming frame-rate or battery improvements. Existing backend50test baseline remains unchanged.

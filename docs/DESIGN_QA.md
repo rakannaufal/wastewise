@@ -103,3 +103,8 @@ Purpose: reduce repetitive buttons and establish a consistent reading hierarchy,
 ## Card menu and replies, 3 November 2026
 
 Antislop during and Impeccable craft floor applied to the existing Manrope/green identity. Card header contains three-dot disclosure; owner edit/withdraw and report actions stay anchored inside the card. No new decorative controls. Likes use red #C62546, immediate count and a short scale animation; reduced motion disables animation. Replies indent one level, lazy-load30 rows, keep labelled delete controls and44px reply targets. Web Escape/outside dismissal and native explicit close are available. Ownership and root/reply deletion remain server-enforced. Expo web is browser evidence; physical device frame rate, VoiceOver/TalkBack and native keyboard remain unverified.
+
+
+## Lighter interaction refinement, 3 November 2026
+
+Preserved layout/type/color. Three-dot action labels now Edit, Hapus, Laporkan on both clients; existing44px targets, icons and ownership remain. Hapus confirmation discloses withdrawal/history semantics. Both owner menu screenshots inspected; no clipping visible. Lazy login preserves all authentication states. Native focus/foreground scheduling and one shared reduced-motion observer reduce redundant work without adding decorative effects. Measured entry reduction is documented separately from unmeasured physical-device smoothness.

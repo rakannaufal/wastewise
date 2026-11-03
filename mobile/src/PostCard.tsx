@@ -1,18 +1,11 @@
 import { memo, useEffect, useRef, useState } from "react";
-import {
-  AccessibilityInfo,
-  Animated,
-  Image,
-  Platform,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { Animated, Image, Platform, Pressable, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import type { Post } from "../../shared/community";
 import { api } from "./api";
 import PostMenu from "./PostMenu";
+import { useReducedMotion } from "./useReducedMotion";
 import { confirmAction } from "./BrandHeader";
 import { Button, Input, categoryName, styles, colors, ErrorText } from "./ui";
 function PostCard({
@@ -31,24 +24,8 @@ function PostCard({
   const [caption, setCaption] = useState(post.caption);
   const [reason, setReason] = useState("");
   const scale = useRef(new Animated.Value(1)).current;
-  const reduced = useRef(false);
-  useEffect(() => {
-    let mounted = true;
-    void AccessibilityInfo.isReduceMotionEnabled().then((v) => {
-      if (mounted) reduced.current = v;
-    });
-    const subscription = AccessibilityInfo.addEventListener(
-      "reduceMotionChanged",
-      (v) => {
-        reduced.current = v;
-      },
-    );
-    return () => {
-      mounted = false;
-      subscription.remove();
-      scale.stopAnimation();
-    };
-  }, [scale]);
+  const reduced = useReducedMotion();
+  useEffect(() => () => scale.stopAnimation(), [scale]);
   useEffect(() => {
     setLiked(post.liked_by_me);
     setLikes(post.like_count);
@@ -65,7 +42,7 @@ function PostCard({
     setLikes(Math.max(0, likes + (next ? 1 : -1)));
     setBusy(true);
     setError("");
-    if (next && !reduced.current) {
+    if (next && !reduced) {
       scale.stopAnimation();
       scale.setValue(1);
       Animated.sequence([
@@ -155,8 +132,8 @@ function PostCard({
             }}
             remove={() =>
               confirmAction(
-                "Tarik posting?",
-                "Foto dan GPS dihapus dari komunitas. Laporan privat tetap tersimpan.",
+                "Hapus posting?",
+                "Foto dan GPS dihapus dari komunitas. Laporan tetap tersimpan di riwayat.",
                 () => void action(`community/posts/${post.id}`, "DELETE"),
               )
             }
@@ -184,6 +161,7 @@ function PostCard({
               backgroundColor: "#edf2ec",
             }}
             resizeMode="contain"
+            resizeMethod="resize"
             accessibilityLabel={`Sampah ${categoryName(post.category)}`}
             onError={() => setFailed(true)}
           />

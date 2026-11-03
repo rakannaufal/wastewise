@@ -74,10 +74,10 @@ test("report automatically becomes a public feed post; peers like, comment, map,
     );
     await peer.locator(".post-menu > summary").click();
     await expect(
-      peer.getByRole("button", { name: "Laporkan konten", exact: true }),
+      peer.getByRole("button", { name: "Laporkan", exact: true }),
     ).toBeVisible();
     await expect(
-      peer.getByRole("button", { name: "Edit deskripsi", exact: true }),
+      peer.getByRole("button", { name: "Edit", exact: true }),
     ).toHaveCount(0);
     await peer.keyboard.press("Escape");
     await expect(peer.locator(".post-menu")).toHaveJSProperty("open", false);
@@ -327,12 +327,10 @@ test("report automatically becomes a public feed post; peers like, comment, map,
     await page.locator(".post-menu > summary").click();
     await page.screenshot({ path: "../docs/evidence/card-menu-web.png" });
     await expect(
-      page.getByRole("button", { name: "Edit deskripsi", exact: true }),
+      page.getByRole("button", { name: "Edit", exact: true }),
     ).toBeVisible();
     page.once("dialog", (d) => d.accept());
-    await page
-      .getByRole("button", { name: "Batalkan publikasi", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Hapus", exact: true }).click();
     await expect
       .poll(async () =>
         (

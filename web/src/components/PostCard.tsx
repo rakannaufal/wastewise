@@ -135,7 +135,7 @@ function PostCard({ post, detail = false }: { post: Post; detail?: boolean }) {
           remove={() => {
             if (
               window.confirm(
-                "Tarik foto dan GPS dari komunitas? Laporan privat tetap tersimpan.",
+                "Hapus posting dari komunitas? Laporan tetap tersimpan di riwayat.",
               )
             )
               mutate("", "DELETE");
@@ -162,6 +162,7 @@ function PostCard({ post, detail = false }: { post: Post; detail?: boolean }) {
             src={post.image_url}
             alt={`Sampah ${categoryName(post.category)}`}
             loading="lazy"
+            decoding="async"
             width="720"
             height="540"
             onError={() => setImageFailed(true)}

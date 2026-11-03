@@ -21,6 +21,14 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
     await startup;
     await route.continue();
   });
+  let feedRequests = 0;
+  page.on("request", (request) => {
+    if (
+      request.method() === "GET" &&
+      new URL(request.url()).pathname === "/api/v1/community/feed"
+    )
+      feedRequests++;
+  });
   await page.goto(mobileURL);
   await expect(
     page.getByLabel("Logo WasteWise", { exact: true }),
@@ -43,6 +51,7 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
   await expect(
     page.getByText("Foto dan kabar dari lingkunganmu.", { exact: true }),
   ).toBeVisible();
+  expect(feedRequests).toBe(1);
   await expect(page.getByText("Semua material", { exact: true })).toHaveCount(
     0,
   );
@@ -190,7 +199,7 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: "Opsi posting", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Edit deskripsi", exact: true }),
+    page.getByRole("button", { name: "Edit", exact: true }),
   ).toBeVisible();
   await page.screenshot({ path: "../docs/evidence/card-menu-mobile.png" });
   await page
@@ -227,6 +236,14 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
       .getByTestId(`post-${postId}`)
       .getByRole("button", { name: "Batalkan suka", exact: true }),
   ).toBeVisible();
+  await page.clock.install();
+  await page.getByRole("tab", { name: "Profil", exact: true }).click();
+  const beforeHidden = feedRequests;
+  await page.clock.fastForward(61000);
+  expect(feedRequests).toBe(beforeHidden);
+  await page.getByRole("tab", { name: "Beranda", exact: true }).click();
+  await expect.poll(() => feedRequests).toBe(beforeHidden + 1);
+  await page.clock.resume();
   await page.getByRole("tab", { name: "Laporan", exact: true }).click();
   await page.getByRole("button", { name: /^Laporan / }).click();
   page.once("dialog", (dialog) => dialog.accept());
