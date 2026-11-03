@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, MapPin } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../Auth";
-import { categoryName, date, Failure, StatusBadge } from "../ui";
+import { categoryName, date, Failure } from "../ui";
 import type { Post } from "../../../shared/community";
 export default function PostCard({
   post,
@@ -60,7 +60,6 @@ export default function PostCard({
           <strong>{post.author_name}</strong>
           <small>{date(post.created_at)}</small>
         </div>
-        <StatusBadge value={post.status} />
       </header>
       {post.image_url && !imageFailed ? (
         <Link

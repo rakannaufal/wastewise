@@ -32,8 +32,10 @@ export default function Guide() {
         {visible.map((category) => (
           <article className="guide-item" id={category.id} key={category.id}>
             <img
-              src={`/materials/${category.id}.jpg`}
-              alt={`Contoh ${category.name.toLowerCase()} dari dataset`}
+              src={`/illustrations/materials/${category.id}.svg`}
+              alt={`Ilustrasi ${category.name.toLowerCase()}`}
+              width="240"
+              height="240"
               loading="lazy"
             />
             <div>
@@ -52,8 +54,8 @@ export default function Guide() {
         <p className="empty">Material tidak ditemukan. Coba kata lain.</p>
       )}
       <p className="caption guide-source">
-        Foto contoh: Garbage Classification, Mostafa Abla. Hak isi mengikuti
-        pemilik asli. Panduan umum; aturan fasilitas setempat dapat berbeda.
+        Ilustrasi material WasteWise. Panduan umum; aturan fasilitas setempat
+        dapat berbeda.
       </p>
     </>
   );

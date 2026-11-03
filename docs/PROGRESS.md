@@ -214,3 +214,10 @@ Model tidak dilatih ulang:95,86% tetap pengukuran evaluasi sebelumnya. Kamera/GP
 Verifikasi browser final setelah perbaikan bukti screenshot: **5 E2E lulus50,3detik**. Preview landing berisi kartu diuji sebelum withdrawal, screenshot desktop1440px dan HP390px terpisah. Menu hamburger, FAQ, footer, font heading dan overflow/axe diuji pada route yang tercakup.
 
 Runtime final: API8000 `/health/ready`, web5173 dan Metro8082 `/status` masing-masing200. API dimuat ulang dengan source final. Bukti screenshot desktop/mobile diperiksa visual; tidak ada overflow yang terlihat pada hasil yang diuji.
+
+
+## Ilustrasi panduan dan kartu komunitas (3 November 2026)
+
+Permintaan pengguna: ganti foto panduan dengan grafik; hilangkan status pada kartu. Dua belas ilustrasi vektor khusus material dibuat pada web/public/illustrations/materials; PNG320px native dirender dari SVG yang sama menggunakan scripts/build_guide_graphics.py dan librsvg. Total aset sekitar208KiB pada disk, tanpa dependensi runtime baru. Panduan native kini juga memiliki ilustrasi. Foto pengguna pada posting tetap dipertahankan. Badge Pending/In Progress/Completed dihapus dari kartu web/native; status pada riwayat, detail laporan operasional, filter dan aturan visibilitas server tetap berlaku. Ketidakpastian review AI tetap dijelaskan pada kategori. Tidak ada migrasi, perubahan model atau data remote.
+
+Verifikasi: `npm run check` dan `npm run build` lulus; Ruff script aset lulus. Runner browser mengekspor iOS/Android/web, lalu **5 E2E lulus**. Regresi memastikan12ilustrasi SVG dapat dimuat, pencarian Baterai menghasilkan1hasil, tidak ada label status operasional di kartu web/native. Viewport panduan320/390/768/1440 dan axe tercakup. Screenshot panduan desktop/HP diperiksa, kemudian ditangkap ulang dari posisi atas tanpa fokus pencarian tertinggal. Bukti `docs/evidence/guide-graphics-*`. Warning chunk peta tetap ada. Native fisik belum diuji; tidak mengulang suite backend karena tidak mengubah backend.

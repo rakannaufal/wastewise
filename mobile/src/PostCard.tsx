@@ -4,7 +4,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import type { Post } from "../../shared/community";
 import { api } from "./api";
-import { categoryName, statusName, styles, colors, ErrorText } from "./ui";
+import { categoryName, styles, colors, ErrorText } from "./ui";
 export default function PostCard({
   post,
   reload,
@@ -64,11 +64,6 @@ export default function PostCard({
             ]}
           >
             {post.author_name}
-          </Text>
-          <Text
-            style={[styles.label, { color: colors.accent, maxWidth: "45%" }]}
-          >
-            {statusName[post.status]}
           </Text>
         </View>
         <Text style={styles.label}>

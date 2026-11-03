@@ -76,3 +76,8 @@ Description/caption are normalized empty strings or trimmed1..5000 characters. P
 ## D-18: Familiar UI interactions (Jakob's Law)
 
 At the user's request, use familiar web/mobile patterns rather than custom navigation semantics: consistent Komunitas label, desktop top bar, small-screen menu button, account dropdown with outside/Escape dismissal, five-tab app navigation with central camera action, staged filters, native FAQ accordion. Preserve the approved handwritten headings and forest/sage/cream surfaces. Shared informational content is extracted from the lazy route so the landing page does not force the complete information page module into its initial bundle.
+
+
+## D-19: Guide graphics and quieter community cards (2026-11-03)
+
+User requests graphics instead of dataset photos in the material guide, and no status badge on community cards. Use twelve authored SVG illustrations with matching native PNG renders, reusing the forest/sage/cream direction. Public cards retain actual report photos, category, AI uncertainty, location and interactions. Operational status remains available in report history/detail and filters; server publication eligibility is unchanged.

@@ -151,6 +151,11 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
   await expect(
     page.getByRole("button", { name: "Buka foto dan percakapan", exact: true }),
   ).toBeVisible({ timeout: 30000 });
+  await expect(
+    page
+      .getByTestId(`post-${postId}`)
+      .getByText(/^(Menunggu|Diproses|Selesai|Ditolak)$/),
+  ).toHaveCount(0);
   await page.screenshot({
     path: "../docs/evidence/refinement-mobile-feed.png",
   });

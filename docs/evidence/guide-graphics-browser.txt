@@ -1,0 +1,94 @@
+> wastewise-mobile@1.0.0 export
+> expo export --platform all --output-dir ../.local/mobile-browser
+
+Starting Metro Bundler
+
+| (node:84695) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:84695) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:84695) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:84695) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:84695) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:84695) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+Android Bundled 7760ms node_modules/expo-router/entry.js (1358 modules)
+iOS Bundled 12830ms node_modules/expo-router/entry.js (1364 modules)
+Static rendering is enabled. Learn more: https://docs.expo.dev/router/web/static-rendering/
+λ Bundled 741ms node_modules/@expo/router-server/node/render.js (1030 modules)
+Web Bundled 1039ms node_modules/expo-router/entry.js (881 modules)
+
+› android bundles (1):
+_expo/static/js/android/entry-2e6f7e87a1117aa1eb2c4f875e9d0283.hbc (3.6MB)
+
+› ios bundles (1):
+_expo/static/js/ios/entry-57d7085e7109921c8deda70256f9067d.hbc (3.6MB)
+
+› web bundles (21):
+_expo/static/js/web/__common-d342bb407bee921ea4de5149780ab867.js (492KB)
+_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js (3.8KB)
+_expo/static/js/web/_layout-1a58c5d9adf5e3ae705ca8b4ab5ca801.js (2KB)
+_expo/static/js/web/_layout-2de3044786278d20b0328c574643b5a6.js (2.4KB)
+_expo/static/js/web/[id]-c2e673572f1ac8a5a706e499fade2ef7.js (8.4KB)
+_expo/static/js/web/[id]-fe18f4059310363a63e752bc0e6ea94c.js (4.3KB)
+_expo/static/js/web/+not-found-e05ab49f9c3109b153738ca4292708c4.js (705B)
+_expo/static/js/web/camera-7e9964b72ad290b539c61bbe699675d1.js (28KB)
+_expo/static/js/web/capture-ae68729c71ff82a6604ef30b8ac7b538.js (627B)
+_expo/static/js/web/classify-1dc0772a64f5599144dc0ec8b9e1d1bb.js (270B)
+_expo/static/js/web/entry-942772a98af46b2e4c0ce6230c7c924b.js (1.1MB)
+_expo/static/js/web/error-66cc1696f90243ae06c96cf1ca543b44.js (1.5KB)
+_expo/static/js/web/guide-309611944799bc0e0156826c6f4ea858.js (4.5KB)
+_expo/static/js/web/index-86fe21a58dfdf8c1b77e72354d5d219e.js (2.3KB)
+_expo/static/js/web/index-fcd8b47cbbd5b6c488ab222dc8301412.js (45KB)
+_expo/static/js/web/login-191585a2b5b6661381eccf326edb3ae9.js (3KB)
+_expo/static/js/web/map-e44e53ecd4b68cbd91f1b1eeea1da411.js (2.4KB)
+_expo/static/js/web/new-report-b11c06ea6a80f3aa7a54cd1f277183c5.js (9.9KB)
+_expo/static/js/web/onboarding-ba05eaed65db9e05ca2a80cedab1129b.js (1.5KB)
+_expo/static/js/web/profile-d9a319910cce07fd91ee89981f499911.js (1.7KB)
+_expo/static/js/web/reports-97acb55c8d502293a328d56031c9164d.js (4.9KB)
+
+› Static routes (23):
+/map (22KB)
+/error (22KB)
+/login (22KB)
+/guide (22KB)
+/ (index) (22KB)
+/camera (22KB)
+/capture (22KB)
+/profile (22KB)
+/reports (22KB)
+/_sitemap (19KB)
+/classify (22KB)
+/post/[id] (22KB)
+/+not-found (21KB)
+/new-report (22KB)
+/onboarding (22KB)
+/(tabs)/map (22KB)
+/report/[id] (22KB)
+/(tabs)/guide (22KB)
+/(tabs) (22KB)
+/(tabs)/capture (22KB)
+/(tabs)/profile (22KB)
+/(tabs)/reports (22KB)
+/(tabs)/classify (22KB)
+
+Exported: ../.local/mobile-browser
+
+> wastewise-web@1.0.0 e2e
+> playwright test
+
+
+Running 5 tests using 1 worker
+
+(node:84949) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 e2e/admin.spec.ts:6:1 › admin aggregates, URL filters, review, revision, workflow and history (5.9s)
+  ✓  2 e2e/community.spec.ts:4:1 › report automatically becomes a public feed post; peers like, comment, map, withdraw (12.6s)
+  ✓  3 e2e/community.spec.ts:275:1 › landing, onboarding and error pages remain readable across viewports (25.6s)
+  ✓  4 e2e/mobile-web.spec.ts:5:1 › Expo gallery, automatic ML/GPS, report and editable history (13.4s)
+  ✓  5 e2e/smoke.spec.ts:6:1 › photo automatically becomes an owned report; edit, resume, search, delete (5.6s)
+
+  5 passed (1.3m)

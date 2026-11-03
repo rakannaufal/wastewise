@@ -2,7 +2,7 @@
 
 Aplikasi pengenalan12 kategori sampah, pelaporan, komunitas foto publik dengan suka/komentar, serta peta lokasi. React web, Expo mobile, FastAPI, PostgreSQL, MobileNetV2. Bahasa antarmuka Indonesia.
 
-Laporan baru otomatis dibagikan kepada publik, termasuk pengunjung tanpa akun, beserta foto dan GPS presisi. Komunitas dan peta menampilkan Menunggu, Diproses, Selesai; Ditolak hanya tersedia pada riwayat pemilik/admin. Arsip privat lama tidak dipublikasikan massal. Navigasi pengguna web memakai header dan navigasi bawah pada HP, tanpa sidebar; panel admin tetap terpisah. Ikon Filter membuka pilihan lokasi, kategori, dan status. Pilih Terapkan untuk mengubah hasil; Tutup membatalkan perubahan, Reset menyiapkan semua pilihan bawaan. Heading h1–h5 web serta judul/subjudul mobile memakai Caveat Bold sesuai referensi. Paragraf, label, tombol, dan teks kecil memakai Manrope.
+Laporan baru otomatis dibagikan kepada publik, termasuk pengunjung tanpa akun, beserta foto dan GPS presisi. Komunitas dan peta menampilkan Menunggu, Diproses, Selesai; Ditolak hanya tersedia pada riwayat pemilik/admin. Arsip privat lama tidak dipublikasikan massal. Navigasi pengguna web memakai header dan navigasi bawah pada HP, tanpa sidebar; panel admin tetap terpisah. Ikon Filter membuka pilihan lokasi, kategori, dan status. Pilih Terapkan untuk mengubah hasil; Tutup membatalkan perubahan, Reset menyiapkan semua pilihan bawaan. Panduan memakai ilustrasi untuk12material pada web/mobile. Kartu komunitas tidak menampilkan badge status; riwayat/detail laporan tetap menampilkan status. Heading h1–h5 web serta judul/subjudul mobile memakai Caveat Bold sesuai referensi. Paragraf, label, tombol, dan teks kecil memakai Manrope.
 
 ## Enam hasil akhir
 

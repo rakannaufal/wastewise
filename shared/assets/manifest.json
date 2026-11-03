@@ -41,5 +41,13 @@
       "about-sorting": "/illustrations/sort-materials.svg",
       "faq-notes": "/illustrations/report-notes.svg"
     }
+  },
+  "material_graphics": {
+    "status": "ready",
+    "source": "Authored WasteWise SVG illustrations; scripts/build_guide_graphics.py",
+    "web_directory": "web/public/illustrations/materials/",
+    "native_directory": "mobile/assets/illustrations/materials/",
+    "categories": 12,
+    "native_format": "PNG 320x320 rendered from the same vectors"
   }
 }

@@ -102,6 +102,10 @@ test("report automatically becomes a public feed post; peers like, comment, map,
       .getByRole("link", { name: "Komunitas", exact: true })
       .click();
     await expect(peer.locator(".post-card")).toHaveCount(1);
+    await expect(peer.locator(".post-card .status-badge")).toHaveCount(0);
+    await expect(peer.locator(".post-card header")).not.toContainText(
+      /Menunggu|Diproses|Selesai|Ditolak/,
+    );
     await expect(peer.getByRole("option")).toHaveCount(0);
     // Install before opening the panel so cached reference data uses this fixture.
     await peer.route("**/api/v1/regions?**", async (route) => {
@@ -233,7 +237,9 @@ test("report automatically becomes a public feed post; peers like, comment, map,
     });
     await peer.goto("/");
     await expect(peer.locator(".post-card")).toHaveCount(1);
-    await expect(peer.getByRole("link", { name: /Lihat semua laporan/ })).toBeVisible();
+    await expect(
+      peer.getByRole("link", { name: /Lihat semua laporan/ }),
+    ).toBeVisible();
     for (const image of await peer.locator("img[loading=lazy]").all()) {
       await image.scrollIntoViewIfNeeded();
       await expect(image).toHaveJSProperty("complete", true);
@@ -275,6 +281,7 @@ test("landing, onboarding and error pages remain readable across viewports", asy
     "/about",
     "/faq",
     "/privacy",
+    "/guide",
     "/errors/403",
     "/errors/404",
     "/errors/429",
@@ -308,6 +315,38 @@ test("landing, onboarding and error pages remain readable across viewports", asy
   await expect(menu).toBeVisible();
   await menu.getByRole("link", { name: "Peta", exact: true }).click();
   await expect(page).toHaveURL(/\/map$/);
+  await page.goto("/guide");
+  await expect(page.locator(".guide-item")).toHaveCount(12);
+  for (const graphic of await page.locator(".guide-item img").all()) {
+    await expect(graphic).toHaveAttribute(
+      "src",
+      /\/illustrations\/materials\/.+\.svg$/,
+    );
+    await graphic.scrollIntoViewIfNeeded();
+    await expect
+      .poll(() =>
+        graphic.evaluate((image) => (image as HTMLImageElement).naturalWidth),
+      )
+      .toBeGreaterThan(0);
+  }
+  await page
+    .getByRole("textbox", { name: "Cari material", exact: true })
+    .fill("baterai");
+  await expect(page.locator(".guide-item")).toHaveCount(1);
+  await page
+    .getByRole("textbox", { name: "Cari material", exact: true })
+    .fill("");
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.evaluate(() => {
+      (document.activeElement as HTMLElement)?.blur();
+      window.scrollTo(0, 0);
+    });
+    await page.screenshot({
+      path: `../docs/evidence/guide-graphics-${width}.png`,
+      fullPage: true,
+    });
+  }
   await page.goto("/faq");
   await page
     .getByText("Apakah deskripsi wajib diisi?", { exact: true })

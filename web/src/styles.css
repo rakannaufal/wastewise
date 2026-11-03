@@ -1169,7 +1169,7 @@ tr:last-child td {
 }
 .guide-item > img {
   width: 100px;
-  height: 120px;
+  height: 100px;
   border-radius: 12px;
   object-fit: cover;
   background: white;
@@ -1412,7 +1412,7 @@ dialog > p {
   }
   .guide-item > img {
     width: 75px;
-    height: 100px;
+    height: 75px;
   }
   .auth-story {
     padding-inline: 35px;
@@ -1590,7 +1590,7 @@ dialog > p {
   }
   .guide-item > img {
     width: 85px;
-    height: 115px;
+    height: 85px;
   }
   .guide-search {
     max-width: none;
