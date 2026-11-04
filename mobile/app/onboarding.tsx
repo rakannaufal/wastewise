@@ -23,7 +23,7 @@ export default function Onboarding() {
         },
         {
           title: "Pahami publikasi laporan",
-          copy: "Laporan baru otomatis dibagikan. Foto, deskripsi opsional, dan GPS presisi terlihat oleh publik, termasuk pengunjung tanpa akun. Laporan Ditolak tidak ditampilkan.",
+          copy: "Laporan baru bersifat privat. Foto, deskripsi opsional, dan GPS presisi terlihat publik hanya jika kamu memilih untuk membagikannya. Laporan Ditolak tidak ditampilkan.",
         },
         {
           title: "Dukung langkah berikutnya",

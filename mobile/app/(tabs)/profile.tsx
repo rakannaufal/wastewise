@@ -1,11 +1,31 @@
-import { Text, View } from "react-native";
+import { useState } from "react";
+import { Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import { useSession } from "../../src/session";
 import { BrandHeader } from "../../src/BrandHeader";
-import { Button, Screen, styles } from "../../src/ui";
+import { Button, Screen, colors, styles } from "../../src/ui";
 
 export default function Profile() {
-  const { user, logout } = useSession();
+  const { user, logout, deleteAccount } = useSession();
+  const [showDelete, setShowDelete] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  async function submitDelete() {
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await deleteAccount(password);
+      router.replace("/login");
+    } catch (error) {
+      setDeleteError((error as Error).message);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <Screen>
       <BrandHeader />
@@ -22,8 +42,9 @@ export default function Profile() {
       <View style={styles.action}>
         <Text style={styles.heading}>Pahami publikasi laporan.</Text>
         <Text style={styles.text}>
-          Laporan baru otomatis menampilkan foto dan GPS presisi kepada publik,
-          termasuk pengunjung tanpa akun. Laporan Ditolak tidak ditampilkan.
+          Laporan baru bersifat privat. Foto dan lokasi presisi tampil kepada
+          publik hanya jika kamu memilih untuk membagikannya. Lokasi berasal
+          dari pelapor dan tidak diverifikasi. Laporan Ditolak tidak ditampilkan.
           Hapus laporan melalui halaman detail bila tidak diperlukan lagi.
         </Text>
       </View>
@@ -48,6 +69,74 @@ export default function Profile() {
           void logout();
         }}
       />
+      <View
+        style={{
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          paddingTop: 22,
+          gap: 12,
+        }}
+      >
+        <Text accessibilityRole="header" style={styles.heading}>
+          Hapus akun
+        </Text>
+        <Text style={styles.text}>
+          Akun, laporan, draft, posting, komentar, dan suka akan dihapus. Foto
+          masuk antrean penghapusan; tautan yang sudah terbit dapat berlaku
+          sampai 15 menit dan salinan unduhan tidak dapat ditarik.
+        </Text>
+        {!showDelete ? (
+          <Button
+            danger
+            title="Hapus akun permanen"
+            onPress={() => setShowDelete(true)}
+          />
+        ) : (
+          <View style={{ gap: 12 }}>
+            <TextInput
+              accessibilityLabel="Kata sandi saat ini"
+              placeholder="Kata sandi saat ini"
+              secureTextEntry
+              autoComplete="current-password"
+              value={password}
+              onChangeText={setPassword}
+              style={styles.input}
+            />
+            <TextInput
+              accessibilityLabel="Ketik HAPUS AKUN untuk melanjutkan"
+              placeholder="Ketik HAPUS AKUN"
+              autoCapitalize="characters"
+              value={confirmation}
+              onChangeText={setConfirmation}
+              style={styles.input}
+            />
+            {deleteError ? (
+              <Text accessibilityLiveRegion="polite" style={styles.error}>
+                {deleteError}
+              </Text>
+            ) : null}
+            <Button
+              secondary
+              title="Batalkan"
+              disabled={deleting}
+              onPress={() => {
+                setShowDelete(false);
+                setPassword("");
+                setConfirmation("");
+                setDeleteError("");
+              }}
+            />
+            <Button
+              danger
+              title={deleting ? "Menghapus akun…" : "Hapus permanen"}
+              disabled={
+                deleting || !password || confirmation !== "HAPUS AKUN"
+              }
+              onPress={() => void submitDelete()}
+            />
+          </View>
+        )}
+      </View>
     </Screen>
   );
 }

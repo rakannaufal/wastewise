@@ -9,7 +9,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "export": "expo export --platform all"
+    "export": "expo export --platform all",
+    "build:apk": "eas build -p android --profile preview",
+    "preview:web": "npx serve dist"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

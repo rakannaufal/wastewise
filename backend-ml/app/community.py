@@ -180,15 +180,6 @@ def project(db, rows, user):
         r.id: r
         for r in db.scalars(select(Report).where(Report.id.in_([p.report_id for p in rows])))
     }
-    names = (
-        dict(
-            db.execute(
-                select(User.id, User.full_name).where(User.id.in_([p.user_id for p in rows]))
-            ).all()
-        )
-        if ids
-        else {}
-    )
     links = storage.signed_many(
         [p.image_path for p in rows if p.image_path and p.state == "published"]
     )
@@ -199,7 +190,7 @@ def project(db, rows, user):
         result.append(
             dict(
                 id=p.id,
-                author_name=names[p.user_id].split()[0],
+                author_name="Warga",
                 is_owner=user is not None and p.user_id == user.id,
                 caption=p.caption,
                 state=p.state,
@@ -273,7 +264,7 @@ def feed(
     user: User | None = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
-    limit(request, "public-feed", 120)
+    limit(request, "public-feed", 120, None, db)
     q = (
         select(CommunityPost)
         .join(Report, Report.id == CommunityPost.report_id)
@@ -335,7 +326,7 @@ def share(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    limit(request, "share", 20, str(user.id))
+    limit(request, "share", 20, str(user.id), db)
     report = db.scalar(
         select(Report)
         .where(Report.id == body.report_id, Report.user_id == user.id)
@@ -361,7 +352,7 @@ def detail(
     user: User | None = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
-    limit(request, "public-post", 120)
+    limit(request, "public-post", 120, None, db)
     return ok(project(db, [post_for(db, post_id, user)], user)[0])
 
 
@@ -401,7 +392,7 @@ def like(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    limit(request, "like", 60, str(user.id))
+    limit(request, "like", 60, str(user.id), db)
     active_post(db, post_id, user)
     db.execute(insert(PostLike).values(post_id=post_id, user_id=user.id).on_conflict_do_nothing())
     db.commit()
@@ -425,7 +416,7 @@ def comments(
     user: User | None = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
-    limit(request, "public-comments", 120)
+    limit(request, "public-comments", 120, None, db)
     active_post(db, post_id, user, lock=False)
     if parent_id is not None:
         parent = db.get(PostComment, parent_id)
@@ -437,8 +428,7 @@ def comments(
         ):
             raise HTTPException(404, "Komentar utama tidak tersedia")
     q = (
-        select(PostComment, User.full_name)
-        .join(User, User.id == PostComment.user_id)
+        select(PostComment)
         .where(
             PostComment.post_id == post_id,
             PostComment.state == "visible",
@@ -453,15 +443,15 @@ def comments(
                 and_(PostComment.created_at == stamp, PostComment.id < identity),
             )
         )
-    rows = db.execute(
-        q.order_by(PostComment.created_at.desc(), PostComment.id.desc()).limit(31)
-    ).all()
+    rows = list(
+        db.scalars(q.order_by(PostComment.created_at.desc(), PostComment.id.desc()).limit(31))
+    )
     counts = (
         dict(
             db.execute(
                 select(PostComment.parent_id, func.count())
-                .where(
-                    PostComment.parent_id.in_([c.id for c, _ in rows[:30]]),
+                    .where(
+                    PostComment.parent_id.in_([c.id for c in rows[:30]]),
                     PostComment.state == "visible",
                 )
                 .group_by(PostComment.parent_id)
@@ -478,13 +468,13 @@ def comments(
                     parent_id=c.parent_id,
                     reply_count=counts.get(c.id, 0),
                     body=c.body,
-                    author_name=n.split()[0],
+                    author_name="Warga",
                     is_owner=user is not None and c.user_id == user.id,
                     created_at=c.created_at,
                 )
-                for c, n in rows[:30]
+                for c in rows[:30]
             ],
-            "next_cursor": cursor_for(rows[29][0]) if len(rows) > 30 else None,
+            "next_cursor": cursor_for(rows[29]) if len(rows) > 30 else None,
         }
     )
 
@@ -497,7 +487,7 @@ def comment(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    limit(request, "comment", 20, str(user.id))
+    limit(request, "comment", 20, str(user.id), db)
     active_post(db, post_id, user)
     if body.parent_id is not None:
         parent = db.get(PostComment, body.parent_id)
@@ -567,7 +557,7 @@ def flag(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    limit(request, "flag", 10, str(user.id))
+    limit(request, "flag", 10, str(user.id), db)
     active_post(db, body.post_id, user)
     db.execute(
         insert(ContentFlag)

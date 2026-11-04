@@ -133,7 +133,7 @@ export function Landing() {
               {
                 Icon: MapPin,
                 title: "Ikuti perkembangannya",
-                copy: "Kirim laporan, lihat statusnya. Foto dan GPS presisi otomatis dipublikasikan.",
+                copy: "Kirim laporan privat, lalu pilih jika ingin membagikan foto dan GPS presisi.",
               },
             ].map(({ Icon, title, copy }) => (
               <article key={title}>
@@ -202,7 +202,7 @@ export function Onboarding() {
             },
             {
               title: "Pahami publikasi laporan",
-              copy: "Laporan baru otomatis dibagikan. Foto dan GPS presisi terlihat oleh publik, termasuk pengunjung tanpa akun. Laporan Ditolak tidak ditampilkan.",
+              copy: "Laporan baru bersifat privat. Foto dan GPS presisi hanya terlihat publik jika pelapor memilih untuk membagikannya. Laporan Ditolak tidak ditampilkan.",
             },
             {
               title: "Pantau, dukung, tindak lanjuti",

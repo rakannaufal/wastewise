@@ -65,7 +65,10 @@ test("photo automatically becomes an owned report; edit, resume, search, delete"
     page.getByLabel("Deskripsi (opsional)", { exact: true }),
   ).toHaveValue("Laporan uji otomatis dari foto galeri di taman.");
   await page
-    .getByRole("button", { name: "Kirim dan publikasikan", exact: true })
+    .getByLabel("Bagikan foto, deskripsi, dan lokasi presisi ke komunitas publik.")
+    .check();
+  await page
+    .getByRole("button", { name: "Kirim laporan", exact: true })
     .click();
   await expect(
     page.getByRole("heading", { name: "Catatan laporan" }),

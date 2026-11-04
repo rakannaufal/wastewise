@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { IconAction } from "./BrandHeader";
 import { colors, styles } from "./ui";
 export default function PostMenu({
   owner,
@@ -84,13 +83,6 @@ export default function PostMenu({
               <Text style={styles.text}>{item.label}</Text>
             </Pressable>
           ))}
-          <View style={{ alignSelf: "flex-end" }}>
-            <IconAction
-              name="close"
-              label="Tutup opsi posting"
-              onPress={() => setOpen(false)}
-            />
-          </View>
         </View>
       )}
     </View>

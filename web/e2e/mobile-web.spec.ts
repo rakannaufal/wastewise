@@ -33,6 +33,9 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
   await expect(
     page.getByLabel("Logo WasteWise", { exact: true }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("progressbar", { name: "Memuat aplikasi", exact: true }),
+  ).toBeVisible();
   await page.screenshot({
     path: "../docs/evidence/professional-mobile-startup.png",
   });
@@ -137,7 +140,7 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
   ).toBeVisible();
   await page.getByLabel("Deskripsi (opsional)").fill("");
   await page
-    .getByRole("button", { name: "Kirim dan publikasikan", exact: true })
+    .getByRole("button", { name: "Kirim laporan", exact: true })
     .click();
   await expect(page).toHaveURL(/\/report\/[0-9a-f-]+$/);
   await page
@@ -202,9 +205,28 @@ test("Expo gallery, automatic ML/GPS, report and editable history", async ({
     page.getByRole("button", { name: "Edit", exact: true }),
   ).toBeVisible();
   await page.screenshot({ path: "../docs/evidence/card-menu-mobile.png" });
+  await expect(
+    page.getByRole("button", { name: "Tutup opsi posting", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Opsi posting", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Edit", exact: true }),
+  ).toHaveCount(0);
   await page
-    .getByRole("button", { name: "Tutup opsi posting", exact: true })
+    .getByRole("button", { name: "Lihat lokasi di peta", exact: true })
     .click();
+  await expect(page).toHaveURL(new RegExp(`post=${postId}`));
+  await page
+    .getByRole("button", { name: "Kembali ke posting", exact: true })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`/post/${postId}$`));
+  const returnedPost = page.getByTestId(`post-${postId}`).last();
+  await expect(
+    returnedPost.getByRole("button", {
+      name: "Buka foto dan percakapan",
+      exact: true,
+    }),
+  ).toBeVisible();
 
   await page.screenshot({
     path: "../docs/evidence/professional-mobile-comments.png",

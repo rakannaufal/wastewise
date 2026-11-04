@@ -195,7 +195,8 @@ class LiveRead(BaseModel):
 
 
 class ReadyRead(BaseModel):
-    status: Literal["ready", "degraded", "unavailable"]
+    status: Literal["ready", "unavailable"]
     database: Literal["ready", "unavailable"]
     storage: Literal["ready", "unavailable"]
     model: Literal["ready", "unavailable"]
+    workers: dict[str, Literal["ready", "unavailable", "not_required"]]

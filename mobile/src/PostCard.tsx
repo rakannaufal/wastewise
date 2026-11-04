@@ -214,7 +214,11 @@ function PostCard({
           onPress={() =>
             router.push({
               pathname: "/map",
-              params: { lat: post.latitude, lng: post.longitude },
+              params: {
+                lat: post.latitude,
+                lng: post.longitude,
+                post: post.id,
+              },
             })
           }
           style={{

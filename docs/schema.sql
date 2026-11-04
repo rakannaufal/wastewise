@@ -343,5 +343,43 @@ CREATE INDEX ix_comments_thread_created ON app_private.post_comments (post_id, p
 
 UPDATE alembic_version SET version_num='e64f31d72ac9' WHERE alembic_version.version_num = 'd53e20c61fb8';
 
+-- Running upgrade e64f31d72ac9 -> f4b6d8a2c931
+
+CREATE TABLE app_private.rate_limit_windows (
+    bucket_key VARCHAR(64) NOT NULL,
+    window_started_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    hits INTEGER NOT NULL,
+    CONSTRAINT pk_rate_limit_windows PRIMARY KEY (bucket_key, window_started_at),
+    CONSTRAINT ck_rate_limit_windows_ck_rate_limit_windows_rate_limit__9671 CHECK (hits >= 1)
+);
+
+CREATE INDEX ix_rate_limit_window_expiry ON app_private.rate_limit_windows (window_started_at);
+
+CREATE TABLE app_private.worker_heartbeats (
+    worker_name VARCHAR(64) NOT NULL,
+    heartbeat_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT pk_worker_heartbeats PRIMARY KEY (worker_name)
+);
+
+UPDATE alembic_version SET version_num='f4b6d8a2c931' WHERE alembic_version.version_num = 'e64f31d72ac9';
+
+-- Running upgrade f4b6d8a2c931 -> 8b7c3d5e1a20
+
+CREATE TABLE app_private.auth_deletion_jobs (
+    user_id UUID NOT NULL,
+    attempts INTEGER NOT NULL,
+    next_attempt_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    locked_until TIMESTAMP WITH TIME ZONE,
+    last_error_code VARCHAR(100),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT pk_auth_deletion_jobs PRIMARY KEY (user_id),
+    CONSTRAINT ck_auth_deletion_jobs_ck_auth_deletion_jobs_auth_deleti_093f CHECK (attempts >= 0)
+);
+
+CREATE INDEX ix_auth_deletion_due ON app_private.auth_deletion_jobs (next_attempt_at);
+
+UPDATE alembic_version SET version_num='8b7c3d5e1a20' WHERE alembic_version.version_num = 'f4b6d8a2c931';
+
 COMMIT;
 

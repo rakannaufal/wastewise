@@ -74,16 +74,19 @@ export default function Information({
           <section className="information-copy">
             <h1>Privasi laporan.</h1>
             <p>
-              Laporan baru otomatis dibagikan kepada publik, termasuk pengunjung
-              tanpa akun. Kebijakan ini ditampilkan sebelum tombol Kirim dan
-              publikasikan.
+              Laporan baru bersifat privat untuk pemilik dan pengelola. Publikasi
+              komunitas hanya terjadi jika kamu memilih persetujuan saat
+              mengirim laporan atau membagikannya dari halaman laporan.
             </p>
             <h2>Data yang tampil</h2>
             <p>
-              Foto turunan tanpa metadata EXIF, nama depan, deskripsi opsional,
-              kategori, status, wilayah, GPS presisi, serta jumlah suka dan
-              komentar. Email, identitas akun internal, foto asli, dan path
-              penyimpanan tidak diberikan melalui API publik.
+              Jika memilih publikasi, foto turunan tanpa metadata EXIF,
+              deskripsi opsional, kategori, status, wilayah, GPS presisi yang
+              kamu kirim, serta jumlah suka dan komentar dapat terlihat tanpa
+              akun. Lokasi berasal dari perangkat/pelapor dan tidak diverifikasi
+              WasteWise. Nama akun tidak ditampilkan pada posting atau komentar.
+              Email, identitas internal, foto asli, dan path penyimpanan tidak
+              diberikan melalui API publik.
             </p>
             <h2>Data yang tetap dibatasi</h2>
             <p>
@@ -93,8 +96,8 @@ export default function Information({
             </p>
             <h2>Kontrol pemilik</h2>
             <p>
-              Tarik publikasi dari detail posting atau hapus laporan melalui
-              riwayat. Laporan Ditolak tidak ditampilkan pada feed, detail
+              Publikasi dapat ditarik dari detail posting; laporan operasional
+              tetap berada di riwayat sampai dihapus. Laporan Ditolak tidak ditampilkan pada feed, detail
               publik, dan peta. Tautan foto yang sudah diterbitkan dapat tetap
               berlaku hingga 15 menit; salinan yang telah diunduh tidak dapat
               dicabut.

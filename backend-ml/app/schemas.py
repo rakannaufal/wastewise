@@ -3,7 +3,15 @@ from enum import StrEnum
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    SecretStr,
+    field_validator,
+    model_validator,
+)
 
 
 class Category(StrEnum):
@@ -100,7 +108,7 @@ PUBLICATION_POLICY = "public-gps-v2"
 
 
 class ReportCreate(StrictModel):
-    publication_policy: Literal["public-gps-v2"]
+    publication_policy: Literal["public-gps-v2"] | None = None
     draft_id: UUID
     description: str = Field(default="", max_length=5000)
 
@@ -154,4 +162,16 @@ class UserUpdate(StrictModel):
     def reject_null(cls, value):
         if value is None:
             raise ValueError("Explicit null is not accepted")
+        return value
+
+class AccountDeletion(StrictModel):
+    confirmation: Literal["HAPUS AKUN"]
+    password: SecretStr
+
+    @field_validator("password")
+    @classmethod
+    def valid_password_size(cls, value):
+        password = value.get_secret_value()
+        if len(password) < 8 or len(password.encode()) > 72:
+            raise ValueError("Password must be 8 to 72 UTF-8 bytes")
         return value

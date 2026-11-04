@@ -6,7 +6,7 @@ from tests.test_community import prediction
 
 
 def published(client, account):
-    create(client, account)
+    create(client, account, share_to_community=True)
     assert run_once()
     posts = client.get("/api/v1/community/feed", headers=account["headers"]).json()["data"]["posts"]
     return "/api/v1/community/posts/" + posts[0]["id"]

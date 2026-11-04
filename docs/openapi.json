@@ -815,6 +815,150 @@
             "HTTPBearer": []
           }
         ]
+      },
+      "delete": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Delete Me",
+        "operationId": "delete_me_api_v1_auth_me_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountDeletion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_NoneType_"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request Entity Too Large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/users": {
@@ -6647,6 +6791,28 @@
   },
   "components": {
     "schemas": {
+      "AccountDeletion": {
+        "properties": {
+          "confirmation": {
+            "type": "string",
+            "const": "HAPUS AKUN",
+            "title": "Confirmation"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "title": "Password",
+            "writeOnly": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "confirmation",
+          "password"
+        ],
+        "title": "AccountDeletion"
+      },
       "AdminDashboardRead": {
         "properties": {
           "generated_at": {
@@ -8167,7 +8333,6 @@
             "type": "string",
             "enum": [
               "ready",
-              "degraded",
               "unavailable"
             ],
             "title": "Status"
@@ -8195,6 +8360,18 @@
               "unavailable"
             ],
             "title": "Model"
+          },
+          "workers": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "ready",
+                "unavailable",
+                "not_required"
+              ]
+            },
+            "type": "object",
+            "title": "Workers"
           }
         },
         "type": "object",
@@ -8202,7 +8379,8 @@
           "status",
           "database",
           "storage",
-          "model"
+          "model",
+          "workers"
         ],
         "title": "ReadyRead"
       },
@@ -8273,8 +8451,15 @@
       "ReportCreate": {
         "properties": {
           "publication_policy": {
-            "type": "string",
-            "const": "public-gps-v2",
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "public-gps-v2"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Publication Policy"
           },
           "draft_id": {
@@ -8292,7 +8477,6 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "publication_policy",
           "draft_id"
         ],
         "title": "ReportCreate"

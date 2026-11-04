@@ -1,7 +1,6 @@
 import { BackButton } from "./BrandHeader";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Linking,
@@ -31,6 +30,7 @@ import { locationNames } from "../../shared/contracts";
 import { currentLocation } from "./location";
 import {
   Action,
+  Loading,
   Button,
   categoryName,
   ErrorText,
@@ -52,6 +52,7 @@ export function ReportComposer({
   const [photo, setPhoto] = useState<Photo | null>(stored?.photo || null);
   const [draft, setDraft] = useState<PhotoDraft | null>(stored?.remote || null);
   const [description, setDescription] = useState(stored?.description || "");
+  const [publishToCommunity, setPublishToCommunity] = useState(false);
   const [original, setOriginal] = useState<Report | null>(null);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -152,6 +153,7 @@ export function ReportComposer({
       setGpsError("");
       setDraft(null);
       setPhoto(null);
+      setPublishToCommunity(false);
       try {
         const prepared = await preparePhoto(value, owner);
         if (version !== generation.current) {
@@ -218,7 +220,9 @@ export function ReportComposer({
           headers: { "Idempotency-Key": ids.current.finalKey },
           body: JSON.stringify({
             description,
-            ...(!editId ? { publication_policy: "public-gps-v2" } : {}),
+            ...(!editId && publishToCommunity
+              ? { publication_policy: "public-gps-v2" }
+              : {}),
             ...(draft ? { draft_id: draft.id } : {}),
             ...(editId ? { revision: original?.revision } : {}),
           }),
@@ -250,6 +254,7 @@ export function ReportComposer({
       setPhoto(null);
       setDraft(null);
       setDescription(original?.description || "");
+      setPublishToCommunity(false);
       setGpsError("");
     } catch (e) {
       setError((e as Error).message);
@@ -297,7 +302,7 @@ export function ReportComposer({
         )}
         {busy ? (
           <View style={styles.panel} accessibilityLiveRegion="polite">
-            <ActivityIndicator color="#245e43" />
+            <Loading compact label={busy} />
             <Text style={styles.text}>{busy}</Text>
             {!deleting && !result && (
               <Text style={styles.text}>
@@ -420,12 +425,25 @@ export function ReportComposer({
         )}
         {!editId && (
           <View style={styles.action}>
-            <Text style={styles.heading}>Laporan publik</Text>
+            <Text style={styles.heading}>Privasi laporan</Text>
             <Text style={styles.text}>
-              Foto, lokasi GPS presisi, dan deskripsi yang kamu isi akan
-              terlihat oleh publik, termasuk pengunjung tanpa akun. Hindari
-              wajah dan data pribadi.
+              Laporan baru hanya terlihat olehmu dan pengelola. Jika dibagikan,
+              foto turunan, deskripsi, kategori/status, dan GPS presisi akan
+              ditampilkan di feed serta peta publik untuk siapa pun, termasuk
+              tanpa akun. Lokasi adalah klaim perangkat/pelapor, bukan
+              verifikasi WasteWise. Hindari wajah, data pribadi, dan lokasi
+              sensitif.
             </Text>
+            <Button
+              secondary
+              selected={publishToCommunity}
+              title={
+                publishToCommunity
+                  ? "Publikasi publik aktif: ketuk untuk membatalkan"
+                  : "Publikasi publik nonaktif: ketuk untuk menyetujui"
+              }
+              onPress={() => setPublishToCommunity((value) => !value)}
+            />
           </View>
         )}
         <Input
@@ -449,7 +467,7 @@ export function ReportComposer({
         <ErrorText message={error} />
         <Button
           title={
-            busy || (editId ? "Simpan perubahan" : "Kirim dan publikasikan")
+            busy || (editId ? "Simpan perubahan" : "Kirim laporan")
           }
           disabled={!!busy || !ready}
           onPress={() => {

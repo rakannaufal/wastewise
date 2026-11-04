@@ -1,4 +1,5 @@
 import hashlib
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from typing import Literal
@@ -19,6 +20,7 @@ from app.storage import sanitize_upload, storage, thumbnail
 from app.workflow import classification, enqueue_many, location_data, lock_request
 
 router = APIRouter(prefix="/api/v1/report-drafts", tags=["Report drafts"])
+draft_pipeline_slots = threading.BoundedSemaphore(3)
 
 
 def draft_data(row):
@@ -80,11 +82,20 @@ async def create_draft(
         captured_at is None or now - captured_at > timedelta(hours=24)
     ):
         raise HTTPException(422, "Foto kamera memerlukan waktu pengambilan yang valid")
-    limit(request, "draft", 30, str(user.id))
+    limit(request, "draft", 30, str(user.id), db)
     content = await sanitize_upload(image)
-    return await run_in_threadpool(
-        store_draft, db, user, request_id, photo_source, captured_at, content, now
-    )
+    if not draft_pipeline_slots.acquire(blocking=False):
+        raise HTTPException(
+            503,
+            "Antrean penyimpanan foto penuh. Coba lagi sebentar.",
+            headers={"Retry-After": "2"},
+        )
+    try:
+        return await run_in_threadpool(
+            store_draft, db, user, request_id, photo_source, captured_at, content, now
+        )
+    finally:
+        draft_pipeline_slots.release()
 
 
 def store_draft(db, user, request_id, photo_source, captured_at, content, now):
@@ -199,7 +210,7 @@ def retry(
     db: Session = Depends(get_db),
 ):
     row = get_draft(db, user, draft_id)
-    limit(request, "predict", 30, str(user.id))
+    limit(request, "predict", 30, str(user.id), db)
     if row.prediction is None:
         content = storage.get(row.image_path)
         row.prediction = analyze(content)

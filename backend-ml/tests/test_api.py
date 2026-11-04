@@ -5,13 +5,12 @@ from uuid import UUID
 
 import jwt
 from PIL import Image
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.config import settings
 from app.db import SessionLocal
 from app.inference import predictor
-from app.models import CleanupJob, Report, User
-from app.security import events
+from app.models import CleanupJob, RateLimitWindow, Report, User
 from app.storage import storage
 
 
@@ -22,8 +21,12 @@ def photo():
 
 
 def create(client, account, **fields):
-    fields.pop("share_to_community", None)
+    share_to_community = fields.pop("share_to_community", False)
     legacy_private = fields.pop("legacy_private", False)
+    publication_policy = fields.pop(
+        "publication_policy",
+        "public-gps-v2" if share_to_community or legacy_private else None,
+    )
     draft = client.post(
         "/api/v1/report-drafts",
         headers=account["headers"],
@@ -50,9 +53,9 @@ def create(client, account, **fields):
         "/api/v1/reports",
         headers={**account["headers"], "Idempotency-Key": str(__import__("uuid").uuid4())},
         json={
-            "publication_policy": "public-gps-v2",
             "draft_id": identity,
             "description": "Botol plastik di dekat taman",
+            **({"publication_policy": publication_policy} if publication_policy else {}),
             **fields,
         },
     )
@@ -202,10 +205,11 @@ def test_upload_validation_and_no_ai_spoof(client, accounts):
     assert response.status_code == 413
 
 
-def test_model_degraded_blocks_report(client, accounts, monkeypatch):
+def test_model_unavailable_fails_readiness_and_blocks_report(client, accounts, monkeypatch):
     monkeypatch.setattr(predictor, "net", None)
     response = client.get("/health/ready")
-    assert response.status_code == 200 and response.json()["data"]["status"] == "degraded"
+    assert response.status_code == 503
+    assert response.json()["data"]["status"] == "unavailable"
     assert (
         client.post(
             "/api/v1/predict",
@@ -302,7 +306,8 @@ def test_last_admin_concurrent_demotions(client, accounts):
 
 
 def test_rate_limits(client, accounts):
-    events.clear()
+    with SessionLocal.begin() as db:
+        db.execute(delete(RateLimitWindow))
     settings.rate_limit_enabled = True
     for _ in range(10):
         assert (
@@ -314,5 +319,6 @@ def test_rate_limits(client, accounts):
     response = client.post(
         "/api/v1/auth/login", json={"email": "missing@example.com", "password": "wrong"}
     )
-    assert response.status_code == 429 and response.headers["Retry-After"] == "60"
+    assert response.status_code == 429
+    assert 1 <= int(response.headers["Retry-After"]) <= 60
     settings.rate_limit_enabled = False

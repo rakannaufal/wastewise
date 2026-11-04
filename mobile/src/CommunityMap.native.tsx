@@ -7,7 +7,14 @@ import { router } from "expo-router";
 import { useActiveScreen } from "./useActiveScreen";
 import { api } from "./api";
 import type { MapPoints, Post } from "../../shared/community";
-import { Button, categoryName, ErrorText, statusName, styles } from "./ui";
+import {
+  Button,
+  categoryName,
+  ErrorText,
+  Loading,
+  statusName,
+  styles,
+} from "./ui";
 type Focus = { latitude: number; longitude: number };
 export default function CommunityMap({
   query,
@@ -159,6 +166,7 @@ export default function CommunityMap({
         {error && (
           <Button secondary title="Muat ulang titik" onPress={reload} />
         )}
+        {loading && <Loading compact label="Memuat titik peta" />}
         {selected ? (
           <>
             <Text style={styles.heading}>

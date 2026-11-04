@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Map as MapLibre,
   Marker,
@@ -10,7 +10,9 @@ import {
 import mapWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { api } from "../api";
-import { Failure } from "../ui";
+import { Failure, Loading } from "../ui";
+import { ChevronLeft } from "lucide-react";
+import { parsePostId } from "../../../shared/community";
 import RegionFilters, { communityParams } from "../components/RegionFilters";
 import type { MapPoints } from "../../../shared/community";
 // Vite relocates the main module; bundle its worker explicitly so relative URLs stay valid.
@@ -22,6 +24,7 @@ export default function WasteMap() {
   const [mapError, setMapError] = useState("");
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const sourcePost = parsePostId(params.get("post"));
   const filter = communityParams(params).toString();
   const focusLat = params.get("lat"),
     focusLng = params.get("lng");
@@ -126,6 +129,16 @@ export default function WasteMap() {
   }, [points.data, navigate, view.zoom]);
   return (
     <>
+      {sourcePost && (
+        <Link
+          className="icon-button map-return"
+          aria-label="Kembali ke posting"
+          title="Kembali ke posting"
+          to={`/community/${sourcePost}`}
+        >
+          <ChevronLeft size={24} />
+        </Link>
+      )}
       <div className="page-heading">
         <div>
           <h1>Peta lingkungan.</h1>
@@ -139,12 +152,19 @@ export default function WasteMap() {
       {points.error && (
         <Failure error={points.error} retry={() => void points.refetch()} />
       )}
-      <div
-        ref={container}
-        className="waste-map"
-        role="region"
-        aria-label="Peta lokasi laporan sampah"
-      />
+      <div className="waste-map-frame">
+        <div
+          ref={container}
+          className="waste-map"
+          role="region"
+          aria-label="Peta lokasi laporan sampah"
+        />
+        {points.isPending && (
+          <div className="map-skeleton-overlay">
+            <Loading />
+          </div>
+        )}
+      </div>
       {mapError && <p role="status">{mapError}</p>}
       <p role="status">
         {points.isFetching

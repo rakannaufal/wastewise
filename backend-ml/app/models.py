@@ -5,7 +5,6 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     Enum,
-    Float,
     ForeignKey,
     Index,
     Integer,
@@ -13,6 +12,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -215,7 +215,16 @@ class Region(Base):
     name: Mapped[str] = mapped_column(String(180))
     source: Mapped[str] = mapped_column(Text)
     geometry: Mapped[dict | None] = mapped_column(JSONB)
-    __table_args__ = (Index("ix_regions_parent_name", "parent_code", "name"),)
+    __table_args__ = (
+        Index("ix_regions_parent_name", "parent_code", "name"),
+        Index(
+            "ix_regions_bounds",
+            text("((geometry['bbox'::text] ->> 0)::double precision)"),
+            text("((geometry['bbox'::text] ->> 2)::double precision)"),
+            text("((geometry['bbox'::text] ->> 1)::double precision)"),
+            text("((geometry['bbox'::text] ->> 3)::double precision)"),
+        ),
+    )
 
 
 class CommunityPost(Timestamps, Base):
@@ -313,4 +322,31 @@ class CommunityAudit(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 
-Index("ix_regions_bounds", *(Region.geometry["bbox"][i].astext.cast(Float) for i in (0, 2, 1, 3)))
+class RateLimitWindow(Base):
+    __tablename__ = "rate_limit_windows"
+    bucket_key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    window_started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), primary_key=True
+    )
+    hits: Mapped[int] = mapped_column(Integer)
+    __table_args__ = (
+        CheckConstraint("hits >= 1", name="rate_limit_hits_positive"),
+        Index("ix_rate_limit_window_expiry", "window_started_at"),
+    )
+
+class WorkerHeartbeat(Base):
+    __tablename__ = "worker_heartbeats"
+    worker_name: Mapped[str] = mapped_column(String(64), primary_key=True)
+    heartbeat_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+class AuthDeletionJob(Timestamps, Base):
+    __tablename__ = "auth_deletion_jobs"
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_error_code: Mapped[str | None] = mapped_column(String(100))
+    __table_args__ = (
+        CheckConstraint("attempts >= 0", name="auth_deletion_attempts_nonnegative"),
+        Index("ix_auth_deletion_due", "next_attempt_at"),
+    )

@@ -875,14 +875,6 @@ tr:last-child td {
   text-align: center;
   font-size: 12px;
 }
-.spin {
-  animation: spin 1s linear infinite;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 .filters {
   display: flex;
   gap: 12px;
@@ -2611,6 +2603,49 @@ a {
   color: var(--muted);
   margin: 24px 0;
 }
+.account-delete {
+  margin-top: 32px;
+  padding: 24px 0;
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 12px;
+}
+.account-delete > p {
+  max-width: 66ch;
+  color: var(--muted);
+  line-height: 1.65;
+}
+.account-delete-form {
+  display: grid;
+  gap: 14px;
+  max-width: 480px;
+}
+.account-delete-form label {
+  display: grid;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.account-delete-form input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid #a9bbac;
+  border-radius: 10px;
+  background: white;
+  color: var(--ink);
+}
+.account-delete-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.account-delete-error {
+  color: #8f2d25;
+  background: #fff0ed;
+  padding: 12px 14px;
+  border-radius: 10px;
+}
 .admin-community {
   margin-top: auto;
   margin-bottom: 16px;
@@ -3521,4 +3556,42 @@ h5 {
   .heart-pop {
     animation: none;
   }
+}
+
+.content-skeleton {
+  display: grid;
+  gap: 12px;
+  width: min(calc(100% - 40px), 1184px);
+  margin: 20px auto;
+  padding-block: 20px;
+}
+.content-skeleton > div {
+  border-radius: 6px;
+  background: #e4ebe4;
+}
+.content-skeleton .skeleton-heading {
+  height: 24px;
+  width: 48%;
+  background: #dce5dd;
+}
+.content-skeleton .skeleton-line {
+  height: 12px;
+  width: 100%;
+}
+.content-skeleton .skeleton-short {
+  width: 72%;
+}
+.waste-map-frame {
+  position: relative;
+}
+.map-skeleton-overlay {
+  position: absolute;
+  inset: 0;
+  background: #f5f7f4;
+  padding: 24px;
+  pointer-events: none;
+}
+.map-return {
+  display: inline-flex;
+  margin-bottom: 12px;
 }

@@ -212,7 +212,7 @@ function PostCard({ post, detail = false }: { post: Post; detail?: boolean }) {
         </small>
         <Link
           className="text-button"
-          to={`/map?lat=${post.latitude}&lng=${post.longitude}`}
+          to={`/map?lat=${post.latitude}&lng=${post.longitude}&post=${post.id}`}
         >
           Lihat di peta
         </Link>

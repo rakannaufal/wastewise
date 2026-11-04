@@ -23,6 +23,7 @@ type Session = {
     fullName: string,
   ) => Promise<boolean>;
   resendConfirmation: (email: string) => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
   logout: () => Promise<void>;
 };
 const Context = createContext<Session | null>(null);
@@ -186,20 +187,38 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     });
     if (failure) throw new Error(authMessage(failure));
   }
+  async function deleteAccount(password: string) {
+    await api<null>("/api/v1/auth/me", {
+      method: "DELETE",
+      body: JSON.stringify({ confirmation: "HAPUS AKUN", password }),
+    });
+    await logout();
+  }
   async function logout() {
     clearDraft();
-    if (supabase.current) {
-      const { error: failure } = await supabase.current.auth.signOut({
-        scope: "local",
-      });
-      if (failure)
-        setError(
-          "Sesi perangkat ditutup. Pencabutan sesi di server belum terkonfirmasi.",
-        );
+    try {
+      if (supabase.current) {
+        const { error: failure } = await supabase.current.auth.signOut({
+          scope: "local",
+        });
+        if (failure)
+          setError(
+            "Sesi perangkat ditutup. Pencabutan sesi di server belum terkonfirmasi.",
+          );
+      }
+    } catch {
+      setError("Sesi perangkat ditutup. Pencabutan sesi di server belum terkonfirmasi.");
+    } finally {
+      if (Platform.OS !== "web") {
+        try {
+          await SecureStore.deleteItemAsync(KEY);
+        } catch {
+          setError("Sesi lokal tidak dapat dihapus dari perangkat. Hapus data aplikasi.");
+        }
+      }
+      setToken("");
+      setUser(null);
     }
-    if (Platform.OS !== "web") await SecureStore.deleteItemAsync(KEY);
-    setToken("");
-    setUser(null);
   }
   return (
     <Context.Provider
@@ -212,6 +231,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         login,
         registerAccount,
         resendConfirmation,
+        deleteAccount,
         logout,
       }}
     >

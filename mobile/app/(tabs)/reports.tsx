@@ -7,6 +7,7 @@ import { api } from "../../src/api";
 import type { Report } from "../../src/api";
 import { useSession } from "../../src/session";
 import {
+  Loading,
   Button,
   categoryName,
   colors,
@@ -74,7 +75,7 @@ export default function Reports() {
         data={rows}
         keyExtractor={(item) => item.id}
         contentContainerStyle={[styles.content, { padding: 16, gap: 12 }]}
-        refreshing={busy}
+        refreshing={false}
         onRefresh={load}
         ListHeaderComponent={
           <View style={{ gap: 14, marginBottom: 8 }}>
@@ -135,6 +136,9 @@ export default function Reports() {
               />
             )}
             <ErrorText message={error} />
+            {busy && rows.length > 0 && (
+              <Loading compact label="Memperbarui laporan" />
+            )}
             {!!error && <Button title="Coba lagi" secondary onPress={load} />}
           </View>
         }

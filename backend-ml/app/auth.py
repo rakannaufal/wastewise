@@ -6,12 +6,13 @@ from sqlalchemy import func, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.account_deletion import schedule_account_deletion
 from app.config import settings
 from app.db import get_db
-from app.models import BlockedIdentity, Report, User
-from app.reports import enqueue, ok
+from app.models import Report, User
+from app.reports import ok
 from app.responses import AuthConfigRead, Envelope, TokenRead, UserRead, UsersPage
-from app.schemas import Credentials, Register, UserUpdate
+from app.schemas import AccountDeletion, Credentials, Register, UserUpdate
 from app.security import (
     DUMMY_HASH,
     admin,
@@ -53,7 +54,7 @@ def user_data(user):
 def register(body: Register, request: Request, db: Session = Depends(get_db)):
     if settings.auth_provider != "local":
         raise HTTPException(409, "Pendaftaran menggunakan Supabase Auth pada aplikasi")
-    limit(request, "register", 5)
+    limit(request, "register", 5, None, db)
     user = User(
         email=str(body.email), full_name=body.full_name, password_hash=hash_password(body.password)
     )
@@ -70,7 +71,7 @@ def register(body: Register, request: Request, db: Session = Depends(get_db)):
 def login(body: Credentials, request: Request, db: Session = Depends(get_db)):
     if settings.auth_provider != "local":
         raise HTTPException(409, "Login menggunakan Supabase Auth pada aplikasi")
-    limit(request, "login", 10)
+    limit(request, "login", 10, None, db)
     user = db.scalar(select(User).where(User.email == str(body.email)))
     valid = verify_password(body.password, user.password_hash if user else DUMMY_HASH.decode())
     if user is None or not valid:
@@ -88,6 +89,36 @@ def login(body: Credentials, request: Request, db: Session = Depends(get_db)):
 @router.get("/auth/me", response_model=Envelope[UserRead])
 def me(user: User = Depends(current_user)):
     return ok(user_data(user))
+
+@router.delete("/auth/me", status_code=202, response_model=Envelope[None])
+def delete_me(
+    body: AccountDeletion,
+    request: Request,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    limit(request, "delete-account", 5, str(user.id), db)
+    password = body.password.get_secret_value()
+    if settings.auth_provider == "supabase":
+        from app.supabase_auth import verify_password as verify_supabase_password
+
+        if not verify_supabase_password(user.id, user.email, password):
+            raise HTTPException(401, "Kata sandi saat ini salah")
+    elif not verify_password(password, user.password_hash):
+        raise HTTPException(401, "Kata sandi saat ini salah")
+
+    target = locked_user(db, user.id)
+    db.execute(
+        text("SELECT pg_advisory_xact_lock(hashtextextended(:identity, 0))"),
+        {"identity": str(user.id)},
+    )
+    target = db.get(User, user.id, populate_existing=True)
+    if target is None:
+        raise HTTPException(404, "Akun tidak ditemukan")
+    protect_last_admin(db, target)
+    schedule_account_deletion(db, target)
+    db.commit()
+    return ok(message="Akun dinonaktifkan; pembersihan data dijadwalkan")
 
 
 @router.get("/users", tags=["Administration"], response_model=Envelope[UsersPage])
@@ -184,26 +215,6 @@ def delete_user(user_id: UUID, user: User = Depends(admin), db: Session = Depend
     if user.role != "admin":
         raise HTTPException(403, "Akses pengelola diperlukan")
     protect_last_admin(db, target)
-    from app.models import ReportDraft
-
-    for path, thumb in db.execute(
-        select(Report.image_path, Report.thumbnail_path).where(Report.user_id == target.id)
-    ):
-        enqueue(db, path)
-        enqueue(db, thumb)
-    for path, thumb in db.execute(
-        select(ReportDraft.image_path, ReportDraft.thumbnail_path).where(
-            ReportDraft.user_id == target.id
-        )
-    ):
-        enqueue(db, path)
-        enqueue(db, thumb)
-    if target.auth_provider == "supabase":
-        db.add(BlockedIdentity(id=target.id))
-    from app.community import retire_media
-    from app.models import CommunityPost
-
-    retire_media(db, db.scalars(select(CommunityPost).where(CommunityPost.user_id == target.id)))
-    db.delete(target)
+    schedule_account_deletion(db, target)
     db.commit()
-    return ok(message="Akun dihapus; pembersihan foto dijadwalkan")
+    return ok(message="Akun dihapus; pembersihan data dijadwalkan")

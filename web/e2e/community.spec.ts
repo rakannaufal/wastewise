@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { apiURL, createReport } from "./helpers";
-test("report automatically becomes a public feed post; peers like, comment, map, withdraw", async ({
+test("explicitly shared report becomes public; peers like, comment, map, withdraw", async ({
   page,
   request,
   browser,
@@ -31,6 +31,12 @@ test("report automatically becomes a public feed post; peers like, comment, map,
     accounts[0].headers,
     "Foto untuk percakapan komunitas WasteWise.",
   );
+  const publication = await request.get(
+    `${apiURL}/api/v1/reports/${report.id}/publication`,
+    { headers: accounts[0].headers },
+  );
+  expect(publication.status()).toBe(200);
+  expect((await publication.json()).data).toBeNull();
   const initial = await request.get(`${apiURL}/api/v1/community/feed`, {
     headers: accounts[1].headers,
   });
@@ -41,6 +47,10 @@ test("report automatically becomes a public feed post; peers like, comment, map,
     .getByLabel("Kata sandi", { exact: true })
     .fill(accounts[0].password);
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
+  await page
+    .getByLabel(/Bagikan foto turunan, deskripsi, kategori\/status, dan GPS presisi/)
+    .check();
+  await page.getByRole("button", { name: "Bagikan laporan", exact: true }).click();
   await page
     .getByRole("link", { name: "Lihat posting dan kelola publikasi" })
     .click();
@@ -55,6 +65,16 @@ test("report automatically becomes a public feed post; peers like, comment, map,
     await peer.goto(postURL);
     await expect(peer.locator(".post-photo")).toBeVisible();
     await expect(peer.getByText(/GPS -6.200/)).toBeVisible();
+    await peer
+      .getByRole("link", { name: "Lihat di peta", exact: true })
+      .click();
+    await expect(peer).toHaveURL(
+      new RegExp(`post=${postURL.split("/").at(-1)}`),
+    );
+    await peer
+      .getByRole("link", { name: "Kembali ke posting", exact: true })
+      .click();
+    await expect(peer).toHaveURL(postURL);
     await peer.getByRole("button", { name: "0 suka" }).click();
     await expect(peer).toHaveURL(/login.*returnTo=/);
     await peer.getByLabel("Email", { exact: true }).fill(accounts[1].email);
@@ -449,4 +469,35 @@ test("landing, onboarding and error pages remain readable across viewports", asy
     path: "../docs/evidence/community-landing-mobile.png",
     fullPage: true,
   });
+});
+
+test("startup uses skeleton without spinning icons; invalid map source has no return link", async ({
+  page,
+}) => {
+  let release!: () => void;
+  const ready = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/api/v1/auth/config", async (route) => {
+    await ready;
+    await route.continue();
+  });
+  try {
+    await page.goto("/");
+    await expect(page.locator(".content-skeleton")).toBeVisible();
+    await expect(page.locator(".spin")).toHaveCount(0);
+    await page.screenshot({
+      path: "../docs/evidence/skeleton-web-startup.png",
+    });
+  } finally {
+    release();
+  }
+  await expect(page.locator("h1")).toBeVisible();
+  await page.goto("/map?post=invalid");
+  await expect(
+    page.getByRole("heading", { name: "Peta lingkungan." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Kembali ke posting", exact: true }),
+  ).toHaveCount(0);
 });

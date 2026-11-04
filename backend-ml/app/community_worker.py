@@ -128,4 +128,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
-    run_worker(run_once, once=args.once)
+    run_worker(run_once, once=args.once, worker_name="community")

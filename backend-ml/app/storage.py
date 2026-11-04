@@ -1,4 +1,5 @@
 import io
+import threading
 import uuid
 import warnings
 from datetime import UTC, datetime, timedelta
@@ -6,12 +7,14 @@ from datetime import UTC, datetime, timedelta
 import jwt
 from fastapi import HTTPException, UploadFile
 from PIL import Image, ImageOps, UnidentifiedImageError
+from starlette.concurrency import run_in_threadpool
 
 from app.config import settings
 from app.http_pool import supabase_client
 
 MAX_BYTES = 5 * 1024 * 1024
 Image.MAX_IMAGE_PIXELS = 20_000_000
+image_decode_slots = threading.BoundedSemaphore(2)
 
 
 async def sanitize_upload(upload: UploadFile):
@@ -19,6 +22,19 @@ async def sanitize_upload(upload: UploadFile):
     await upload.close()
     if len(raw) > MAX_BYTES:
         raise HTTPException(413, "Ukuran foto maksimal 5 MiB")
+    if not image_decode_slots.acquire(blocking=False):
+        raise HTTPException(
+            503,
+            "Antrean pemrosesan foto penuh. Coba lagi sebentar.",
+            headers={"Retry-After": "2"},
+        )
+    try:
+        return await run_in_threadpool(decode_upload, raw)
+    finally:
+        image_decode_slots.release()
+
+
+def decode_upload(raw: bytes) -> bytes:
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)

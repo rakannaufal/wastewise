@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -147,24 +146,30 @@ export function Button({
   title,
   onPress,
   secondary = false,
+  danger = false,
   disabled = false,
+  selected = false,
 }: {
   title: string;
   onPress: () => void;
   secondary?: boolean;
+  danger?: boolean;
   disabled?: boolean;
+  selected?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled }}
+      accessibilityState={{ disabled, selected }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
         minHeight: 48,
         padding: 14,
         borderRadius: 10,
-        backgroundColor: secondary ? "#E4EFE5" : colors.accent,
+        backgroundColor: danger ? "#FFF0ED" : secondary ? "#E4EFE5" : colors.accent,
+        borderWidth: danger ? 1 : 0,
+        borderColor: danger ? "#DCA9A1" : "transparent",
         opacity: disabled ? 0.5 : pressed ? 0.8 : 1,
         justifyContent: "center",
         alignItems: "center",
@@ -172,7 +177,7 @@ export function Button({
     >
       <Text
         style={{
-          color: secondary ? colors.accent : "#FFF",
+          color: danger ? "#8F2D25" : secondary ? colors.accent : "#FFF",
           fontFamily: "Manrope_600",
           fontWeight: "600",
           fontSize: 14,
@@ -204,10 +209,52 @@ export function ErrorText({ message }: { message: string }) {
     </Text>
   ) : null;
 }
-export function Loading() {
+export function Loading({
+  compact = false,
+  label = "Memuat data",
+}: { compact?: boolean; label?: string } = {}) {
   return (
-    <View style={{ padding: 30 }}>
-      <ActivityIndicator size="large" color={colors.accent} />
+    <View
+      accessible
+      accessibilityLabel={label}
+      accessibilityRole="progressbar"
+      accessibilityState={{ busy: true }}
+      style={{
+        paddingVertical: compact ? 8 : 20,
+        gap: 10,
+        width: "100%",
+        maxWidth: compact ? 220 : undefined,
+      }}
+    >
+      <View
+        accessible={false}
+        style={{
+          height: compact ? 12 : 22,
+          width: "48%",
+          backgroundColor: "#DCE5DD",
+          borderRadius: 6,
+        }}
+      />
+      <View
+        accessible={false}
+        style={{
+          height: 12,
+          width: "100%",
+          backgroundColor: "#E4EBE4",
+          borderRadius: 6,
+        }}
+      />
+      {!compact && (
+        <View
+          accessible={false}
+          style={{
+            height: 12,
+            width: "72%",
+            backgroundColor: "#E4EBE4",
+            borderRadius: 6,
+          }}
+        />
+      )}
     </View>
   );
 }

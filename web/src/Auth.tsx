@@ -24,6 +24,7 @@ type Session = {
   resendConfirmation: (email: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
   logout: () => Promise<void>;
 };
 const Context = createContext<Session | null>(null);
@@ -207,21 +208,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await logout();
     window.history.replaceState({}, "", "/");
   }
+  async function deleteAccount(password: string) {
+    await api<null>("/api/v1/auth/me", {
+      method: "DELETE",
+      body: JSON.stringify({ confirmation: "HAPUS AKUN", password }),
+    });
+    await logout();
+  }
   async function logout() {
     for (const key of Object.keys(sessionStorage)) if (key.startsWith("wastewise.draft.")) sessionStorage.removeItem(key);
-    if (supabase.current) {
-      const { error: failure } = await supabase.current.auth.signOut({
-        scope: "local",
-      });
-      if (failure)
-        setError(
-          "Sesi perangkat ditutup. Periksa koneksi sebelum masuk kembali.",
-        );
+    try {
+      if (supabase.current) {
+        const { error: failure } = await supabase.current.auth.signOut({
+          scope: "local",
+        });
+        if (failure)
+          setError(
+            "Sesi perangkat ditutup. Periksa koneksi sebelum masuk kembali.",
+          );
+      }
+    } catch {
+      setError("Sesi perangkat ditutup. Pencabutan di server belum terkonfirmasi.");
+    } finally {
+      setToken("");
+      setUser(null);
+      setRecovery(false);
+      client.clear();
     }
-    setToken("");
-    setUser(null);
-    setRecovery(false);
-    client.clear();
   }
   return (
     <Context.Provider
@@ -237,6 +250,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resendConfirmation,
         resetPassword,
         updatePassword,
+        deleteAccount,
         logout,
       }}
     >

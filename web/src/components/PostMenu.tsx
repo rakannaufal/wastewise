@@ -19,13 +19,12 @@ export default function PostMenu({
     if (!open) return;
     function outside(e: PointerEvent) {
       if (ref.current && !ref.current.contains(e.target as Node))
-        ref.current.open = false;
+        setOpen(false);
     }
     function escape(e: KeyboardEvent) {
-      if (e.key === "Escape" && ref.current?.open) {
-        ref.current.open = false;
-        ref.current.querySelector("summary")?.focus();
-      }
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      ref.current?.querySelector("summary")?.focus();
     }
     document.addEventListener("pointerdown", outside);
     document.addEventListener("keydown", escape);
@@ -35,19 +34,19 @@ export default function PostMenu({
     };
   }, [open]);
   function choose(action: () => void) {
-    if (ref.current) ref.current.open = false;
+    setOpen(false);
     action();
   }
   return (
-    <details
-      ref={ref}
-      className="post-menu"
-      onToggle={(e) => setOpen(e.currentTarget.open)}
-    >
+    <details ref={ref} className="post-menu" open={open}>
       <summary
         className="icon-button"
         aria-label="Opsi posting"
         title="Opsi posting"
+        onClick={(e) => {
+          e.preventDefault();
+          setOpen((value) => !value);
+        }}
       >
         <MoreHorizontal size={23} />
       </summary>

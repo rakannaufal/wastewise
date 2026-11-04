@@ -6,6 +6,10 @@
     "dev:web": "npm --prefix web run dev",
     "dev:mobile": "npm --prefix mobile start",
     "build": "npm --prefix web run build",
+    "build:web": "npm --prefix web run build",
+    "export:mobile": "npm --prefix mobile run export",
+    "preview:web": "npm --prefix web run preview",
+    "preview:mobile": "npm --prefix mobile run preview:web",
     "check": "npm --prefix web run check && npm --prefix mobile run typecheck"
   }
 }

@@ -1,0 +1,26 @@
+WasteWise production-readiness verification
+Date: 2026-11-04
+Environment: macOS arm64; isolated PostgreSQL UTF-8 cluster and source copy under /tmp; no backend-ml/.env, .local database, Supabase database, or production service used.
+
+Backend database and tests
+- alembic upgrade head: passed on a fresh isolated database.
+- alembic check: No new upgrade operations detected.
+- PostgreSQL test role: wastewise_tests; CONNECT, app_private USAGE, table DML only; CREATE on app_private revoked.
+- pytest -q: 87 passed, 1 StarletteDeprecationWarning, 99.09 seconds.
+- Focused config regression suite: 28 passed, 1 StarletteDeprecationWarning, 0.07 seconds.
+- Ruff: All checks passed.
+- mypy app: Success, no issues found in 28 source files.
+
+Web and mobile
+- npm run check: passed; web TypeScript/ESLint and mobile TypeScript.
+- VITE_API_URL=https://api.ci.example npm run build: passed.
+- VITE_API_URL=https://127.0.0.1. npm --prefix web run build: rejected as expected with "VITE_API_URL must be a public origin; production requires HTTPS.".
+- Built HTML CSP includes the configured API origin, Supabase, and OpenStreetMap tiles.
+- Map chunk: 1,080.06 kB minified, 293.87 kB gzip; Vite >500 kB warning remains.
+
+Repository and release boundary
+- git diff --check: passed after final edits.
+- npm audit web/mobile and pip-audit: previous same-day audit recorded zero known vulnerabilities; not rerun in this final pass.
+- GitHub Actions: workflow updated, not executed or observed remotely.
+- Browser E2E: not rerun; latest documented baseline is 6 passing tests on 2026-11-03.
+- Native device install, production deployment, remote migration, backup/restore, SMTP, load testing, and live monitoring: not tested.

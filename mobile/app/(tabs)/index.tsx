@@ -6,7 +6,7 @@ import { useFeed, emptyFilters } from "../../src/community";
 import { filterCount } from "../../../shared/filters";
 import CommunityFilters from "../../src/CommunityFilters";
 import PostCard, { PostSkeleton } from "../../src/PostCard";
-import { Button, ErrorText, styles } from "../../src/ui";
+import { Button, ErrorText, Loading, styles } from "../../src/ui";
 export default function Home() {
   const [filters, setFilters] = useState(emptyFilters);
   const feed = useFeed(filters);
@@ -23,7 +23,7 @@ export default function Home() {
           alignSelf: "center",
         }}
         renderItem={({ item }) => <PostCard post={item} reload={feed.reload} />}
-        refreshing={feed.loading}
+        refreshing={false}
         onRefresh={feed.reload}
         initialNumToRender={4}
         maxToRenderPerBatch={4}
@@ -33,6 +33,9 @@ export default function Home() {
             <CommunityFilters showOrder value={filters} onChange={setFilters} />
             <Text style={styles.text}>Foto dan kabar dari lingkunganmu.</Text>
             <ErrorText message={feed.error} />
+            {feed.loading && feed.posts.length > 0 && (
+              <Loading compact label="Memperbarui beranda" />
+            )}
             {!!feed.error && (
               <Button secondary title="Muat ulang" onPress={feed.reload} />
             )}

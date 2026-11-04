@@ -19,6 +19,7 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
   const [draft, setDraft] = useState<PhotoDraft | null>(null);
   const [original, setOriginal] = useState<Report | null>(null);
   const [description, setDescription] = useState("");
+  const [publishToCommunity, setPublishToCommunity] = useState(false);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState<Error | null>(null);
   const [locationError, setLocationError] = useState("");
@@ -114,6 +115,7 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
       };
     setFile(value);
     setDraft(null);
+    if (!retry) setPublishToCommunity(false);
     setConfirmed(false);
     setError(null);
     setLocationError("");
@@ -178,7 +180,9 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
           headers: { "Idempotency-Key": attempt.current.final },
           body: JSON.stringify({
             description,
-            ...(!editId ? { publication_policy: "public-gps-v2" } : {}),
+            ...(!editId && publishToCommunity
+              ? { publication_policy: "public-gps-v2" }
+              : {}),
             ...(draft ? { draft_id: draft.id } : {}),
             ...(editId ? { revision: original?.revision } : {}),
           }),
@@ -207,6 +211,7 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
       setDraft(null);
       setFile(null);
       setConfirmed(false);
+      setPublishToCommunity(false);
       setDescription(original?.description || "");
       setLocationError("");
     } catch (e) {
@@ -367,9 +372,25 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
           )}
           {!editId && (
             <p className="publication-notice">
-              Foto, lokasi GPS presisi, dan deskripsi yang kamu isi akan
-              terlihat oleh publik, termasuk pengunjung tanpa akun. Hindari
-              wajah dan data pribadi.
+              Laporan baru hanya terlihat olehmu dan pengelola. Jika dibagikan,
+              foto, deskripsi, dan lokasi yang kamu kirim dapat dilihat siapa
+              pun, termasuk tanpa akun. Lokasi tidak diverifikasi oleh WasteWise.
+              Hindari wajah, data pribadi, dan lokasi sensitif.
+            </p>
+          )}
+          {!editId && (
+            <label className="confirmation">
+              <input
+                type="checkbox"
+                checked={publishToCommunity}
+                onChange={(event) => setPublishToCommunity(event.target.checked)}
+              />
+              Bagikan foto turunan, deskripsi, kategori/status, dan GPS presisi ke feed serta peta publik. Siapa pun, termasuk tanpa akun, dapat melihatnya.
+            </label>
+          )}
+          {!editId && (
+            <p className="caption">
+              <Link to="/privacy">Baca kebijakan privasi</Link>
             </p>
           )}
           <label htmlFor="report-description">Deskripsi (opsional)</label>
@@ -400,7 +421,7 @@ export function ReportComposer({ title = "Buat laporan" }: { title?: string }) {
               ? "Memproses…"
               : editId
                 ? "Simpan perubahan"
-                : "Kirim dan publikasikan"}
+                : "Kirim laporan"}
           </button>
         </section>
       </div>

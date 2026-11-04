@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
-import { AlertCircle, ArrowUpRight, Leaf, LoaderCircle, X } from "lucide-react";
+import { AlertCircle, ArrowUpRight, Leaf, X } from "lucide-react";
 import categories from "../../shared/categories.json";
 import type { Status } from "./types";
 
@@ -29,9 +29,11 @@ export function Brand() {
 }
 export function Loading() {
   return (
-    <div className="state" role="status">
-      <LoaderCircle className="spin" size={24} />
-      Memuat data…
+    <div className="content-skeleton" role="status" aria-busy="true">
+      <span className="sr-only">Memuat data…</span>
+      <div aria-hidden="true" className="skeleton-heading" />
+      <div aria-hidden="true" className="skeleton-line" />
+      <div aria-hidden="true" className="skeleton-line skeleton-short" />
     </div>
   );
 }

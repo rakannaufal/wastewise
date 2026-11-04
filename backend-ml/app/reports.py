@@ -131,7 +131,7 @@ def create_report(
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ):
-    limit(request, "report", 30, str(user.id))
+    limit(request, "report", 30, str(user.id), db)
     digest = hashlib.sha256(body.model_dump_json().encode()).hexdigest()
     lock_request(db, f"finalize:{user.id}:{idempotency_key}")
     previous = db.scalar(
@@ -155,9 +155,10 @@ def create_report(
         idempotency_key,
         digest,
     )
-    from app.community import publish
+    if body.publication_policy:
+        from app.community import publish
 
-    publish(db, row, user, body.description)
+        publish(db, row, user, body.description)
     event(db, row, user, "created", {"to": "Pending"})
     db.commit()
     return ok(report_data(row), "Laporan tersimpan")
@@ -335,8 +336,13 @@ def summary(user: User = Depends(current_user), db: Session = Depends(get_db)):
 
 
 @router.post("/predict", tags=["Machine Learning"], response_model=Envelope[PredictionRead])
-async def predict(request: Request, image: UploadFile = File(), user: User = Depends(current_user)):
-    limit(request, "predict", 30, str(user.id))
+async def predict(
+    request: Request,
+    image: UploadFile = File(),
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    limit(request, "predict", 30, str(user.id), db)
     content = await sanitize_upload(image)
     try:
         result = await run_in_threadpool(predictor.predict, content)

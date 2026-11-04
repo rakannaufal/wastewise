@@ -14,7 +14,7 @@ export const faqs = [
   ],
   [
     "Siapa yang bisa melihat foto dan lokasi saya?",
-    "Laporan baru otomatis dipublikasikan. Foto, deskripsi yang kamu isi, serta GPS presisi dapat dilihat publik, termasuk pengunjung tanpa akun. Hindari wajah, alamat rumah sensitif, dan informasi pribadi. Laporan Ditolak tidak tampil di komunitas atau peta.",
+    "Laporan baru bersifat privat. Jika memilih publikasi, foto, deskripsi, dan GPS presisi dapat dilihat publik, termasuk pengunjung tanpa akun. Lokasi berasal dari pelapor dan tidak diverifikasi. Hindari wajah, alamat rumah sensitif, dan informasi pribadi. Laporan Ditolak tidak tampil di komunitas atau peta.",
   ],
   [
     "Bagaimana jika foto galeri tidak memiliki GPS?",

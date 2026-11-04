@@ -1,5 +1,6 @@
 import hashlib
 import io
+import json
 import logging
 import threading
 from time import perf_counter
@@ -21,12 +22,22 @@ class Predictor:
         self.checkpoint_sha256 = None
 
     def load(self):
+        self.net = None
+        self.metadata = None
+        self.checkpoint_sha256 = None
         try:
             torch.set_num_threads(2)
+            checkpoint_hash = hashlib.sha256(settings.model_path.read_bytes()).hexdigest()
+            metadata_path = settings.model_path.with_name("metadata.json")
+            artifact_metadata = json.loads(metadata_path.read_text())
+            if artifact_metadata.get("checkpoint_sha256") != checkpoint_hash:
+                raise ValueError("Checkpoint checksum does not match metadata")
             self.net, self.metadata = load_model(settings.model_path)
-            self.checkpoint_sha256 = hashlib.sha256(settings.model_path.read_bytes()).hexdigest()
+            self.checkpoint_sha256 = checkpoint_hash
         except Exception:
             self.net = None
+            self.metadata = None
+            self.checkpoint_sha256 = None
             logger.warning("model_unavailable")
 
     def predict(self, content):

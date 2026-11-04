@@ -38,6 +38,43 @@ def verified_identity(token: str) -> dict:
         raise HTTPException(503, "Layanan autentikasi belum tersedia. Coba kembali.") from exc
 
 
+def verify_password(subject: UUID, email: str, password: str) -> bool:
+    try:
+        response = supabase_client().post(
+            settings.supabase_url.rstrip("/") + "/auth/v1/token?grant_type=password",
+            headers={"apikey": settings.supabase_publishable_key},
+            json={"email": email, "password": password},
+            timeout=10,
+        )
+        if response.status_code in {400, 401}:
+            return False
+        if response.status_code == 429:
+            raise HTTPException(
+                429,
+                "Percobaan konfirmasi terlalu sering. Coba lagi nanti.",
+                headers={"Retry-After": response.headers.get("Retry-After", "60")},
+            )
+        if response.status_code != 200:
+            raise HTTPException(503, "Layanan autentikasi belum tersedia. Coba kembali.")
+        data = response.json()
+        return data.get("user", {}).get("id") == str(subject)
+    except httpx.HTTPError as exc:
+        raise HTTPException(503, "Layanan autentikasi belum tersedia. Coba kembali.") from exc
+    except (ValueError, TypeError, AttributeError) as exc:
+        raise HTTPException(503, "Layanan autentikasi belum tersedia. Coba kembali.") from exc
+
+def delete_identity(subject: UUID):
+    service_key = settings.supabase_service_key.get_secret_value()
+    if not service_key:
+        raise RuntimeError("Supabase Auth administration is not configured")
+    response = supabase_client().delete(
+        settings.supabase_url.rstrip("/") + f"/auth/v1/admin/users/{subject}",
+        headers={"apikey": service_key, "Authorization": "Bearer " + service_key},
+        timeout=10,
+    )
+    if response.status_code != 404:
+        response.raise_for_status()
+
 def profile_for(identity: dict, db: Session) -> User:
     subject = UUID(identity["id"])
     email = identity["email"].strip().lower()

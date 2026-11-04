@@ -6,12 +6,13 @@ from concurrent.futures import ThreadPoolExecutor
 import httpx
 import pytest
 from fastapi import HTTPException
+from pydantic import SecretStr
 from sqlalchemy import delete, select
 
 from app import supabase_auth
 from app.config import settings
 from app.db import SessionLocal
-from app.models import BlockedIdentity, User
+from app.models import AuthDeletionJob, BlockedIdentity, User
 
 
 def identity(subject=None, email=None):
@@ -30,6 +31,7 @@ def configure(monkeypatch):
     monkeypatch.setattr(settings, "auth_provider", "supabase")
     monkeypatch.setattr(settings, "supabase_url", "https://example.supabase.co")
     monkeypatch.setattr(settings, "supabase_publishable_key", "sb_publishable_fixture")
+    monkeypatch.setattr(settings, "supabase_service_key", SecretStr("sb_secret_fixture"))
 
 
 def test_provider_validation_and_fail_closed(monkeypatch, request):
@@ -117,8 +119,54 @@ def test_supabase_profiles_roles_and_deleted_identity(client, monkeypatch):
         )
     finally:
         with SessionLocal.begin() as db:
+            db.execute(delete(AuthDeletionJob).where(AuthDeletionJob.user_id.in_(ids)))
             db.execute(delete(User).where(User.id.in_(ids)))
             db.execute(delete(BlockedIdentity).where(BlockedIdentity.id.in_(ids)))
+
+def test_self_deletion_rechecks_password_and_blocks_provider_identity(
+    client, monkeypatch
+):
+    configure(monkeypatch)
+    data = identity()
+    subject = uuid.UUID(data["id"])
+    monkeypatch.setattr(supabase_auth, "verified_identity", lambda _: data)
+    monkeypatch.setattr(
+        supabase_auth,
+        "verify_password",
+        lambda candidate, email, password: candidate == subject
+        and password == "correct-password",
+    )
+    headers = {"Authorization": "Bearer provider-token"}
+    try:
+        assert client.get("/api/v1/auth/me", headers=headers).status_code == 200
+        denied = client.request(
+            "DELETE",
+            "/api/v1/auth/me",
+            headers=headers,
+            json={"confirmation": "HAPUS AKUN", "password": "incorrect-password"},
+        )
+        assert denied.status_code == 401
+        with SessionLocal() as db:
+            assert db.get(User, subject) is not None
+            assert db.get(AuthDeletionJob, subject) is None
+
+        result = client.request(
+            "DELETE",
+            "/api/v1/auth/me",
+            headers=headers,
+            json={"confirmation": "HAPUS AKUN", "password": "correct-password"},
+        )
+        assert result.status_code == 202
+        with SessionLocal() as db:
+            assert db.get(User, subject) is None
+            assert db.get(BlockedIdentity, subject) is not None
+            assert db.get(AuthDeletionJob, subject) is not None
+        assert client.get("/api/v1/auth/me", headers=headers).status_code == 403
+    finally:
+        with SessionLocal.begin() as db:
+            db.execute(delete(AuthDeletionJob).where(AuthDeletionJob.user_id == subject))
+            db.execute(delete(User).where(User.id == subject))
+            db.execute(delete(BlockedIdentity).where(BlockedIdentity.id == subject))
 
 
 def test_existing_email_is_not_automatically_linked(client, accounts, monkeypatch):

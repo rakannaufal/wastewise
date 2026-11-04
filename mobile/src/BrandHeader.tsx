@@ -1,16 +1,8 @@
 import type { ComponentProps, ReactNode } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Platform,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Image, Platform, Pressable, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { colors, styles } from "./ui";
+import { colors, styles, Loading } from "./ui";
 
 export function BrandHeader({ children }: { children?: ReactNode }) {
   return (
@@ -124,10 +116,7 @@ export function LaunchScreen() {
       >
         WasteWise
       </Text>
-      <ActivityIndicator
-        color={colors.accent}
-        accessibilityLabel="Memuat aplikasi"
-      />
+      <Loading compact label="Memuat aplikasi" />
     </View>
   );
 }

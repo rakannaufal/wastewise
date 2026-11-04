@@ -1,6 +1,8 @@
 import pytest
 from sqlalchemy.exc import OperationalError
 
+from app.db import SessionLocal
+from app.models import WorkerHeartbeat
 from app.worker_loop import run_worker
 
 
@@ -27,3 +29,13 @@ def test_one_shot_fails_loudly_instead_of_claiming_completion():
 
     with pytest.raises(OperationalError):
         run_worker(job, once=True)
+
+
+def test_named_worker_writes_a_heartbeat():
+    run_worker(lambda: False, once=True, worker_name="test-worker")
+    with SessionLocal() as db:
+        row = db.get(WorkerHeartbeat, "test-worker")
+        assert row is not None
+        assert row.heartbeat_at is not None
+    with SessionLocal.begin() as db:
+        db.delete(db.get(WorkerHeartbeat, "test-worker"))

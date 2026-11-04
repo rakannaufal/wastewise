@@ -2,15 +2,27 @@
 
 import argparse
 from datetime import UTC, datetime, timedelta
+from time import monotonic
+from typing import Any, cast
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, delete, or_, select
+from sqlalchemy.engine import CursorResult
 
 from app.config import settings
 from app.db import SessionLocal
-from app.models import CleanupJob, CommunityPost, Report, ReportDraft
+from app.models import (
+    AuthDeletionJob,
+    CleanupJob,
+    CommunityPost,
+    RateLimitWindow,
+    Report,
+    ReportDraft,
+)
 from app.storage import storage
 from app.worker_loop import run_worker
 from app.workflow import enqueue
+
+next_rate_limit_prune = 0.0
 
 
 def referenced(db, path):
@@ -56,8 +68,62 @@ def expire_drafts():
         return len(rows)
 
 
+def prune_rate_limit_windows():
+    global next_rate_limit_prune
+    now_monotonic = monotonic()
+    if now_monotonic < next_rate_limit_prune:
+        return False
+    cutoff = datetime.now(UTC) - timedelta(hours=2)
+    with SessionLocal.begin() as db:
+        result = cast(
+            CursorResult[Any],
+            db.execute(delete(RateLimitWindow).where(RateLimitWindow.window_started_at < cutoff)),
+        )
+    next_rate_limit_prune = now_monotonic + 3600
+    return bool(result.rowcount)
+
+
+def process_auth_deletion():
+    now = datetime.now(UTC)
+    with SessionLocal.begin() as db:
+        job = db.scalar(
+            select(AuthDeletionJob)
+            .where(
+                AuthDeletionJob.next_attempt_at <= now,
+                or_(AuthDeletionJob.locked_until.is_(None), AuthDeletionJob.locked_until < now),
+            )
+            .order_by(AuthDeletionJob.next_attempt_at)
+            .with_for_update(skip_locked=True)
+            .limit(1)
+        )
+        if job is None:
+            return False
+        job.attempts += 1
+        job.locked_until = now + timedelta(seconds=60)
+        user_id, attempts = job.user_id, job.attempts
+    try:
+        from app.supabase_auth import delete_identity
+
+        delete_identity(user_id)
+        error = None
+    except Exception as exc:
+        error = type(exc).__name__[:100]
+    with SessionLocal.begin() as db:
+        job = db.get(AuthDeletionJob, user_id)
+        if job is None:
+            return True
+        if error:
+            job.locked_until = None
+            job.last_error_code = error
+            job.next_attempt_at = now + timedelta(seconds=min(3600, 2 ** min(attempts, 11)))
+        else:
+            db.delete(job)
+    return True
+
 def run_once():
-    expire_drafts()
+    pruned_limits = prune_rate_limit_windows()
+    expired_drafts = expire_drafts()
+    auth_deletion = process_auth_deletion()
     now = datetime.now(UTC)
     with SessionLocal.begin() as db:
         job = db.scalar(
@@ -73,7 +139,7 @@ def run_once():
             .limit(1)
         )
         if job is None:
-            return False
+            return pruned_limits or bool(expired_drafts) or auth_deletion
         if referenced(db, job.object_path):
             job.status = "completed"
             job.locked_until = None
@@ -103,4 +169,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
-    run_worker(run_once, once=args.once)
+    run_worker(run_once, once=args.once, worker_name="cleanup")

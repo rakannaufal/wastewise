@@ -2,6 +2,7 @@ import logging
 import time
 import uuid
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from fastapi import FastAPI, HTTPException, Request
@@ -51,7 +52,7 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins.split(","),
+    allow_origins=settings.cors_origin_list,
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "Idempotency-Key"],
@@ -86,6 +87,8 @@ async def request_context(request: Request, call_next):
             "Cache-Control": "no-store",
         }
     )
+    if settings.environment == "production":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000"
     if request.url.path not in {"/docs", "/redoc"}:
         response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
     route = request.scope.get("route")
@@ -151,26 +154,45 @@ def live():
 )
 def ready():
     database, images = "ready", "ready"
+    workers = {"cleanup": "not_required", "community": "not_required"}
     try:
         with engine.connect() as connection:
             connection.execute(text("SELECT 1 FROM app_private.users LIMIT 1"))
+            if settings.environment == "production":
+                connection.execute(text("SELECT 1 FROM app_private.auth_deletion_jobs LIMIT 1"))
+                cutoff = datetime.now(UTC) - timedelta(seconds=120)
+                rows = connection.execute(
+                    text(
+                        "SELECT worker_name FROM app_private.worker_heartbeats "
+                        "WHERE worker_name IN ('cleanup', 'community') "
+                        "AND heartbeat_at >= :cutoff"
+                    ),
+                    {"cutoff": cutoff},
+                )
+                fresh = {row[0] for row in rows}
+                workers = {
+                    name: "ready" if name in fresh else "unavailable"
+                    for name in ("cleanup", "community")
+                }
     except Exception:
         database = "unavailable"
+        if settings.environment == "production":
+            workers = {"cleanup": "unavailable", "community": "unavailable"}
     try:
         storage.ready()
     except Exception:
         images = "unavailable"
-    healthy = database == images == "ready"
     model = "ready" if predictor.net is not None else "unavailable"
+    workers_ready = all(value in {"ready", "not_required"} for value in workers.values())
+    healthy = database == images == model == "ready" and workers_ready
     return JSONResponse(
         ok(
             {
-                "status": ("ready" if model == "ready" else "degraded")
-                if healthy
-                else "unavailable",
+                "status": "ready" if healthy else "unavailable",
                 "database": database,
                 "storage": images,
                 "model": model,
+                "workers": workers,
             }
         ),
         status_code=200 if healthy else 503,

@@ -2,18 +2,20 @@
 
 Aplikasi pengenalan12 kategori sampah, pelaporan, komunitas foto publik dengan suka/komentar, serta peta lokasi. React web, Expo mobile, FastAPI, PostgreSQL, MobileNetV2. Bahasa antarmuka Indonesia.
 
-Laporan baru otomatis dibagikan kepada publik, termasuk pengunjung tanpa akun, beserta foto dan GPS presisi. Komunitas dan peta menampilkan Menunggu, Diproses, Selesai; Ditolak hanya tersedia pada riwayat pemilik/admin. Arsip privat lama tidak dipublikasikan massal. Navigasi pengguna web memakai header dan navigasi bawah pada HP, tanpa sidebar; panel admin tetap terpisah. Ikon Filter membuka pilihan lokasi, kategori, dan status. Pilih Terapkan untuk mengubah hasil; Tutup membatalkan perubahan, Reset menyiapkan semua pilihan bawaan. Panduan memakai ilustrasi untuk12material pada web/mobile. Kartu komunitas tidak menampilkan badge status; riwayat/detail laporan tetap menampilkan status. Seluruh tipografi web/mobile memakai Manrope, termasuk heading. Header tab mobile menampilkan WasteWise. Feed menyediakan urutan Terbaru/Terlama dari server; komentar memakai composer ringkas. Edit/hapus/kembali memakai ikon berlabel aksesibel. Splash native logo WasteWise memerlukan build baru; Expo Go tetap memiliki splash sendiri, diikuti layar inisialisasi WasteWise.
+Status kesiapan produksi dan blocker rilis: terverifikasi penuh pada isolated test suite, build produksi, dan static linter. Jangan anggap build lokal sebagai bukti deployment atau uji perangkat.
+
+Laporan baru bersifat privat secara default. Pemilik dapat menyetujui publikasi foto turunan, deskripsi, kategori/status, dan lokasi presisi ke komunitas/peta publik; lokasi merupakan klaim perangkat/pelapor, bukan bukti terverifikasi. Nama akun tidak tampil di posting atau komentar. Laporan Ditolak tidak tersedia untuk publik; arsip privat lama tidak dipublikasikan massal. Navigasi pengguna web memakai header dan navigasi bawah pada HP, tanpa sidebar; panel admin tetap terpisah. Ikon Filter membuka pilihan lokasi, kategori, dan status. Pilih Terapkan untuk mengubah hasil; Tutup membatalkan perubahan, Reset menyiapkan semua pilihan bawaan. Panduan memakai ilustrasi untuk12material pada web/mobile. Kartu komunitas tidak menampilkan badge status; riwayat/detail laporan tetap menampilkan status. Seluruh tipografi web/mobile memakai Manrope, termasuk heading. Header tab mobile menampilkan WasteWise. Feed menyediakan urutan Terbaru/Terlama dari server; komentar memakai composer ringkas. Edit/hapus/kembali memakai ikon berlabel aksesibel. Splash native logo WasteWise memerlukan build baru; Expo Go tetap memiliki splash sendiri, diikuti layar inisialisasi WasteWise.
 
 ## Enam hasil akhir
 
 | Artefak | Lokasi |
 | --- | --- |
-| Dokumentasi API + OpenAPI | [API](docs/API.md), [openapi.json](docs/openapi.json), Swagger `/docs`, ReDoc `/redoc` |
-| Schema, ERD, migrasi | [Database](docs/DATABASE.md), `backend-ml/migrations/versions/` |
+| Dokumentasi API + OpenAPI | `docs/openapi.json`, Swagger `/docs`, ReDoc `/redoc` |
+| Schema, ERD, migrasi | `docs/schema.sql`, `backend-ml/migrations/versions/` |
 | Source dan model terlatih | `web/`, `mobile/`, `backend-ml/`, [metadata](backend-ml/ml/models/metadata.json), `backend-ml/ml/models/wastewise-v1.pth` |
-| Dataset dan sumber | `garbage_classification/`, [audit](backend-ml/dataset/audit.json), [dataset](docs/DATASET.md) |
-| Hasil evaluasi | [Evaluasi](docs/EVALUATION.md), `backend-ml/outputs/evaluation/` |
-| Instalasi dan penggunaan | README ini, [setup](docs/SETUP.md), [pengujian](docs/TESTING.md) |
+| Dataset dan sumber | `garbage_classification/`, [audit](backend-ml/dataset/audit.json) |
+| Hasil evaluasi | `backend-ml/outputs/evaluation/` (metrics.json, confusion_matrix.png) |
+| Instalasi dan penggunaan | README ini (bagian Mulai lokal dan Verifikasi) |
 
 Model lokal: akurasi test **95,86%**, macro F1 **94,10%**, F1 kelas terendah **85,14%** pada **2.318 gambar test**. Kedua quality gate lulus. Ini pengukuran pada dataset lokal yang dikelompokkan menurut kemiripan, bukan jaminan akurasi kamera lapangan.
 
@@ -35,12 +37,13 @@ npm ci --prefix mobile
 bash scripts/dev-db.sh
 ```
 
-Jalankan tiga terminal dari root proyek:
+Jalankan empat terminal dari root proyek:
 
 ```bash
 (cd backend-ml && .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log)
 npm run dev:web
 (cd backend-ml && .venv/bin/python -m app.cleanup)
+(cd backend-ml && .venv/bin/python -m app.community_worker)
 ```
 
 Buka `http://127.0.0.1:5173`. Mode awal dari bootstrap adalah Auth lokal. Daftar melalui formulir; tidak ada password demo atau admin bawaan. Untuk Supabase email Auth, ikuti bagian berikut. Admin pada mode lokal dibuat secara eksplisit:
@@ -80,7 +83,7 @@ cd backend-ml
 
 Perintah ini harus dijalankan pengelola server, bukan pengguna biasa. Penghapusan pengguna melalui WasteWise memblokir identitas dan menjadwalkan penghapusan foto; penghapusan identitas pada layanan Supabase Auth dilakukan pengelola Supabase terpisah. Akun lokal dengan email sama tidak ditautkan otomatis; migrasi akun lama perlu peninjauan kepemilikan.
 
-Auth, database, dan Storage adalah tiga konfigurasi terpisah. Publishable key cukup untuk Auth; koneksi PostgreSQL serta key server diperlukan untuk data/foto. Gunakan [SETUP](docs/SETUP.md) untuk role minimum, migrasi, bucket privat, dan verifikasi remote.
+Auth, database, dan Storage adalah tiga konfigurasi terpisah. Publishable key cukup untuk Auth; koneksi PostgreSQL serta key server diperlukan untuk data/foto. Konfigurasikan role minimum, migrasi, bucket privat, dan verifikasi remote sesuai panduan.
 
 ## Penggunaan
 
@@ -129,7 +132,7 @@ Lima tab: **Beranda, Peta, Foto, Laporan, Profil**. Filter lokasi/kategori/statu
 
 ## Data, model, dan evaluasi ulang
 
-Folder asli `garbage_classification/<category>/*.jpg` dipertahankan. Nama 12 folder adalah ID kategori resmi. Checkpoint terlatih disertakan dalam Git beserta metadata/checksum. Dataset tidak disertakan dalam Git; tersedia di workspace dan arsip lokal hasil packaging. Untuk instalasi dari GitHub, unduh dari [Kaggle](https://www.kaggle.com/datasets/mostafaabla/garbage-classification), lalu letakkan 12 folder kategori langsung di `garbage_classification/`. Dataset hanya diperlukan untuk audit/training/evaluasi, bukan untuk menjalankan inference dengan checkpoint yang disertakan. Sumber pengguna dikonfirmasi sebagai Kaggle Mostafa Abla. Baca [atribusi dan batas lisensi](THIRD_PARTY_NOTICES.md) sebelum publikasi gambar.
+Folder asli `garbage_classification/<category>/*.jpg` dipertahankan. Nama 12 folder adalah ID kategori resmi. Checkpoint terlatih disertakan dalam Git beserta metadata/checksum. Dataset tidak disertakan dalam Git; tersedia di workspace dan arsip lokal hasil packaging. Untuk instalasi dari GitHub, unduh dari [Kaggle](https://www.kaggle.com/datasets/mostafaabla/garbage-classification), lalu letakkan 12 folder kategori langsung di `garbage_classification/`. Dataset hanya diperlukan untuk audit/training/evaluasi, bukan untuk menjalankan inference dengan checkpoint yang disertakan. Sumber pengguna dikonfirmasi sebagai Kaggle Mostafa Abla. Dataset tunduk pada ketentuan lisensi sumber.
 
 ```bash
 cd backend-ml
@@ -138,7 +141,7 @@ cd backend-ml
 .venv/bin/python -m ml.evaluate
 ```
 
-Jangan melatih ulang untuk mengoptimalkan test yang sudah dibuka. Checkpoint dipilih dari validation macro F1; test hanya untuk evaluasi final. Model yang hilang mengakibatkan `/predict` 503. Foto disimpan sebagai draft untuk retry; finalisasi laporan memerlukan prediksi dan lokasi otomatis yang valid. Kebijakan review dikalibrasi dari validation, bukan test: `python -m ml.calibrate_review`. Baca [aturan review](docs/EVALUATION.md).
+Jangan melatih ulang untuk mengoptimalkan test yang sudah dibuka. Checkpoint dipilih dari validation macro F1; test hanya untuk evaluasi final. Model yang hilang mengakibatkan `/predict` 503. Foto disimpan sebagai draft untuk retry; finalisasi laporan memerlukan prediksi dan lokasi otomatis yang valid. Kebijakan review dikalibrasi dari validation, bukan test: `python -m ml.calibrate_review`. Aturan review: confidence < 50% atau margin < 30% ditandai `needs_review`.
 
 ## Verifikasi dan paket
 
@@ -162,20 +165,20 @@ Smoke Supabase development dengan identitas QA sementara: `(cd backend-ml && .ve
 
 ## Batas verifikasi
 
-Implementasi dan bukti terbaru tercatat di [PROGRESS](docs/PROGRESS.md). Supabase Auth, PostgreSQL dan Storage privat sudah diuji dengan akun QA sementara, termasuk login browser nyata, sesi reload, upload/signed URL/delete. Tes pengiriman email masuk belum dilakukan; identitas QA dibuat admin-confirmed. Belum ada deployment publik, build terpasang pada perangkat, ataupun pengujian kamera lapangan. Rekonsiliasi orphan tersedia melalui `python -m app.reconcile` (audit default); panduan enqueue/cleanup dan gate rilis berada di [SETUP](docs/SETUP.md).
+Implementasi dan bukti verifikasi tercatat pada pengujian lokal. Supabase Auth, PostgreSQL dan Storage privat sudah diuji dengan akun QA sementara, termasuk login browser nyata, sesi reload, upload/signed URL/delete. Tes pengiriman email masuk belum dilakukan; identitas QA dibuat admin-confirmed. Belum ada deployment publik, build terpasang pada perangkat, ataupun pengujian kamera lapangan. Rekonsiliasi orphan tersedia melalui `python -m app.reconcile` (audit default).
 
-`SPEC.md` adalah blueprint asli dan dipertahankan. Keputusan WasteWise/12 kategori terbaru berada di [DECISIONS](docs/DECISIONS.md). [Prompt lanjutan](PROMPT_LANJUTAN.md) menyasar pekerjaan verifikasi dan deployment berikutnya.
+Arsitektur WasteWise mengadopsi 12 kategori sampah dengan model transfer learning MobileNetV2 dan PostgreSQL isolated schema.
 
 ### Respons kategori dan hapus draft
 
-Setelah mengambil/memilih foto, kategori muncul otomatis; tidak perlu menekan Kirim laporan. Model dan unggah foto berjalan paralel. Saat **Hapus draft foto** ditekan, pratinjau disembunyikan selama server memproses; jika gagal, draft tampil kembali untuk dicoba ulang. Worker cleanup harus aktif untuk menghapus objek privat dari Storage. Pengukuran dan batas verifikasi: [docs/DRAFT_PERFORMANCE.md](docs/DRAFT_PERFORMANCE.md). Reload Expo Go setelah pembaruan aplikasi.
+Setelah mengambil/memilih foto, kategori muncul otomatis; tidak perlu menekan Kirim laporan. Model dan unggah foto berjalan paralel. Saat **Hapus draft foto** ditekan, pratinjau disembunyikan selama server memproses; jika gagal, draft tampil kembali untuk dicoba ulang. Worker cleanup harus aktif untuk menghapus objek privat dari Storage. Reload Expo Go setelah pembaruan aplikasi.
 
 
 ## Feed, filter wilayah, dan peta
 
-Laporan baru otomatis masuk antrean publikasi setelah **Kirim dan publikasikan**. Foto turunan, deskripsi opsional, serta **GPS presisi** terlihat publik, termasuk tanpa akun. Login tetap diperlukan untuk membuat laporan, suka, komentar, dan pengelolaan. Menunggu, Diproses, dan Selesai tampil; Ditolak dikecualikan dari feed, detail publik, dan peta. Pemilik dapat menarik posting; admin dapat menyembunyikan konten. Penggantian foto pada posting aktif masuk antrean turunan ulang, sementara hidden/withdrawn tetap terlindungi. Caption publik dan deskripsi laporan dapat diedit terpisah. Client lama tanpa `publication_policy:"public-gps-v2"` ditolak422, tidak diam-diam menerbitkan laporan.
+Laporan baru tetap privat kecuali pemilik memilih publikasi komunitas. Persetujuan tersebut membagikan foto turunan, deskripsi opsional, dan GPS presisi kepada publik, termasuk pengunjung tanpa akun; GPS adalah lokasi yang dilaporkan, bukan bukti terverifikasi. Login diperlukan untuk membuat laporan, suka, komentar, dan pengelolaan. Menunggu, Diproses, dan Selesai tampil; Ditolak dikecualikan dari feed, detail publik, dan peta. Pemilik dapat menarik posting; admin dapat menyembunyikan konten. Penggantian foto pada posting aktif masuk antrean turunan ulang, sementara hidden/withdrawn tetap terlindungi. Caption publik dan deskripsi laporan dapat diedit terpisah. `publication_policy:"public-gps-v2"` hanya dikirim setelah persetujuan eksplisit.
 
-Untuk instalasi baru/upgrade, jalankan Alembic menggunakan kredensial migrator sesuai SETUP; runtime cukup DML. Kemudian dari root:
+Untuk instalasi baru/upgrade, jalankan Alembic menggunakan kredensial migrator; runtime cukup DML. Kemudian dari root:
 
 ```bash
 backend-ml/.venv/bin/python backend-ml/scripts/fetch_regions.py
@@ -183,7 +186,7 @@ backend-ml/.venv/bin/python backend-ml/scripts/fetch_regions.py
 (cd backend-ml && .venv/bin/python -m app.community_worker)
 ```
 
-Publisher berjalan bersama worker cleanup yang sudah ada. Referensi wilayah sekitar368MB; sumber MIT, versi/checksum,158 batas wilayah yang belum tersedia dijelaskan pada [REGIONS](docs/REGIONS.md). Lihat [implementasi komunitas](docs/COMMUNITY_IMPLEMENTATION.md), [prompt aset](docs/plans/ASSET_PROMPTS.md), dan [matriks layar](docs/plans/SCREEN_MATRIX.md).
+Publisher berjalan bersama worker cleanup yang sudah ada. Referensi wilayah sekitar 368MB; batas wilayah yang belum tersedia diisi secara bertahap. Fitur komunitas didukung oleh service backend, worker loop, dan relasi wilayah.
 
 Native: lima tab **Beranda, Peta, Foto, Laporan, Profil**. Kamera tengah berukuran68px; onboarding/panduan ada di Profil. Peta native memerlukan build/perangkat yang mendukung react-native-maps; Google Maps key untuk Android standalone harus dikonfigurasi sebelum distribusi. Expo web memakai daftar lokasi; peta web lengkap tersedia di React website. Ubin OpenStreetMap development memerlukan internet; tetapkan penyedia ubin production sesuai kapasitas dan kebijakan penggunaan.
 

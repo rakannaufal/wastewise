@@ -62,7 +62,6 @@ export async function createReport(
     data: {
       draft_id: draft.id,
       description,
-      publication_policy: "public-gps-v2",
     },
   });
   expect(response.status()).toBe(201);

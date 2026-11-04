@@ -24,7 +24,7 @@ def regions(
     user: User | None = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
-    limit(request, "public-regions", 120)
+    limit(request, "public-regions", 120, None, db)
     q = select(Region)
     if parent is not None:
         q = q.where(Region.parent_code == parent)
@@ -57,7 +57,7 @@ def map_points(
     user: User | None = Depends(optional_user),
     db: Session = Depends(get_db),
 ):
-    limit(request, "public-map", 120)
+    limit(request, "public-map", 120, None, db)
     try:
         west, south, east, north = [float(v) for v in bbox.split(",")]
         if not all(math.isfinite(x) for x in (west, south, east, north)) or not (

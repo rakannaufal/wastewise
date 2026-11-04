@@ -1,45 +1,100 @@
-import threading
-import time
-from collections import defaultdict, deque
+import hashlib
+import hmac
 from datetime import UTC, datetime, timedelta
+from ipaddress import ip_address
 from uuid import UUID
 
 import bcrypt
 import jwt
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import func
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.db import get_db
-from app.models import User
+from app.models import RateLimitWindow, User
 
 bearer = HTTPBearer(auto_error=False)
-events: dict[tuple[str, str], deque[float]] = defaultdict(deque)
-guard = threading.Lock()
 DUMMY_HASH = bcrypt.hashpw(b"WasteWiseDummy1!", bcrypt.gensalt(rounds=12))
 
 
-def limit(request: Request, scope: str, maximum: int, identity: str | None = None):
+def client_ip(request: Request):
+    peer_host = request.client.host if request.client else "unknown"
+    try:
+        peer = ip_address(peer_host)
+    except ValueError:
+        return peer_host
+
+    networks = settings.trusted_proxy_networks
+
+    def trusted(address):
+        return any(
+            address.version == network.version and address in network for network in networks
+        )
+
+    if not trusted(peer):
+        return str(peer)
+    forwarded = request.headers.get("x-forwarded-for")
+    if not forwarded:
+        return str(peer)
+    try:
+        chain = [ip_address(value.strip()) for value in forwarded.split(",")]
+    except ValueError:
+        return str(peer)
+    if not chain:
+        return str(peer)
+
+    client = peer
+    for address in reversed(chain):
+        if not trusted(client):
+            break
+        client = address
+    return str(client)
+
+
+def limit(
+    request: Request,
+    scope: str,
+    maximum: int,
+    identity: str | None,
+    db: Session,
+):
     if not settings.rate_limit_enabled:
         return
-    key = (scope, identity or (request.client.host if request.client else "unknown"))
-    timestamp = time.monotonic()
-    with guard:
-        for stale in [
-            key for key, queue in events.items() if not queue or queue[-1] < timestamp - 60
-        ]:
-            del events[stale]
-        queue = events[key]
-        while queue and queue[0] < timestamp - 60:
-            queue.popleft()
-        if len(queue) >= maximum:
-            raise HTTPException(
-                429,
-                "Terlalu banyak permintaan. Coba lagi satu menit.",
-                headers={"Retry-After": "60"},
-            )
-        queue.append(timestamp)
+    subject = identity or client_ip(request)
+    raw_key = f"{scope}:{subject}".encode()
+    secret = settings.jwt_secret.get_secret_value().encode()
+    bucket_key = hmac.new(secret, raw_key, hashlib.sha256).hexdigest()
+    now = datetime.now(UTC)
+    window = now.replace(second=0, microsecond=0)
+    statement = (
+        insert(RateLimitWindow)
+        .values(bucket_key=bucket_key, window_started_at=window, hits=1)
+        .on_conflict_do_update(
+            index_elements=[RateLimitWindow.bucket_key, RateLimitWindow.window_started_at],
+            set_={"hits": func.least(RateLimitWindow.hits + 1, maximum + 1)},
+        )
+        .returning(RateLimitWindow.hits)
+    )
+    try:
+        hits = db.scalar(statement)
+        if hits is None:
+            db.rollback()
+            raise HTTPException(503, "Pembatasan permintaan sedang tidak tersedia")
+        db.commit()
+    except SQLAlchemyError as exc:
+        db.rollback()
+        raise HTTPException(503, "Pembatasan permintaan sedang tidak tersedia") from exc
+    if hits > maximum:
+        retry_after = max(1, int((window + timedelta(minutes=1) - now).total_seconds() + 0.999))
+        raise HTTPException(
+            429,
+            "Terlalu banyak permintaan. Coba lagi sebentar.",
+            headers={"Retry-After": str(retry_after)},
+        )
 
 
 def hash_password(value):
@@ -68,20 +123,20 @@ def token_for(user):
 
 
 def current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
     db: Session = Depends(get_db),
 ):
+    if credentials is None:
+        raise HTTPException(
+            401, "Sesi tidak valid atau kedaluwarsa", headers={"WWW-Authenticate": "Bearer"}
+        )
     if settings.auth_provider == "supabase":
+        limit(request, "authenticated-api", 300, None, db)
         from app.supabase_auth import profile_for, verified_identity
 
-        if credentials is None:
-            raise HTTPException(
-                401, "Masuk untuk melanjutkan", headers={"WWW-Authenticate": "Bearer"}
-            )
         return profile_for(verified_identity(credentials.credentials), db)
     try:
-        if credentials is None:
-            raise ValueError("Missing credentials")
         payload = jwt.decode(
             credentials.credentials,
             settings.jwt_secret.get_secret_value(),
@@ -110,7 +165,7 @@ def optional_user(
         if request.headers.get("Authorization"):
             raise HTTPException(401, "Sesi tidak valid")
         return None
-    return current_user(credentials, db)
+    return current_user(request, credentials, db)
 
 
 def admin(user: User = Depends(current_user)):

@@ -3,7 +3,7 @@ import { Linking, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { api } from "./api";
 import type { MapPoints } from "../../shared/community";
-import { Button, ErrorText, styles } from "./ui";
+import { Button, ErrorText, Loading, styles } from "./ui";
 export default function CommunityMap({
   query,
 }: {
@@ -31,6 +31,7 @@ export default function CommunityMap({
         iOS/Android dan website WasteWise.
       </Text>
       <ErrorText message={error} />
+      {!points && !error && <Loading />}
       {points?.features.map((p, i) => (
         <View style={styles.panel} key={i}>
           <Text style={styles.text}>
