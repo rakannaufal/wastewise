@@ -45,11 +45,15 @@ export function Failure({
   retry?: () => void;
 }) {
   return (
-    <div className="error" role="alert">
-      <AlertCircle size={20} />
+    <div className="error failure-alert" role="alert">
+      <AlertCircle size={20} aria-hidden="true" />
       <span>{error.message}</span>
       {retry && (
-        <button className="text-button" onClick={retry}>
+        <button
+          type="button"
+          className="text-button failure-retry"
+          onClick={retry}
+        >
           Coba lagi
         </button>
       )}

@@ -5,6 +5,7 @@ export function ReportDistribution({ summary }: { summary: Summary }) {
   const groups = [
     {
       title: "Komposisi material",
+      description: "Jumlah laporan per kategori material.",
       rows: categories.map(({ id, name }) => ({
         id,
         label: name,
@@ -13,6 +14,7 @@ export function ReportDistribution({ summary }: { summary: Summary }) {
     },
     {
       title: "Progres penanganan",
+      description: "Jumlah laporan per status penanganan.",
       rows: Object.entries(summary.by_status).map(([id, count]) => ({
         id,
         label: statusName[id as keyof typeof statusName],
@@ -22,10 +24,10 @@ export function ReportDistribution({ summary }: { summary: Summary }) {
   ];
   return (
     <div className="distribution-grid">
-      {groups.map(({ title, rows }) => (
+      {groups.map(({ title, description, rows }) => (
         <section className="panel" key={title} aria-label={title}>
           <h2>{title}</h2>
-          <p className="muted">Jumlah laporan dari ringkasan saat ini.</p>
+          <p className="muted">{description}</p>
           <dl className="distribution-list">
             {rows.map(({ id, label, count }) => (
               <div key={id}>
@@ -34,7 +36,11 @@ export function ReportDistribution({ summary }: { summary: Summary }) {
                   <span className="distribution-track" aria-hidden="true">
                     <span
                       style={{
-                        width: `${(count / summary.total_reports) * 100}%`,
+                        width: `${
+                          summary.total_reports > 0
+                            ? (count / summary.total_reports) * 100
+                            : 0
+                        }%`,
                       }}
                     />
                   </span>

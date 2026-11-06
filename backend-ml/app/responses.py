@@ -17,6 +17,7 @@ class UserRead(BaseModel):
     id: UUID
     email: str
     full_name: str
+    public_name_visible: bool
     role: str
     created_at: datetime
     updated_at: datetime

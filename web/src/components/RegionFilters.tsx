@@ -258,17 +258,6 @@ export default function RegionFilters() {
               <X size={14} aria-label="Hapus filter status" />
             </button>
           )}
-          {applied.order === "oldest" && (
-            <button
-              onClick={() => {
-                const next = new URLSearchParams(params);
-                next.delete("order");
-                setParams(next);
-              }}
-            >
-              Terlama <X size={14} aria-label="Hapus urutan" />
-            </button>
-          )}
           <button onClick={() => apply({ ...emptyFilters, order: "newest" })}>
             Hapus semua
           </button>

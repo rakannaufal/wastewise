@@ -7,6 +7,7 @@ import jwt
 from PIL import Image
 from sqlalchemy import delete, select
 
+from app import main as app_main
 from app.config import settings
 from app.db import SessionLocal
 from app.inference import predictor
@@ -220,6 +221,25 @@ def test_model_unavailable_fails_readiness_and_blocks_report(client, accounts, m
     )
     result = create(client, accounts["owner"])
     assert result.status_code == 503
+
+
+def test_missing_profile_migration_fails_readiness(client, monkeypatch):
+    class MissingProfileColumn:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def execute(self, statement, *_args, **_kwargs):
+            if "public_name_visible" in str(statement):
+                raise RuntimeError("required profile column is missing")
+
+    monkeypatch.setattr(app_main.engine, "connect", lambda: MissingProfileColumn())
+    response = client.get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json()["data"]["database"] == "unavailable"
 
 
 def test_cleanup_outbox(client, accounts, monkeypatch):

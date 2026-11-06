@@ -961,6 +961,152 @@
         ]
       }
     },
+    "/api/v1/auth/me/public-name": {
+      "patch": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Update Public Name",
+        "operationId": "update_public_name_api_v1_auth_me_public_name_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicNameUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_UserRead_"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request Entity Too Large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/users": {
       "get": {
         "tags": [
@@ -6965,6 +7111,10 @@
             "type": "string",
             "title": "Full Name"
           },
+          "public_name_visible": {
+            "type": "boolean",
+            "title": "Public Name Visible"
+          },
           "role": {
             "type": "string",
             "title": "Role"
@@ -6989,6 +7139,7 @@
           "id",
           "email",
           "full_name",
+          "public_name_visible",
           "role",
           "created_at",
           "updated_at",
@@ -8294,6 +8445,20 @@
         ],
         "title": "PredictionRead"
       },
+      "PublicNameUpdate": {
+        "properties": {
+          "public_name_visible": {
+            "type": "boolean",
+            "title": "Public Name Visible"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "public_name_visible"
+        ],
+        "title": "PublicNameUpdate"
+      },
       "PublishPost": {
         "properties": {
           "report_id": {
@@ -8908,6 +9073,10 @@
             "type": "string",
             "title": "Full Name"
           },
+          "public_name_visible": {
+            "type": "boolean",
+            "title": "Public Name Visible"
+          },
           "role": {
             "type": "string",
             "title": "Role"
@@ -8928,6 +9097,7 @@
           "id",
           "email",
           "full_name",
+          "public_name_visible",
           "role",
           "created_at",
           "updated_at"

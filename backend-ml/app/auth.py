@@ -12,7 +12,7 @@ from app.db import get_db
 from app.models import Report, User
 from app.reports import ok
 from app.responses import AuthConfigRead, Envelope, TokenRead, UserRead, UsersPage
-from app.schemas import AccountDeletion, Credentials, Register, UserUpdate
+from app.schemas import AccountDeletion, Credentials, PublicNameUpdate, Register, UserUpdate
 from app.security import (
     DUMMY_HASH,
     admin,
@@ -44,6 +44,7 @@ def user_data(user):
         "id": user.id,
         "email": user.email,
         "full_name": user.full_name,
+        "public_name_visible": user.public_name_visible,
         "role": user.role,
         "created_at": user.created_at,
         "updated_at": user.updated_at,
@@ -89,6 +90,16 @@ def login(body: Credentials, request: Request, db: Session = Depends(get_db)):
 @router.get("/auth/me", response_model=Envelope[UserRead])
 def me(user: User = Depends(current_user)):
     return ok(user_data(user))
+
+@router.patch("/auth/me/public-name", response_model=Envelope[UserRead])
+def update_public_name(
+    body: PublicNameUpdate,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    user.public_name_visible = body.public_name_visible
+    db.commit()
+    return ok(user_data(user), "Pengaturan nama komunitas diperbarui")
 
 @router.delete("/auth/me", status_code=202, response_model=Envelope[None])
 def delete_me(

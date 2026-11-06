@@ -53,13 +53,13 @@ export default function SiteHeader({ compact = false }: { compact?: boolean }) {
               Buat laporan
             </Link>
           )}
-          {user ? (
+          {!compact && (user ? (
             <details
               ref={account}
               className="account-menu"
               key={location.pathname}
             >
-              <summary>
+              <summary aria-label="Menu akun">
                 <span className="avatar" aria-hidden="true">
                   {user.full_name[0]}
                 </span>
@@ -85,7 +85,7 @@ export default function SiteHeader({ compact = false }: { compact?: boolean }) {
             >
               Masuk
             </Link>
-          )}
+          ))}
           {!compact && (
             <button
               className="icon-button site-menu-trigger"

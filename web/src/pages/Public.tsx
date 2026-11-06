@@ -1,12 +1,11 @@
-import Illustration from "../components/Illustration";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
+  ArrowRight,
   Camera,
-  MapPin,
-  ScanLine,
-  ArrowUpRight,
-  MoveRight,
+  Check,
 } from "lucide-react";
+import categories from "../../../shared/categories.json";
 import { Brand, Failure } from "../ui";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
@@ -15,158 +14,272 @@ import type { Feed } from "../../../shared/community";
 import SiteHeader from "../components/SiteHeader";
 import PostCard from "../components/PostCard";
 import SiteFooter from "../components/SiteFooter";
-import { AboutSection, FAQList } from "../components/PublicContent";
+import { FAQList } from "../components/PublicContent";
+
+const COMMUNITY_PREVIEW_REFRESH_MS = 60_000;
+
 export function Landing() {
   const { user } = useAuth();
+  const [selectedQuiz, setSelectedQuiz] = useState<number | null>(null);
+  const createReportPath = user
+    ? "/reports/new"
+    : "/login?returnTo=%2Freports%2Fnew";
+
   const preview = useQuery({
     queryKey: ["community", "preview", user?.id],
     queryFn: ({ signal }) =>
-      api<Feed>("/api/v1/community/feed?per_page=3", { signal }),
-    staleTime: 30000,
-    refetchInterval: 60000,
+      api<Feed>("/api/v1/community/feed?per_page=2", { signal }),
+    staleTime: COMMUNITY_PREVIEW_REFRESH_MS,
+    refetchInterval: COMMUNITY_PREVIEW_REFRESH_MS,
   });
+
   return (
-    <div className="landing">
+    <div className="landing-editorial">
       <SiteHeader />
-      <main>
-        <Illustration
-          slot="landing-hero"
-          alt="Warga merawat lingkungan sekitar"
-        />
-        <section className="landing-hero">
-          <div>
-            <h1>
-              Lingkungan baik,
-              <br />
-              dimulai dari
-              <br />
-              <em>sekitarmu.</em>
+      <main className="home-main">
+        <section className="home-hero" aria-labelledby="home-title">
+          <div className="home-hero-copy">
+            <h1 id="home-title">
+              Kenali sampah.
+              <span>Pilih langkah berikutnya.</span>
             </h1>
             <p>
-              Kenali sampah lewat foto. Laporkan lokasinya. Ajak lingkunganmu
-              mengambil langkah berikutnya bersama WasteWise.
+              Ambil foto, kenali materialnya dalam 12 kategori, lalu catat lokasi
+              dan pantau penanganannya lewat WasteWise.
             </p>
-            <div className="landing-actions">
-              <Link
-                to={user ? "/reports/new" : "/login?returnTo=%2Freports%2Fnew"}
-                className="button primary"
-              >
-                Mulai dari satu foto <Camera size={19} />
+            <div className="home-hero-actions">
+              <Link className="home-button home-button-primary" to={createReportPath}>
+                <Camera size={18} aria-hidden="true" />
+                Buat laporan
               </Link>
-              <a href="#cara-kerja">
-                Lihat cara kerjanya <MoveRight size={18} />
-              </a>
+              <Link className="home-button home-button-secondary" to="/guide">
+                Panduan 12 kategori
+                <ArrowRight size={17} aria-hidden="true" />
+              </Link>
             </div>
-            <small>Kamera, galeri, dan klasifikasi AI dalam satu alur.</small>
+            <ul className="home-hero-facts" aria-label="Fitur WasteWise">
+              <li>12 kategori material</li>
+              <li>Lokasi dengan izin perangkat</li>
+              <li>Privat sebagai pengaturan awal</li>
+            </ul>
           </div>
-          <figure className="material-story">
-            <img
-              src="/materials/landing-plastic.webp"
-              alt="Contoh material plastik dari dataset klasifikasi"
-              width="512"
-              height="384"
-              fetchPriority="high"
-            />
+
+          <figure className="home-example">
+            <div className="home-example-photo">
+              <img
+                src="/materials/landing-plastic.webp"
+                alt="Contoh foto botol plastik dari dataset klasifikasi"
+                width="640"
+                height="480"
+                fetchPriority="high"
+              />
+              <span>Foto contoh dataset</span>
+            </div>
             <figcaption>
-              <ScanLine size={22} />
               <div>
-                <strong>Kenali sebelum memilah.</strong>
-                <span>Contoh dataset · Plastik</span>
+                <span className="home-example-label">Contoh kategori</span>
+                <strong>Plastik</strong>
               </div>
+              <Link to="/guide" aria-label="Baca panduan memilah plastik">
+                Cara memilah
+                <ArrowRight size={16} aria-hidden="true" />
+              </Link>
             </figcaption>
           </figure>
         </section>
-        <section id="komunitas" className="landing-preview">
-          <div className="section-heading">
+
+        <section className="home-process home-section" id="cara-kerja">
+          <div className="home-section-heading">
+            <h2>Dari foto ke tindak lanjut.</h2>
+            <p>
+              Tinjau detail sebelum mengirim, lalu cek status laporan di riwayat.
+            </p>
+          </div>
+          <ol className="home-process-list">
+            <li>
+              <span className="home-process-marker" aria-hidden="true">01</span>
+              <div className="home-process-copy">
+                <h3>Pilih foto</h3>
+                <p>
+                  Ambil foto atau pilih dari galeri. Pastikan objek terlihat jelas.
+                </p>
+              </div>
+            </li>
+            <li>
+              <span className="home-process-marker" aria-hidden="true">02</span>
+              <div className="home-process-copy">
+                <h3>Tinjau hasil</h3>
+                <p>
+                  Periksa kategori prediksi karena hasil AI bisa keliru. Jika foto
+                  tidak memiliki GPS, konfirmasikan lokasi perangkat.
+                </p>
+              </div>
+            </li>
+            <li>
+              <span className="home-process-marker" aria-hidden="true">03</span>
+              <div className="home-process-copy">
+                <h3>Pantau laporan</h3>
+                <p>
+                  Buka riwayat untuk melihat pembaruan status dari pengelola.
+                </p>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section className="home-privacy" aria-labelledby="home-privacy-title">
+          <div>
+            <h2 id="home-privacy-title">Laporanmu tidak langsung menjadi publik.</h2>
+            <p>
+              Sebelum berbagi ke komunitas atau peta, kamu dapat meninjau foto,
+              deskripsi, kategori, status, dan GPS presisi yang akan terlihat.
+              Lokasi berasal dari pelapor, bukan verifikasi lapangan. Nama akun
+              hanya tampil jika pemilik mengaktifkannya di Profil.
+            </p>
+          </div>
+          <Link className="home-button home-button-light" to="/privacy">
+            Pelajari privasi
+            <ArrowRight size={17} aria-hidden="true" />
+          </Link>
+        </section>
+
+        <section className="home-categories home-section" id="kategori">
+          <div className="home-section-heading home-heading-split">
             <div>
-              <h2>Laporan di sekitar.</h2>
-              <p>Foto, lokasi, dan perkembangan terbaru dari komunitas.</p>
+              <h2>Kenali 12 kategori material.</h2>
+              <p>Mulai dari bahan, lalu ikuti panduan penanganannya.</p>
             </div>
-            <Link className="button secondary" to="/app">
-              Lihat semua laporan <ArrowUpRight size={18} />
+            <Link className="home-text-link" to="/guide">
+              Buka panduan lengkap
+              <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+          </div>
+          <ul className="home-category-list">
+            {categories.map((category) => (
+              <li key={category.id}>
+                <Link to={`/guide#${category.id}`}>
+                  <img
+                    src={`/illustrations/materials/${category.id}.svg`}
+                    alt=""
+                    width="42"
+                    height="42"
+                    loading="lazy"
+                  />
+                  <span>{category.name}</span>
+                  <ArrowRight size={15} aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="home-quiz home-section" aria-labelledby="home-quiz-title">
+          <div className="home-quiz-intro">
+            <h2 id="home-quiz-title">Coba satu contoh pemilahan.</h2>
+            <p>
+              Botol kaca bening bekas minuman masuk kategori apa?
+            </p>
+            <Link className="home-text-link" to="/guide">
+              Lihat semua cara penanganan
+              <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="home-quiz-panel">
+            <fieldset>
+              <legend>Pilih langkah yang tepat</legend>
+              <button
+                type="button"
+                className={selectedQuiz === 0 ? "home-quiz-choice is-selected" : "home-quiz-choice"}
+                aria-pressed={selectedQuiz === 0}
+                onClick={() => setSelectedQuiz(0)}
+              >
+                <span aria-hidden="true">A</span>
+                Kosongkan, bilas, lalu pisahkan sebagai kaca bening.
+              </button>
+              <button
+                type="button"
+                className={selectedQuiz === 1 ? "home-quiz-choice is-selected" : "home-quiz-choice"}
+                aria-pressed={selectedQuiz === 1}
+                onClick={() => setSelectedQuiz(1)}
+              >
+                <span aria-hidden="true">B</span>
+                Campurkan dengan keramik atau kaca lampu.
+              </button>
+            </fieldset>
+            {selectedQuiz === null ? (
+              <p className="home-quiz-feedback" role="status">
+                Pilih jawaban untuk melihat penjelasan.
+              </p>
+            ) : selectedQuiz === 0 ? (
+              <p className="home-quiz-feedback is-correct" role="status">
+                <Check size={17} aria-hidden="true" />
+                Tepat. Pisahkan kaca kemasan dari keramik dan kaca lampu.
+              </p>
+            ) : (
+              <p className="home-quiz-feedback is-incorrect" role="status">
+                Belum tepat. Kosongkan dan bilas kaca kemasan; jangan campur
+                dengan keramik atau kaca lampu.
+              </p>
+            )}
+          </div>
+        </section>
+
+        <section className="home-community home-section" id="komunitas">
+          <div className="home-section-heading home-heading-split">
+            <div>
+              <h2>Laporan yang dibagikan warga.</h2>
+              <p>
+                Feed ini hanya menampilkan laporan yang pemiliknya setujui untuk
+                dibagikan.
+              </p>
+            </div>
+            <Link className="home-text-link" to="/app">
+              Lihat lainnya
+              <ArrowRight size={17} aria-hidden="true" />
             </Link>
           </div>
           {preview.isPending ? (
-            <p role="status">Memuat laporan…</p>
+            <p className="home-feed-state" role="status">
+              Memuat laporan komunitas…
+            </p>
           ) : preview.error ? (
-            <Failure
-              error={preview.error}
-              retry={() => void preview.refetch()}
-            />
+            <div className="home-feed-error">
+              <Failure
+                error={preview.error}
+                retry={() => void preview.refetch()}
+              />
+            </div>
           ) : preview.data.posts.length ? (
-            <div className="preview-grid">
-              {preview.data.posts.map((post) => (
+            <div className="preview-grid home-post-grid">
+              {preview.data.posts.slice(0, 2).map((post) => (
                 <PostCard key={post.id} post={post} />
               ))}
             </div>
           ) : (
-            <div className="community-empty">
+            <div className="home-feed-empty">
               <h3>Belum ada laporan publik.</h3>
-              <p>Mulai dengan memfoto sampah di sekitarmu.</p>
-              <Link
-                className="button primary"
-                to={user ? "/reports/new" : "/login?returnTo=%2Freports%2Fnew"}
-              >
-                Buat laporan pertama
+              <p>
+                Laporan baru tetap privat kecuali kamu menyetujui untuk
+                membagikannya.
+              </p>
+              <Link className="home-text-link" to={createReportPath}>
+                Buat laporan
+                <ArrowRight size={17} aria-hidden="true" />
               </Link>
             </div>
           )}
         </section>
-        <section id="cara-kerja" className="landing-process">
-          <h2>
-            Satu foto.
-            <br />
-            <em>Langkah yang lebih jelas.</em>
-          </h2>
-          <div>
-            {[
-              {
-                Icon: Camera,
-                title: "Foto di tempatnya",
-                copy: "Ambil foto langsung atau pilih dari galeri. Lokasi diperoleh otomatis dengan izinmu.",
-              },
-              {
-                Icon: ScanLine,
-                title: "Kenali materialnya",
-                copy: "AI mengklasifikasikan 12 kategori material. Hasil yang meragukan masuk review pengelola.",
-              },
-              {
-                Icon: MapPin,
-                title: "Ikuti perkembangannya",
-                copy: "Kirim laporan privat, lalu pilih jika ingin membagikan foto dan GPS presisi.",
-              },
-            ].map(({ Icon, title, copy }) => (
-              <article key={title}>
-                <Icon size={28} />
-                <h3>{title}</h3>
-                <p>{copy}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-        <AboutSection />
-        <section className="landing-faq" id="faq">
-          <div>
-            <h2>
-              Ada yang ingin
-              <br />
-              kamu ketahui?
-            </h2>
-            <p>Mulai dengan informasi yang jelas.</p>
-            <img
-              src="/illustrations/report-notes.svg"
-              width="480"
-              height="400"
-              loading="lazy"
-              alt="Ilustrasi catatan dan pensil"
-            />
-          </div>
-          <div>
-            <FAQList compact />
-            <Link className="text-button" to="/faq">
-              Lihat semua pertanyaan
+
+        <section className="home-faq home-section" id="faq">
+          <div className="home-faq-intro">
+            <h2>Yang perlu kamu ketahui.</h2>
+            <p>Informasi privasi, lokasi, dan penggunaan WasteWise.</p>
+            <Link className="home-text-link" to="/faq">
+              Semua pertanyaan
+              <ArrowRight size={17} aria-hidden="true" />
             </Link>
           </div>
+          <FAQList compact />
         </section>
       </main>
       <SiteFooter />
@@ -186,10 +299,6 @@ export function Onboarding() {
           <br />
           <em>Mulai dari yang dekat.</em>
         </h1>
-        <Illustration
-          slot="onboarding-community"
-          alt="Komunitas merawat lingkungan"
-        />
         <ol>
           {[
             {
@@ -223,6 +332,30 @@ export function Onboarding() {
     </>
   );
 }
+
+export function ErrorPage({ code }: { code?: string }) {
+  const { code: paramCode } = useParams<{ code?: string }>();
+  const activeCode = code || paramCode || "404";
+  const [title, message] = errors[activeCode] || [
+    "Halaman ini belum siap.",
+    "Periksa alamat halaman atau kembali ke beranda.",
+  ];
+
+  return (
+    <div className="error-screen">
+      <SiteHeader compact />
+      <main>
+        <p className="code-pill">Status {activeCode}</p>
+        <h1>{title}</h1>
+        <p>{message}</p>
+        <Link to="/" className="button primary">
+          Kembali ke beranda
+        </Link>
+      </main>
+    </div>
+  );
+}
+
 const errors: Record<string, [string, string]> = {
   "400": [
     "Permintaan belum tepat.",
@@ -248,54 +381,11 @@ const errors: Record<string, [string, string]> = {
     "Terlalu banyak permintaan. Tunggu sejenak sebelum mencoba lagi.",
   ],
   "500": [
-    "Ada gangguan di sini.",
-    "Permintaan belum berhasil. Coba kembali beberapa saat lagi.",
-  ],
-  "502": [
-    "Layanan belum tersambung.",
-    "Server pendukung belum menjawab dengan benar.",
+    "Sedang ada kendala di peladen.",
+    "Coba beberapa saat lagi atau laporkan jika berlanjut.",
   ],
   "503": [
-    "Sedang belum tersedia.",
-    "Layanan membutuhkan waktu untuk kembali siap.",
+    "Layanan sedang disiapkan.",
+    "Koneksi ke sistem AI atau basis data sedang pulih.",
   ],
-  "504": ["Server membutuhkan waktu.", "Coba kembali setelah koneksi stabil."],
 };
-export function ErrorPage({ code: provided }: { code?: string }) {
-  const { code } = useParams();
-  const requested = provided || code || "404";
-  const value = /^[45]\d{2}$/.test(requested) ? requested : "404";
-  const [title, copy] =
-    errors[value] || errors[value.startsWith("5") ? "500" : "400"];
-  return (
-    <>
-      <SiteHeader compact />
-      <main className="error-page">
-        <Link to="/">
-          <Brand />
-        </Link>
-        <Illustration
-          slot={value.startsWith("5") ? "error-5xx" : "error-4xx"}
-          alt=""
-        />
-        <p className="error-code">{value}</p>
-        <h1>{title}</h1>
-        <p>{copy}</p>
-        <div>
-          <Link
-            className="button primary"
-            to={value === "401" ? "/login" : "/app"}
-          >
-            {value === "401" ? "Masuk kembali" : "Kembali ke beranda"}
-          </Link>
-          <button
-            className="button secondary"
-            onClick={() => window.location.reload()}
-          >
-            Coba lagi
-          </button>
-        </div>
-      </main>
-    </>
-  );
-}

@@ -2,6 +2,7 @@ import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
     Enum,
@@ -57,6 +58,9 @@ class User(Timestamps, Base):
     password_hash: Mapped[str | None] = mapped_column(String(255))
     auth_provider: Mapped[str] = mapped_column(String(16), default="local", server_default="local")
     full_name: Mapped[str] = mapped_column(String(255))
+    public_name_visible: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false")
+    )
     role: Mapped[str] = mapped_column(role_type, default="user", server_default="user")
     __table_args__ = (
         CheckConstraint(

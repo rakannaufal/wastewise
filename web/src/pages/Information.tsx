@@ -84,7 +84,8 @@ export default function Information({
               deskripsi opsional, kategori, status, wilayah, GPS presisi yang
               kamu kirim, serta jumlah suka dan komentar dapat terlihat tanpa
               akun. Lokasi berasal dari perangkat/pelapor dan tidak diverifikasi
-              WasteWise. Nama akun tidak ditampilkan pada posting atau komentar.
+              WasteWise. Nama akun pada posting hanya tampil jika pemilik
+              mengaktifkannya di Profil; komentar tetap memakai nama samaran.
               Email, identitas internal, foto asli, dan path penyimpanan tidak
               diberikan melalui API publik.
             </p>

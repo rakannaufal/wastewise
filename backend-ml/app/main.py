@@ -158,6 +158,9 @@ def ready():
     try:
         with engine.connect() as connection:
             connection.execute(text("SELECT 1 FROM app_private.users LIMIT 1"))
+            connection.execute(
+                text("SELECT public_name_visible FROM app_private.users LIMIT 0")
+            )
             if settings.environment == "production":
                 connection.execute(text("SELECT 1 FROM app_private.auth_deletion_jobs LIMIT 1"))
                 cutoff = datetime.now(UTC) - timedelta(seconds=120)

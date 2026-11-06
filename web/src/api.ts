@@ -1,8 +1,9 @@
 import { fetchPayload } from "../../shared/request";
-const API = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(
-  /\/$/,
-  "",
-);
+const API = (
+  import.meta.env.DEV && !import.meta.env.VITE_API_URL
+    ? ""
+    : import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
+).replace(/\/$/, "");
 let accessToken = "";
 export function setToken(token: string) {
   accessToken = token;

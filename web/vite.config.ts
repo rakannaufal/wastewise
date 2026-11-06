@@ -56,6 +56,14 @@ export default defineConfig(({ mode }) => {
   ].join("; ");
 
   return {
+    server: {
+      proxy: {
+        "/api": {
+          target: apiUrl.origin,
+          changeOrigin: true,
+        },
+      },
+    },
     plugins: [
       react(),
       tailwindcss(),

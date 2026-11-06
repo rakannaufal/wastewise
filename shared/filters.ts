@@ -15,8 +15,7 @@ export function filterCount(value: CommunityFilters) {
   return (
     Number(value.codes.some(Boolean)) +
     Number(!!value.category) +
-    Number(!!value.status) +
-    Number(value.order === "oldest")
+    Number(!!value.status)
   );
 }
 export function chooseRegion(

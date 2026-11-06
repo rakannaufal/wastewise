@@ -25,7 +25,7 @@ export default function SiteFooter() {
         </nav>
       </div>
       <div className="site-footer-credit">
-        © 2026 Khay Brownies · Website by{" "}
+        Website by{" "}
         <a
           href="https://www.instagram.com/rakandevv/"
           target="_blank"

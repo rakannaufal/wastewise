@@ -37,6 +37,7 @@ CREATE TABLE app_private.users (
     email VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(255) NOT NULL,
+    public_name_visible BOOLEAN DEFAULT false NOT NULL,
     role app_private.user_role DEFAULT 'user' NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,

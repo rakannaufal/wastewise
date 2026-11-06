@@ -1,17 +1,31 @@
 import { useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Switch, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import { useSession } from "../../src/session";
 import { BrandHeader } from "../../src/BrandHeader";
 import { Button, Screen, colors, styles } from "../../src/ui";
 
 export default function Profile() {
-  const { user, logout, deleteAccount } = useSession();
+  const { user, logout, deleteAccount, updatePublicName } = useSession();
   const [showDelete, setShowDelete] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [updatingPublicName, setUpdatingPublicName] = useState(false);
+  const [publicNameError, setPublicNameError] = useState("");
+
+  async function changePublicNameVisibility(visible: boolean) {
+    setUpdatingPublicName(true);
+    setPublicNameError("");
+    try {
+      await updatePublicName(visible);
+    } catch (error) {
+      setPublicNameError((error as Error).message);
+    } finally {
+      setUpdatingPublicName(false);
+    }
+  }
 
   async function submitDelete() {
     setDeleting(true);
@@ -47,6 +61,29 @@ export default function Profile() {
           dari pelapor dan tidak diverifikasi. Laporan Ditolak tidak ditampilkan.
           Hapus laporan melalui halaman detail bila tidak diperlukan lagi.
         </Text>
+      </View>
+      <View style={styles.panel}>
+        <Text style={styles.heading}>Nama di komunitas</Text>
+        <Text style={styles.text}>
+          Pengaturan ini berlaku untuk posting yang sudah dan akan kamu
+          bagikan. Email tetap privat; komentarmu tetap tampil sebagai “Warga”.
+        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Switch
+            accessibilityLabel="Tampilkan nama akun pada postingan komunitas"
+            value={user?.public_name_visible ?? false}
+            disabled={updatingPublicName}
+            onValueChange={(visible) => void changePublicNameVisibility(visible)}
+            trackColor={{ false: "#DCE4DC", true: "#215B3C" }}
+            thumbColor="#FFFFFF"
+          />
+          <Text style={styles.text}>Tampilkan nama akun pada postingan komunitas</Text>
+        </View>
+        {publicNameError ? (
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            {publicNameError}
+          </Text>
+        ) : null}
       </View>
       <Button
         secondary

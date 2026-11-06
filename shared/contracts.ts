@@ -1,6 +1,7 @@
 export type User = {
   id: string;
   full_name: string;
+  public_name_visible: boolean;
   email: string;
   role: "admin" | "user";
 };

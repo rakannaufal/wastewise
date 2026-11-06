@@ -164,6 +164,9 @@ class UserUpdate(StrictModel):
             raise ValueError("Explicit null is not accepted")
         return value
 
+class PublicNameUpdate(StrictModel):
+    public_name_visible: bool
+
 class AccountDeletion(StrictModel):
     confirmation: Literal["HAPUS AKUN"]
     password: SecretStr

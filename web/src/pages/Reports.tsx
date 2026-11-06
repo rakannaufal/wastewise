@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Plus, Search } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Search } from "lucide-react";
 import { api } from "../api";
-import type { ReportsPage } from "../types";
+import type { ReportsPage, Summary } from "../types";
 import { categories, Failure, Loading, statusName } from "../ui";
 import { ReportTable } from "../components/ReportTable";
+import { ReportDistribution } from "../components/ReportDistribution";
 import { useAuth } from "../Auth";
+import "./workspace-pages.css";
 export default function Reports() {
   const { user } = useAuth();
   const [params, setParams] = useSearchParams();
@@ -35,74 +37,88 @@ export default function Reports() {
       api<ReportsPage>(`/api/v1/reports?${query}`, { signal }),
     staleTime: 30000,
   });
+  const summary = useQuery({
+    queryKey: ["summary"],
+    queryFn: () => api<Summary>("/api/v1/stats/summary"),
+    staleTime: 30000,
+  });
   return (
-    <>
-      <div className="page-heading">
+    <section className="ww-reports-page" aria-labelledby="reports-title">
+      <header className="ww-page-intro">
         <div>
-          <h1>Laporan sampah</h1>
-          <p className="muted">
-            Foto, lokasi, dan perkembangan penanganan dalam satu tempat.
-          </p>
+          <h1 id="reports-title">Laporan sampah</h1>
+          <p>Foto, lokasi, dan perkembangan penanganan dalam satu tempat.</p>
         </div>
-        <Link className="button primary" to="/reports/new">
-          <Plus size={18} />
-          Buat laporan
-        </Link>
-      </div>
-      <section className="panel">
-        <div className="filters">
+      </header>
+      <section className="ww-filter-panel" aria-labelledby="report-filter-title">
+        <div className="ww-filter-heading">
+          <div>
+            <h2 id="report-filter-title">Temukan laporan</h2>
+            <p>Persempit daftar berdasarkan kata kunci atau detail laporan.</p>
+          </div>
+          {result.data && (
+            <p className="ww-result-count" aria-live="polite">
+              <strong>{result.data.pagination.total_items}</strong> laporan
+            </p>
+          )}
+        </div>
+        <div className="ww-primary-filters">
           <form
-            className="search-field"
+            className="ww-search-form"
             onSubmit={(e) => {
               e.preventDefault();
               change("search", draft);
             }}
           >
-            <Search size={18} />
+            <Search size={18} aria-hidden="true" />
             <input
+              id="report-search"
               aria-label="Cari deskripsi laporan"
               placeholder="Cari deskripsi laporan…"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               maxLength={200}
             />
-            <button type="submit" className="text-button">
+            <button type="submit" className="ww-text-link">
               Cari
             </button>
           </form>
-          <select
-            aria-label="Filter status"
-            value={status}
-            onChange={(e) => {
-              change("status", e.target.value);
-            }}
-          >
-            <option value="">Semua status</option>
-            {Object.entries(statusName).map(([id, label]) => (
-              <option value={id} key={id}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Filter kategori"
-            value={category}
-            onChange={(e) => {
-              change("category", e.target.value);
-            }}
-          >
-            <option value="">Semua material</option>
-            {categories.map((c) => (
-              <option value={c.id} key={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <label className="ww-filter-field" htmlFor="report-status">
+            <span>Status</span>
+            <select
+              id="report-status"
+              value={status}
+              onChange={(e) => change("status", e.target.value)}
+            >
+              <option value="">Semua status</option>
+              {Object.entries(statusName).map(([id, label]) => (
+                <option value={id} key={id}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="ww-filter-field" htmlFor="report-category">
+            <span>Material</span>
+            <select
+              id="report-category"
+              value={category}
+              onChange={(e) => change("category", e.target.value)}
+            >
+              <option value="">Semua material</option>
+              {categories.map((c) => (
+                <option value={c.id} key={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
-        <div className="filters secondary-filters">
-          <label>
-            Dari tanggal
+        <div className="ww-secondary-filters">
+          <label className="ww-filter-field" htmlFor="report-date-from">
+            <span>Dari tanggal</span>
             <input
+              id="report-date-from"
               type="date"
               value={params.get("date_from")?.slice(0, 10) || ""}
               onChange={(e) =>
@@ -113,9 +129,10 @@ export default function Reports() {
               }
             />
           </label>
-          <label>
-            Sebelum tanggal
+          <label className="ww-filter-field" htmlFor="report-date-to">
+            <span>Sampai tanggal</span>
             <input
+              id="report-date-to"
               type="date"
               value={
                 params.get("date_to")
@@ -133,9 +150,10 @@ export default function Reports() {
               }
             />
           </label>
-          <label>
-            Urutan
+          <label className="ww-filter-field" htmlFor="report-sort">
+            <span>Urutkan</span>
             <select
+              id="report-sort"
               value={params.get("sort") || "newest"}
               onChange={(e) => change("sort", e.target.value)}
             >
@@ -144,7 +162,7 @@ export default function Reports() {
             </select>
           </label>
           {user?.role === "admin" && (
-            <label className="confirmation">
+            <label className="ww-review-filter">
               <input
                 type="checkbox"
                 checked={params.get("needs_review") === "true"}
@@ -155,19 +173,22 @@ export default function Reports() {
               Perlu review AI
             </label>
           )}
-          {params.get("user_id") && (
-            <p className="caption">Filter pelapor aktif</p>
-          )}
           <button
-            className="text-button"
+            className="ww-reset-filter"
+            type="button"
             onClick={() => {
               setParams({});
               setDraft("");
             }}
           >
-            Reset filter
+            Reset semua filter
           </button>
         </div>
+        {params.get("user_id") && (
+          <p className="ww-active-scope">Filter pelapor aktif</p>
+        )}
+      </section>
+      <section className="ww-report-results" aria-label="Hasil laporan">
         {result.isPending ? (
           <Loading />
         ) : result.isError ? (
@@ -205,6 +226,17 @@ export default function Reports() {
           </>
         )}
       </section>
-    </>
+      {summary.isError && (
+        <Failure error={summary.error} retry={() => summary.refetch()} />
+      )}
+      {summary.data && summary.data.total_reports > 0 && (
+        <section
+          className="ww-reports-summary"
+          aria-label="Ringkasan komposisi dan progres laporan"
+        >
+          <ReportDistribution summary={summary.data} />
+        </section>
+      )}
+    </section>
   );
 }

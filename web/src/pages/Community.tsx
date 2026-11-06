@@ -20,7 +20,7 @@ export default function Community() {
   const { user } = useAuth();
   const feed = useInfiniteQuery({
     queryKey: ["community", "feed", user?.id, filter],
-    staleTime: 30000,
+    staleTime: 60000,
     initialPageParam: "",
     queryFn: ({ pageParam, signal }) =>
       api<Feed>(
@@ -36,34 +36,29 @@ export default function Community() {
         : 60000,
   });
   const posts = feed.data?.pages.flatMap((p) => p.posts) || [];
+  const createReportPath = user
+    ? "/reports/new"
+    : "/login?returnTo=%2Freports%2Fnew";
   return (
-    <>
-      <div className="page-heading feed-heading">
-        <div>
-          <h1>Komunitas</h1>
-          <p>Foto dan kabar dari lingkunganmu.</p>
+    <section className="community-page" aria-label="Komunitas">
+      <div className="community-toolbar">
+        <RegionFilters />
+        <div className="feed-order">
+          <label htmlFor="feed-order">Urutan</label>
+          <select
+            id="feed-order"
+            value={params.get("order") === "oldest" ? "oldest" : "newest"}
+            onChange={(e) => {
+              const next = new URLSearchParams(params);
+              next.set("order", e.target.value);
+              setParams(next);
+            }}
+          >
+            <option value="newest">Terbaru</option>
+            <option value="oldest">Terlama</option>
+          </select>
         </div>
-        <Link className="text-button" to={"/map?" + params.toString()}>
-          <MapPin size={18} />
-          Lihat peta
-        </Link>
       </div>
-      <div className="feed-order">
-        <label htmlFor="feed-order">Urutan posting</label>
-        <select
-          id="feed-order"
-          value={params.get("order") === "oldest" ? "oldest" : "newest"}
-          onChange={(e) => {
-            const next = new URLSearchParams(params);
-            next.set("order", e.target.value);
-            setParams(next);
-          }}
-        >
-          <option value="newest">Terbaru</option>
-          <option value="oldest">Terlama</option>
-        </select>
-      </div>
-      <RegionFilters />
       <section aria-label="Posting komunitas">
         {feed.error && posts.length > 0 && (
           <Failure
@@ -91,13 +86,13 @@ export default function Community() {
         ) : posts.length === 0 ? (
           <div className="community-empty">
             <MapPin size={32} />
-            <h2>Belum ada cerita di sini.</h2>
+            <h2>Belum ada laporan untuk pilihan ini.</h2>
             <p>
-              Coba wilayah lain, atau buat laporan pertamamu. Laporan Ditolak
-              tidak ditampilkan.
+              Coba ubah wilayah atau filter. Laporan yang ditolak tidak
+              ditampilkan di komunitas.
             </p>
-            <Link className="button secondary" to="/reports/new">
-              Foto sampah di sekitarmu
+            <Link className="button secondary" to={createReportPath}>
+              {user ? "Buat laporan" : "Masuk untuk membuat laporan"}
             </Link>
           </div>
         ) : (
@@ -121,7 +116,7 @@ export default function Community() {
           </div>
         )}
       </section>
-    </>
+    </section>
   );
 }
 export function PostDetail() {

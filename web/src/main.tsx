@@ -8,6 +8,7 @@ import "@fontsource/manrope/latin-500.css";
 import "@fontsource/manrope/latin-600.css";
 import "@fontsource/manrope/latin-700.css";
 import "./styles.css";
+import "./admin-shell.css";
 import App from "./App";
 import { AuthProvider } from "./Auth";
 import { ApiError } from "./api";
@@ -49,7 +50,16 @@ class ErrorBoundary extends Component<
     );
   }
 }
-ReactDOM.createRoot(document.getElementById("root")!).render(
+const container = document.getElementById("root")!;
+let root = (window as unknown as { __wastewise_root?: ReactDOM.Root })
+  .__wastewise_root;
+if (!root) {
+  root = ReactDOM.createRoot(container);
+  (window as unknown as { __wastewise_root?: ReactDOM.Root }).__wastewise_root =
+    root;
+}
+
+root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>

@@ -17,7 +17,7 @@ export async function fetchPayload(url: string, options: RequestInit) {
     throw new Error(
       controller.signal.aborted
         ? "Server belum merespons dalam 60 detik. Draft tetap tersedia; coba lagi."
-        : "Tidak dapat terhubung. Periksa koneksi dan alamat server.",
+        : "Tidak dapat terhubung. Periksa koneksi internet, lalu coba lagi.",
     );
   } finally {
     clearTimeout(timer);

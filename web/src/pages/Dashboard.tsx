@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   ArrowUpRight,
-  Camera,
   ClipboardList,
   Clock3,
   CheckCheck,
@@ -13,8 +12,8 @@ import { useAuth } from "../Auth";
 import type { ReportsPage, Summary } from "../types";
 import { categories, Failure, Loading } from "../ui";
 import { ReportTable } from "../components/ReportTable";
-import { ReportDistribution } from "../components/ReportDistribution";
 import AdminDashboard from "./AdminDashboard";
+import "./workspace-pages.css";
 export default function Dashboard() {
   const { user } = useAuth();
   return user?.role === "admin" ? <AdminDashboard /> : <UserDashboard />;
@@ -30,80 +29,91 @@ function UserDashboard() {
     queryKey: ["reports", "recent"],
     queryFn: () => api<ReportsPage>("/api/v1/reports?per_page=5"),
   });
-  const stats = [
-    {
-      label: "Total laporan",
-      value: summary.data?.total_reports,
-      icon: ClipboardList,
-    },
-    {
-      label: "Perlu ditangani",
-      value: summary.data
-        ? summary.data.by_status.Pending + summary.data.by_status["In Progress"]
-        : undefined,
-      icon: Clock3,
-    },
-    {
-      label: "Selesai ditangani",
-      value: summary.data?.by_status.Completed,
-      icon: CheckCheck,
-    },
-  ];
+  const date = new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+  const pending = summary.data
+    ? summary.data.by_status.Pending + summary.data.by_status["In Progress"]
+    : null;
+  const completed = summary.data?.by_status.Completed ?? null;
+  const firstName = user?.full_name.trim().split(/\s+/)[0] || "warga";
   return (
-    <>
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">
-            {new Intl.DateTimeFormat("id-ID", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            }).format(new Date())}
-          </p>
-          <h1>Langkah baik, {user?.full_name.split(" ")[0]}.</h1>
-          <p className="muted">
-            {user?.role === "admin"
-              ? "Pantau laporan dan bantu penanganannya berjalan."
-              : "Sampah terpilah dimulai dari keputusan kecil hari ini."}
-          </p>
+    <section className="ww-dashboard" aria-labelledby="dashboard-title">
+      <header className="ww-dashboard-hero">
+        <div className="ww-dashboard-welcome">
+          <time className="ww-dashboard-date">{date}</time>
+          <h1 id="dashboard-title">
+            Langkah baik,
+            <br />
+            <span>{firstName}.</span>
+          </h1>
+          <p>Sampah terpilah dimulai dari keputusan kecil hari ini.</p>
+          <Link to="/reports/new" className="ww-button ww-button-primary">
+            <ClipboardList size={18} />
+            Buat laporan
+            <ArrowUpRight size={17} />
+          </Link>
         </div>
-        <Link to="/reports/new" className="button primary">
-          Buat laporan
-          <ArrowUpRight size={18} />
+        <Link to="/classify" className="ww-classify-feature">
+          <div className="ww-classify-copy">
+            <h2>Kenali material dari foto.</h2>
+            <p>
+              Dapatkan perkiraan kategori, lalu periksa panduan penanganannya.
+            </p>
+            <span className="ww-feature-link">
+              Mulai klasifikasi <ArrowUpRight size={17} />
+            </span>
+          </div>
+          <figure>
+            <img
+              src="/materials/plastic.jpg"
+              alt="Contoh material plastik dari dataset"
+            />
+            <figcaption>Contoh plastik</figcaption>
+          </figure>
         </Link>
-      </div>
+      </header>
       {summary.isError && (
         <Failure error={summary.error} retry={() => summary.refetch()} />
       )}
-      <div className="metrics">
-        {stats.map(({ label, value, icon: Icon }, i) => (
-          <div className={`metric ${i === 0 ? "metric-main" : ""}`} key={label}>
-            <div>
-              <span>{label}</span>
-              <Icon size={20} />
-            </div>
-            <strong>{value ?? "…"}</strong>
-            <small>
-              {i === 0
-                ? user?.role === "admin"
-                  ? "Seluruh laporan masuk"
-                  : "Laporan milikmu"
-                : i === 1
-                  ? "Menunggu dan sedang diproses"
-                  : "Status dikonfirmasi pengelola"}
-            </small>
+      <section
+        className="ww-dashboard-summary"
+        aria-label="Ringkasan laporan"
+        aria-busy={summary.isPending}
+      >
+        <article className="ww-summary-total">
+          <span>Total laporan</span>
+          <strong>{summary.data?.total_reports ?? "—"}</strong>
+          <small>Laporan yang kamu buat</small>
+        </article>
+        <article className="ww-summary-stat">
+          <div>
+            <Clock3 size={18} aria-hidden="true" />
+            <span>Perlu ditangani</span>
           </div>
-        ))}
-      </div>
-      <div className="dashboard-columns">
-        <section className="panel report-panel">
-          <div className="section-heading">
+          <strong>{pending ?? "—"}</strong>
+          <small>Menunggu atau sedang diproses</small>
+        </article>
+        <article className="ww-summary-stat">
+          <div>
+            <CheckCheck size={18} aria-hidden="true" />
+            <span>Selesai ditangani</span>
+          </div>
+          <strong>{completed ?? "—"}</strong>
+          <small>Status dikonfirmasi pengelola</small>
+        </article>
+      </section>
+      <div className="ww-dashboard-content">
+        <section className="ww-report-panel" aria-labelledby="recent-reports-title">
+          <div className="ww-section-heading">
             <div>
-              <h2>Laporan terbaru</h2>
-              <p className="muted">Setiap laporan punya langkah berikutnya.</p>
+              <h2 id="recent-reports-title">Laporan terbaru</h2>
+              <p>Periksa perkembangan laporan yang kamu kirim.</p>
             </div>
-            <Link to="/reports" className="text-button">
+            <Link to="/reports" className="ww-text-link">
               Lihat semua
               <ArrowRight size={17} />
             </Link>
@@ -119,51 +129,48 @@ function UserDashboard() {
             />
           )}
         </section>
-        <aside className="classify-callout">
-          <span className="eyebrow">Kenali sebelum memilah</span>
-          <div className="sample-material">
-            <img src="/materials/plastic.jpg" alt="Contoh material plastik" />
-            <span>Contoh material · Plastik</span>
+        <aside className="ww-guide-preview">
+          <div>
+            <h2>Panduan memilah</h2>
+            <p>Kenali bahan dan cara penanganan yang sesuai.</p>
+            <Link to="/guide" className="ww-text-link">
+              Buka panduan <ArrowRight size={17} />
+            </Link>
           </div>
-          <h2>Foto. Kenali. Pilah.</h2>
-          <p>
-            Dapatkan perkiraan kategori dari foto, lalu periksa panduan
-            penanganannya.
-          </p>
-          <Link to="/classify" className="button primary full">
-            <Camera size={18} />
-            Klasifikasi foto
-            <ArrowUpRight size={18} />
-          </Link>
-          <small>12 kategori. Hasil AI perlu diperiksa kembali.</small>
+          <ul>
+            {categories.slice(0, 4).map((category) => (
+              <li key={category.id}>
+                <Link to={`/guide#${category.id}`}>
+                  <span>{category.name}</span>
+                  <ArrowUpRight size={15} aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
         </aside>
       </div>
-      {summary.data && summary.data.total_reports > 0 && (
-        <ReportDistribution summary={summary.data} />
-      )}
-      <section className="category-overview">
-        <div className="section-heading">
+      <section className="ww-material-overview">
+        <div className="ww-section-heading">
           <div>
-            <span className="eyebrow">Kenali materialnya</span>
-            <h2>Beda bahan, beda penanganan.</h2>
+            <h2>Setiap bahan punya cara penanganan.</h2>
+            <p>Telusuri kategori material yang tersedia.</p>
           </div>
-          <Link to="/guide" className="text-button">
+          <Link to="/guide" className="ww-text-link">
             Buka panduan
             <ArrowRight size={17} />
           </Link>
         </div>
-        <div className="material-strip">
-          {categories.slice(0, 6).map((category, index) => (
-            <Link to={`/guide#${category.id}`} key={category.id}>
-              <span className="material-index">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <span>{category.name}</span>
-              <ArrowUpRight size={16} />
-            </Link>
+        <ul className="ww-material-list">
+          {categories.slice(0, 6).map((category) => (
+            <li key={category.id}>
+              <Link to={`/guide#${category.id}`}>
+                <span>{category.name}</span>
+                <ArrowUpRight size={16} aria-hidden="true" />
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
-    </>
+    </section>
   );
 }

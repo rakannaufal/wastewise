@@ -40,7 +40,7 @@ export default function Users() {
           <span className="eyebrow">Administrasi</span>
           <h1>Pengguna</h1>
           <p className="muted">
-            Kelola akses. Minimal satu pengelola harus tetap tersedia.
+            Atur peran akun. Setidaknya satu pengelola harus tetap aktif.
           </p>
         </div>
       </div>

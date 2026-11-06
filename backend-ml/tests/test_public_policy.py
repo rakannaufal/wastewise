@@ -63,6 +63,11 @@ def test_public_reads_optional_text_and_rejected_guards(client, accounts, monkey
     ).json()["data"]
     assert report["description"] == ""
     owner, peer = accounts["owner"]["headers"], accounts["other"]["headers"]
+    profile = client.get("/api/v1/auth/me", headers=owner).json()["data"]
+    assert profile["public_name_visible"] is False
+    assert client.patch(
+        "/api/v1/auth/me/public-name", json={"public_name_visible": True}
+    ).status_code == 401
     with SessionLocal() as db:
         post = db.scalar(select(CommunityPost).where(CommunityPost.report_id == UUID(report["id"])))
         identity = str(post.id)
@@ -79,6 +84,14 @@ def test_public_reads_optional_text_and_rejected_guards(client, accounts, monkey
     assert not value["is_owner"] and not value["liked_by_me"]
     assert not set(value) & {"email", "user_id", "report_id", "image_path", "source_image_path"}
     assert public.headers["cache-control"] == "no-store"
+    visible = client.patch(
+        "/api/v1/auth/me/public-name",
+        headers=owner,
+        json={"public_name_visible": True},
+    )
+    assert visible.status_code == 200
+    assert visible.json()["data"]["public_name_visible"] is True
+    assert client.get(path).json()["data"]["author_name"] == profile["full_name"]
     assert client.get(path, headers={"Authorization": "Bearer invalid"}).status_code == 401
     assert client.get(path, headers={"Authorization": "Basic invalid"}).status_code == 401
     assert client.get("/api/v1/regions").status_code == 200
@@ -90,6 +103,13 @@ def test_public_reads_optional_text_and_rejected_guards(client, accounts, monkey
     ).status_code == 201
     comment = client.get(path + "/comments").json()["data"]["comments"][0]
     assert comment["author_name"] == "Warga"
+    hidden = client.patch(
+        "/api/v1/auth/me/public-name",
+        headers=owner,
+        json={"public_name_visible": False},
+    )
+    assert hidden.status_code == 200
+    assert client.get(path).json()["data"]["author_name"] == "Warga"
     assert client.put(path + "/like").status_code == 401
     assert (
         client.post(

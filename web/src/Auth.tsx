@@ -24,6 +24,7 @@ type Session = {
   resendConfirmation: (email: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
+  updatePublicName: (visible: boolean) => Promise<void>;
   deleteAccount: (password: string) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -215,6 +216,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     await logout();
   }
+  async function updatePublicName(visible: boolean) {
+    const profile = await api<User>("/api/v1/auth/me/public-name", {
+      method: "PATCH",
+      body: JSON.stringify({ public_name_visible: visible }),
+    });
+    setUser(profile);
+    await client.invalidateQueries({ queryKey: ["community"] });
+  }
   async function logout() {
     for (const key of Object.keys(sessionStorage)) if (key.startsWith("wastewise.draft.")) sessionStorage.removeItem(key);
     try {
@@ -250,6 +259,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resendConfirmation,
         resetPassword,
         updatePassword,
+        updatePublicName,
         deleteAccount,
         logout,
       }}

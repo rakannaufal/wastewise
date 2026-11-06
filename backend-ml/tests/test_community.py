@@ -63,6 +63,11 @@ def test_private_then_publish_interact_withdraw(client, accounts, monkeypatch):
         == 409
     )
     assert client.get(path, headers=other).json()["data"]["comment_count"] == 1
+    feed_post = client.get("/api/v1/community/feed", headers=other).json()["data"]["posts"][0]
+    assert feed_post["author_name"] == "Warga"
+    assert feed_post["like_count"] == 1
+    assert feed_post["comment_count"] == 1
+    assert feed_post["liked_by_me"] is True
     assert (
         client.patch(
             path,

@@ -9,6 +9,17 @@ import { ReportDistribution } from "../components/ReportDistribution";
 
 const jakartaDate = (value: Date) =>
   value.toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" });
+const formatDateLabel = (value: string) => {
+  const timestamp = Date.parse(`${value}T00:00:00Z`);
+  if (!Number.isFinite(timestamp)) return value;
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(timestamp);
+};
+
 export default function AdminDashboard() {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
@@ -55,6 +66,23 @@ export default function AdminDashboard() {
   };
   const points = data?.trend || [];
   const max = Math.max(1, ...points.map((point) => point.count));
+  const rangeStart = Date.parse(`${from}T00:00:00Z`);
+  const rangeEnd = Date.parse(`${to}T00:00:00Z`);
+  const pointX = (date: string, index: number) => {
+    const dateValue = Date.parse(`${date}T00:00:00Z`);
+    if (
+      Number.isFinite(rangeStart) &&
+      Number.isFinite(rangeEnd) &&
+      Number.isFinite(dateValue) &&
+      rangeEnd > rangeStart
+    ) {
+      return 10 + ((dateValue - rangeStart) / (rangeEnd - rangeStart)) * 580;
+    }
+    return points.length > 1
+      ? 10 + (index / (points.length - 1)) * 580
+      : 300;
+  };
+  const pointY = (count: number) => 130 - (count / max) * 110;
   return (
     <div className="admin-dashboard">
       <div className="page-heading">
@@ -136,8 +164,8 @@ export default function AdminDashboard() {
             <div>
               <h2>Ringkasan periode</h2>
               <p className="muted">
-                {from} sampai {to} · Asia/Jakarta. Status terkini dari laporan
-                yang dibuat dalam periode ini.
+                {formatDateLabel(from)} – {formatDateLabel(to)} · WIB. Status
+                menampilkan kondisi terakhir laporan dalam rentang tanggal ini.
               </p>
             </div>
           </div>
@@ -223,32 +251,51 @@ export default function AdminDashboard() {
               Berdasarkan waktu laporan dibuat pada periode yang dipilih.
             </p>
             {data.cohort.total ? (
-              <>
+              points.length > 0 ? (
+                <>
                 <svg
                   className="trend-chart"
                   viewBox="0 0 600 140"
                   role="img"
-                  aria-label={`Tren ${data.cohort.total} laporan dalam ${points.length} hari. Data harian tersedia di bawah.`}
+                  aria-label={`Tren ${data.cohort.total} laporan pada periode terpilih. Data harian tersedia di bawah.`}
                 >
-                  <polyline
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    vectorEffect="non-scaling-stroke"
-                    points={points
-                      .map(
-                        (point, i) =>
-                          `${10 + (i / Math.max(1, points.length - 1)) * 580},${130 - (point.count / max) * 110}`,
-                      )
-                      .join(" ")}
-                  />
+                  {points.length > 1 && (
+                    <polyline
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      vectorEffect="non-scaling-stroke"
+                      points={points
+                        .map((point, index) =>
+                          `${pointX(point.date, index)},${pointY(point.count)}`,
+                        )
+                        .join(" ")}
+                    />
+                  )}
+                  {points.map(
+                    (point, index) =>
+                      point.count > 0 && (
+                        <circle
+                          key={point.date}
+                          cx={pointX(point.date, index)}
+                          cy={pointY(point.count)}
+                          r={points.length === 1 ? 4 : 2.5}
+                          fill="currentColor"
+                        />
+                      ),
+                  )}
                 </svg>
                 <div className="trend-axis">
-                  <span>{from}</span>
+                  <span>{formatDateLabel(from)}</span>
                   <span>Puncak {max} laporan/hari</span>
-                  <span>{to}</span>
+                  <span>{formatDateLabel(to)}</span>
                 </div>
-              </>
+                </>
+              ) : (
+                <p className="empty-inline">
+                  Data harian belum tersedia untuk periode ini.
+                </p>
+              )
             ) : (
               <p className="empty-inline">
                 Belum ada laporan pada periode ini.
@@ -259,7 +306,9 @@ export default function AdminDashboard() {
               <div className="trend-data">
                 {points.map((point) => (
                   <p key={point.date}>
-                    <time>{point.date}</time>
+                    <time dateTime={`${point.date}T00:00:00Z`}>
+                      {formatDateLabel(point.date)}
+                    </time>
                     <strong>{point.count}</strong>
                   </p>
                 ))}
@@ -275,7 +324,7 @@ export default function AdminDashboard() {
               }}
             />
           )}
-          <section className="panel">
+          <section className="panel timing-panel">
             <h2>Waktu penanganan</h2>
             <dl className="timing-metrics">
               <div>
@@ -296,11 +345,14 @@ export default function AdminDashboard() {
               </div>
             </dl>
             <p className="caption">
-              Hanya laporan dengan riwayat sejak dibuat. Data lama tanpa riwayat
-              tidak diestimasi dari waktu edit. Pembaruan{" "}
-              {new Date(data.generated_at).toLocaleString("id-ID", {
+              Median dihitung dari riwayat sejak laporan dibuat. Data lama
+              tanpa riwayat tidak diperkirakan dari waktu edit. Terakhir
+              diperbarui{" "}
+              {new Intl.DateTimeFormat("id-ID", {
+                dateStyle: "long",
+                timeStyle: "short",
                 timeZone: "Asia/Jakarta",
-              })}{" "}
+              }).format(new Date(data.generated_at))}{" "}
               WIB.
             </p>
           </section>

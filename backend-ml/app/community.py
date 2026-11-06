@@ -143,6 +143,19 @@ def retire_media(db, rows):
 
 def project(db, rows, user):
     ids = [p.id for p in rows]
+    author_ids = {p.user_id for p in rows}
+    authors = (
+        {
+            identity: name if visible else "Warga"
+            for identity, name, visible in db.execute(
+                select(User.id, User.full_name, User.public_name_visible).where(
+                    User.id.in_(author_ids)
+                )
+            ).all()
+        }
+        if author_ids
+        else {}
+    )
     likes = (
         dict(
             db.execute(
@@ -190,7 +203,7 @@ def project(db, rows, user):
         result.append(
             dict(
                 id=p.id,
-                author_name="Warga",
+                author_name=authors.get(p.user_id, "Warga"),
                 is_owner=user is not None and p.user_id == user.id,
                 caption=p.caption,
                 state=p.state,
@@ -252,6 +265,44 @@ def cursor_for(row):
     ).decode()
 
 
+def project_feed(rows, user):
+    links = storage.signed_many(
+        [post.image_path for post, *_ in rows if post.image_path and post.state == "published"]
+    )
+    result = []
+    for post, report, full_name, public_name_visible, likes, comments, liked_by_me in rows:
+        url, expires = links.get(post.image_path, (None, None))
+        result.append(
+            dict(
+                id=post.id,
+                author_name=full_name if public_name_visible else "Warga",
+                is_owner=user is not None and post.user_id == user.id,
+                caption=post.caption,
+                state=post.state,
+                image_url=url,
+                image_url_expires_at=expires,
+                category=report.category,
+                classification_state=report.classification_state,
+                status=report.status,
+                latitude=float(report.latitude),
+                longitude=float(report.longitude),
+                location_source=report.location_source,
+                location_accuracy_m=float(report.location_accuracy_m)
+                if report.location_accuracy_m is not None
+                else None,
+                location_label=post.location_label,
+                location_state=post.location_state,
+                region_code=post.region_code,
+                like_count=likes,
+                comment_count=comments,
+                liked_by_me=liked_by_me,
+                revision=post.revision,
+                created_at=post.created_at,
+            )
+        )
+    return result
+
+
 @router.get("/community/feed", response_model=Envelope[FeedRead], openapi_extra={"security": [{}]})
 def feed(
     request: Request,
@@ -265,9 +316,39 @@ def feed(
     db: Session = Depends(get_db),
 ):
     limit(request, "public-feed", 120, None, db)
+    like_count = (
+        select(func.count())
+        .select_from(PostLike)
+        .where(PostLike.post_id == CommunityPost.id)
+        .correlate(CommunityPost)
+        .scalar_subquery()
+    )
+    comment_count = (
+        select(func.count())
+        .select_from(PostComment)
+        .where(PostComment.post_id == CommunityPost.id, PostComment.state == "visible")
+        .correlate(CommunityPost)
+        .scalar_subquery()
+    )
+    liked_by_me = (
+        select(PostLike.post_id)
+        .where(PostLike.post_id == CommunityPost.id, PostLike.user_id == user.id)
+        .exists()
+        if user is not None
+        else false()
+    )
     q = (
-        select(CommunityPost)
+        select(
+            CommunityPost,
+            Report,
+            User.full_name,
+            User.public_name_visible,
+            like_count,
+            comment_count,
+            liked_by_me,
+        )
         .join(Report, Report.id == CommunityPost.report_id)
+        .join(User, User.id == CommunityPost.user_id)
         .where(
             or_(
                 public_eligible(),
@@ -301,11 +382,11 @@ def feed(
         if order == "oldest"
         else (CommunityPost.created_at.desc(), CommunityPost.id.desc())
     )
-    rows = list(db.scalars(q.order_by(*ordering).limit(per_page + 1)))
+    rows = db.execute(q.order_by(*ordering).limit(per_page + 1)).all()
     return ok(
         {
-            "posts": project(db, rows[:per_page], user),
-            "next_cursor": cursor_for(rows[per_page - 1]) if len(rows) > per_page else None,
+            "posts": project_feed(rows[:per_page], user),
+            "next_cursor": cursor_for(rows[per_page - 1][0]) if len(rows) > per_page else None,
         }
     )
 

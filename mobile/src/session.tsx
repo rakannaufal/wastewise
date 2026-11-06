@@ -22,6 +22,7 @@ type Session = {
     password: string,
     fullName: string,
   ) => Promise<boolean>;
+  updatePublicName: (visible: boolean) => Promise<void>;
   resendConfirmation: (email: string) => Promise<void>;
   deleteAccount: (password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -194,6 +195,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     });
     await logout();
   }
+  async function updatePublicName(visible: boolean) {
+    const profile = await api<User>("/api/v1/auth/me/public-name", {
+      method: "PATCH",
+      body: JSON.stringify({ public_name_visible: visible }),
+    });
+    setUser(profile);
+  }
   async function logout() {
     clearDraft();
     try {
@@ -230,6 +238,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         retry: () => setAttempt((value) => value + 1),
         login,
         registerAccount,
+        updatePublicName,
         resendConfirmation,
         deleteAccount,
         logout,

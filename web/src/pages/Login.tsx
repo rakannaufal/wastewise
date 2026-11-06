@@ -2,18 +2,27 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../Auth";
-import { Brand } from "../ui";
 import SiteHeader from "../components/SiteHeader";
+import { validPassword } from "../../../shared/auth-errors";
 
-const schema = (recovery: boolean) =>
+const passwordPolicyError =
+  "Gunakan minimal 8 karakter dengan huruf besar, huruf kecil, angka, dan simbol. Maksimal 72 byte UTF-8.";
+const schema = (recovery: boolean, register: boolean, forgot: boolean) =>
   z.object({
     email: recovery
       ? z.string().optional()
       : z.email("Masukkan email yang valid"),
-    password: z.string().optional(),
-    full_name: z.string().optional(),
+    password:
+      register || recovery
+        ? z.string().refine(validPassword, passwordPolicyError)
+        : forgot
+          ? z.string().optional()
+          : z.string().min(1, "Masukkan kata sandi."),
+    full_name: register
+      ? z.string().trim().min(3, "Nama lengkap minimal 3 karakter.")
+      : z.string().optional(),
   });
 type Values = z.infer<ReturnType<typeof schema>>;
 export default function Login() {
@@ -40,8 +49,11 @@ export default function Login() {
   const {
     register: field,
     handleSubmit,
+    clearErrors,
     formState: { errors, isSubmitting },
-  } = useForm<Values>({ resolver: zodResolver(schema(recovery)) });
+  } = useForm<Values>({
+    resolver: zodResolver(schema(recovery, register, forgot)),
+  });
   async function submit(values: Values) {
     setError("");
     setMessage("");
@@ -77,17 +89,15 @@ export default function Login() {
       <SiteHeader compact />
       <div className="auth-page">
         <section className="auth-story">
-          <Brand />
           <div className="auth-story-copy">
-            <span className="eyebrow">Mulai dari satu pilihan baik</span>
-            <h1>
+            <p className="auth-story-title">
               Kenali sampahnya.
               <br />
               Tentukan langkahnya.
-            </h1>
+            </p>
             <p>
-              Dari foto menjadi panduan memilah. Catat laporan, pantau
-              penanganan, beri material kesempatan berikutnya.
+              Kenali material dari foto, buat laporan, lalu pantau tindak
+              lanjutnya.
             </p>
           </div>
           <div
@@ -109,68 +119,76 @@ export default function Login() {
           </p>
           <div className="auth-foot">
             <span>12 kategori material</span>
-            <span>Satu kebiasaan lebih baik</span>
+            <span>Laporan privat secara default</span>
           </div>
         </section>
         <main className="auth-form">
-          <div className="mobile-brand">
-            <Brand />
-          </div>
-          <div>
-            <span className="eyebrow">Ruang untuk perubahan kecil</span>
-            <h2>
+          <div className="auth-form-content">
+            <h1>
               {recovery
                 ? "Buat kata sandi baru"
                 : forgot
                   ? "Pulihkan akunmu"
                   : register
-                    ? "Mulai bersama WasteWise"
+                    ? "Buat akun WasteWise"
                     : "Selamat datang kembali"}
-            </h2>
+            </h1>
             <p className="muted">
               {recovery
                 ? "Gunakan kata sandi kuat yang belum pernah dipakai."
                 : forgot
                   ? "Masukkan email akun untuk menerima tautan pemulihan."
                   : register
-                    ? "Buat akun untuk mencatat dan memantau laporan."
-                    : "Masuk untuk melanjutkan langkah baikmu."}
+                    ? "Simpan laporanmu dan pantau tindak lanjutnya."
+                    : "Masuk untuk melihat laporan dan tindak lanjutnya."}
             </p>
             <form onSubmit={handleSubmit(submit)}>
               {register && (
-                <label>
+                <label htmlFor="auth-full-name">
                   Nama lengkap
                   <input
+                    id="auth-full-name"
                     {...field("full_name")}
                     autoComplete="name"
                     minLength={3}
                     maxLength={255}
                     required
+                    aria-invalid={!!errors.full_name}
+                    aria-describedby={errors.full_name ? "auth-name-error" : undefined}
                   />
+                  {errors.full_name && (
+                    <small id="auth-name-error" className="field-error">
+                      {errors.full_name.message}
+                    </small>
+                  )}
                 </label>
               )}
               {!recovery && (
-                <label>
+                <label htmlFor="auth-email">
                   Email
                   <input
+                    id="auth-email"
                     {...field("email")}
                     type="email"
                     autoComplete="email"
-                    placeholder="nama@contoh.com"
+                    placeholder="Masukkan alamat email"
+                    required
                     aria-invalid={!!errors.email}
+                    aria-describedby={errors.email ? "auth-email-error" : undefined}
                   />
                   {errors.email && (
-                    <small className="field-error">
+                    <small id="auth-email-error" className="field-error">
                       {errors.email.message}
                     </small>
                   )}
                 </label>
               )}
               {(!forgot || recovery) && (
-                <label>
+                <label htmlFor="auth-password">
                   {recovery ? "Kata sandi baru" : "Kata sandi"}
                   <div className="password-input">
                     <input
+                      id="auth-password"
                       {...field("password")}
                       type={show ? "text" : "password"}
                       autoComplete={
@@ -178,7 +196,22 @@ export default function Login() {
                           ? "new-password"
                           : "current-password"
                       }
+                      placeholder={
+                        recovery
+                          ? "Buat kata sandi baru"
+                          : register
+                            ? "Buat kata sandi yang kuat"
+                            : "Masukkan kata sandi"
+                      }
                       required
+                      aria-invalid={!!errors.password}
+                      aria-describedby={
+                        errors.password
+                          ? "auth-password-error"
+                          : register || recovery
+                            ? "auth-password-hint"
+                            : undefined
+                      }
                     />
                     <button
                       type="button"
@@ -191,23 +224,33 @@ export default function Login() {
                       {show ? <EyeOff size={19} /> : <Eye size={19} />}
                     </button>
                   </div>
+                  {errors.password && (
+                    <small id="auth-password-error" className="field-error">
+                      {errors.password.message}
+                    </small>
+                  )}
                 </label>
               )}
               {(register || recovery) && (
-                <p className="caption">
-                  Minimal 8 karakter: huruf besar, huruf kecil, angka, simbol.
-                  Maksimal 72 byte.
+                <p id="auth-password-hint" className="caption">
+                  Kata sandi minimal 8 karakter, dengan huruf besar, huruf
+                  kecil, angka, dan simbol. Maksimal 72 byte UTF-8.
                 </p>
               )}
               {(error || authError) && (
-                <p className="error" role="alert">
-                  {error || authError}
-                </p>
-              )}
-              {authError && (
-                <button type="button" className="text-button" onClick={retry}>
-                  Coba hubungkan kembali
-                </button>
+                <div className="error auth-form-error" role="alert">
+                  <AlertCircle size={18} aria-hidden="true" />
+                  <span>{error || authError}</span>
+                  {authError && (
+                    <button
+                      type="button"
+                      className="text-button"
+                      onClick={retry}
+                    >
+                      Coba lagi
+                    </button>
+                  )}
+                </div>
               )}
               {message && (
                 <p className="next-action" role="status">
@@ -234,6 +277,7 @@ export default function Login() {
               <p className="auth-switch">
                 {register ? "Sudah punya akun?" : "Belum punya akun?"}{" "}
                 <button
+                  type="button"
                   className="text-button"
                   onClick={() => {
                     setRegister(!register);
@@ -241,6 +285,7 @@ export default function Login() {
                     setError("");
                     setMessage("");
                     setConfirmation(false);
+                    clearErrors();
                   }}
                 >
                   {register ? "Masuk" : "Daftar sekarang"}
@@ -250,12 +295,14 @@ export default function Login() {
             {provider === "supabase" && !recovery && (
               <p className="auth-switch">
                 <button
+                  type="button"
                   className="text-button"
                   onClick={() => {
                     setForgot(!forgot);
                     setRegister(false);
                     setError("");
                     setMessage("");
+                    clearErrors();
                   }}
                 >
                   {forgot ? "Kembali masuk" : "Lupa kata sandi?"}
@@ -283,9 +330,13 @@ export default function Login() {
             )}
             <p className="caption session-note">
               {provider === "supabase"
-                ? "Login email melalui Supabase. Keluar dari akun setelah menggunakan perangkat bersama."
-                : "Untuk keamanan, masuk kembali setelah halaman dimuat ulang."}{" "}
-              Foto laporan tersedia bagi pemilik dan pengelola.
+                ? "Autentikasi email dikelola oleh Supabase. Keluar setelah selesai jika memakai perangkat bersama."
+                : "Mode lokal hanya menyimpan sesi di memori browser. Masuk kembali setelah halaman dimuat ulang."}
+            </p>
+            <p className="caption privacy-note">
+              Laporan privat sampai kamu memilih untuk membagikannya. Saat
+              dibagikan, foto turunan, deskripsi, kategori/status, dan lokasi
+              presisi dapat dilihat publik.
             </p>
           </div>
           <p className="auth-copyright">WasteWise · Pilah dengan tepat.</p>

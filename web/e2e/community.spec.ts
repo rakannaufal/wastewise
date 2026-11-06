@@ -446,7 +446,7 @@ test("landing, onboarding and error pages remain readable across viewports", asy
     .click();
   await expect(page.getByText(/Tidak. Foto, hasil klasifikasi/)).toBeVisible();
   await expect(page.locator(".site-footer-credit")).toHaveText(
-    "© 2026 Khay Brownies · Website by rakandev",
+    "Website by rakandev",
   );
   await expect(page.locator(".site-footer-credit a")).toHaveAttribute(
     "href",
